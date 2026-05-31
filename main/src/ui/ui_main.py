@@ -1,4 +1,8 @@
 import os
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+import cartopy.geodesic as geodesic
+import matplotlib.image as mpimg
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
@@ -8,6 +12,9 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from PySide6.QtGui import QIcon
+from matplotlib.figure import Figure
+from matplotlib.patches import Polygon
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
 class SatelliteTrackerApp(QMainWindow):
     # # Signal to request action from worker
@@ -36,55 +43,12 @@ class SatelliteTrackerApp(QMainWindow):
 
     def __init__(self):
         '''
-        This function initializes the class and set up all 'global' variables.
+        This function initializes the ui.
         '''
         super().__init__()
         self.setWindowTitle('Satellite Tracker')
         self.setWindowIcon(QIcon(os.path.join('Main', 'Images', 'satellite_icon_white.svg')))
         self.setGeometry(100, 100, 1200, 800) # set inital pos and size
-
-        # Initialize 'global' variables
-        load_dotenv(os.path.join('Main', 'config', 'config.env'))
-        self.antenna_latitude = float(os.getenv('LATITUDE'))
-        self.antenna_longitude = float(os.getenv('LONGITUDE'))
-        self.antenna_altitude = float(os.getenv('ALTITUDE'))
-        self.min_angle_change_before_update = float(os.getenv('MIN_ANGLE_CHANGE_BEFORE_UPDATE'))
-        self.local_tz = os.getenv('LOCAL_TZ') # local time zone
-        self.display_light_time_correction_option = os.getenv('DISPLAY_LIGHT_TIME_CORRECTION_OPTION').upper() == 'TRUE'
-        self.display_horizons_directly_option = os.getenv('DISPLAY_HORIZONS_DIRECTLY_OPTION').upper() == 'TRUE'
-        self.auto_uncheck_start_tracking_at_AOS_btn = os.getenv('AUTO_UNCHECK_START_TRACKING_AT_AOS_BTN').upper() == 'TRUE'
-
-        self.skyfield_antenna_pos = wgs84.latlon(self.antenna_latitude, self.antenna_longitude, self.antenna_altitude)
-        self.skyfield_ts = load.timescale() # used to create skyfield time objects
-        
-        planet_ephemeris_path = os.path.join('Main', 'data', 'Ephemeris', 'de421.bsp')
-        self.planet_ephemeris = load(planet_ephemeris_path)
-        
-        self.tracking = False
-
-        # data
-        self.satellite_list = self.get_satellites_from_file()
-        self.satellite_metadata = self.load_satellite_metadata()
-        self.all_CelesTrak_satellites_df = None # gets loaded by load_all_satellite_data()
-        self.omm_df = None                      # gets loaded by browse_gp_file()
-        self.tle_by_name = None                 # gets loaded by browse_gp_file()
-        self.tle_by_norad = None                # gets loaded by browse_gp_file()
-        self.tle_by_intl = None                 # gets loaded by browse_gp_file()
-        self.gp_file_satellite = None           # gets set by tracking_mode_TLE_OMM()
-
-        # SPICE
-        self.spice_kernels_loaded = False # gets set by browse_spice_file()
-
-        # timer for continuously updating
-        self.update_frequency = 500 # ms
-        self.update_continuously_timer = QTimer(self)
-        self.update_continuously_timer.timeout.connect(self.update_continuously)
-
-        # Motors
-        self.motor_controller_IP = os.getenv('IP_ADRESS')
-        self.motor_controller_port = int(os.getenv('PORT'))
-        self.socket = None
-        self.last_time_motor_got_updated = None
 
         # Map
         map_path = os.path.join('Main', 'Images', 'nasa-topo_1024.jpg')
