@@ -1,7 +1,9 @@
 import os
+from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 from datetime import datetime, timezone
 
+load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
 LOCAL_TZ = os.getenv('LOCAL_TZ') # local time zone
 
 def local_time_to_UTC(datetime):
