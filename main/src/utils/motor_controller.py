@@ -1,52 +1,83 @@
-import os
-import numpy as np
-from dotenv import load_dotenv
+import socket
+from PySide6.QtCore import QObject, Signal
 
-load_dotenv(os.path.join('main', 'config', 'config_app.env'))
-MIN_ANGLE_CHANGE_BEFORE_UPDATE = float(os.getenv('MIN_ANGLE_CHANGE_BEFORE_UPDATE'))
+class MotorWorker(QObject):
+    # Signals to talk back to the UI
+    status_received = Signal(float, float) # az, el
+    log_signal = Signal(str)
 
-def should_update_motors(current_az, current_el, new_az, new_el):
-    '''
-    Determines if the newly calculated target azimuth and elevation differ sufficiently from the current position
-    such that we need to send the motors new instructions
-    Parameters:
-        current_az: current azimuth of the antenna. 
-        current_el: current elevation of the antenna. 
-        new_az: latest value that was calculated for azimuth
-        new_el: latest value that was calculated for elevation
-    
-    Returns:
-        (bool): Bool that says if antenna should be moved
-    '''
-    def az_el_to_vector(azimuth, elevation):
+    def __init__(self, ip, port):
+        super().__init__()
+        self.ip = ip
+        self.port = port
+        self.socket = None
+
+    def connect_controller(self):
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(2.0)
+            self.socket.connect((self.ip, self.port))
+            self.log_signal.emit(f"Connected to {self.ip}")
+        except Exception as e:
+            self.log_signal.emit(f"Connection failed: {e}")
+
+    def create_set_position_packet(self, azimuth, elevation, az_resolution=10, el_resolution=10):
         '''
-        NOTE: I'm 99.9% sure that this function can be replaced by az_el_to_cartesian()
-        They use different orientations of the coordiant systems but since we are only interested
-        in the angle between 2 vectors that shouldn't matter. But I don't have acesses to the motorcontroller
-        at the moment and I don't want to change a tested system with out the ability to test again.
-
-        Convert azimuth and elevation angles (in degrees) to a 3D unit vector.
-        Azimuth: angle in the x-y plane from x-axis (0° is +x, 90° is +y)
-        Elevation: angle from x-y plane (90° is +z)
-        '''
-        # Convert degrees to radians
-        az_rad = np.radians(azimuth)
-        el_rad = np.radians(elevation)
+        Create a command packet to set the position for a Rot2Prog controller.
         
-        # Calculate the 3D vector components
-        x = np.cos(el_rad) * np.cos(az_rad)
-        y = np.cos(el_rad) * np.sin(az_rad)
-        z = np.sin(el_rad)
+        Parameters:
+            azimuth (float): Azimuth in degrees (0-360)
+            elevation (float): Elevation in degrees
+            az_resolution (int): Azimuth resolution in steps per degree
+            el_resolution (int): Elevation resolution in steps per degree
+            
+        Returns:
+            bytearray: 13-byte command packet
+        '''
+        # Create command packet (13 bytes)
+        packet = bytearray(13)
+        
+        # Start byte
+        packet[0] = 0x57  # 'W'
+        
+        # Azimuth encoding
+        az_steps = int((360 + azimuth) * az_resolution)
+        az_str = f'{az_steps:04d}' # formats the steps count as a 4-digit string with leading zeros
 
-        return np.array([x, y, z])
-    
-    current_vec = az_el_to_vector(current_az, current_el)
-    new_vec = az_el_to_vector(new_az, new_el)
+        # encode each digit as its ASCII value
+        packet[1] = ord(az_str[0])  # Thousands H1
+        packet[2] = ord(az_str[1])  # Hundreds  H2
+        packet[3] = ord(az_str[2])  # Tens      H3
+        packet[4] = ord(az_str[3])  # Ones      H4
+        
+        # Azimuth resolution
+        packet[5] = az_resolution
+        
+        # Elevation encoding
+        el_steps = int((360 + elevation) * el_resolution)
+        el_str = f'{el_steps:04d}'
+        packet[6] = ord(el_str[0])  # Thousands V1
+        packet[7] = ord(el_str[1])  # Hundreds  V2
+        packet[8] = ord(el_str[2])  # Tens      V3
+        packet[9] = ord(el_str[3])  # Ones      V4
+        
+        # Elevation resolution
+        packet[10] = el_resolution
+        
+        # Command byte (0x2F for SET)
+        packet[11] = 0x2F
+        
+        # End byte
+        packet[12] = 0x20  # space
+        
+        return packet
 
-    # Calculate angle in radians using arccos of the normalized dot product
-    dot_product = np.dot(current_vec, new_vec)
-    angle_rad = np.arccos(np.clip(dot_product / (np.linalg.norm(current_vec) * np.linalg.norm(new_vec)), -1.0, 1.0))
-    
-    # Convert to degrees
-    angle_deg = np.degrees(angle_rad)
-    return angle_deg >= MIN_ANGLE_CHANGE_BEFORE_UPDATE
+    def send_command(self, az, el):
+        if not self.socket: return
+        try:
+            # Your packet logic here...
+            self.log_signal.emit(f"Sending: {az}, {el}")
+            packet = self.create_set_position_packet(az, el)
+            self.socket.sendall(packet)
+        except Exception as e:
+            self.log_signal.emit(f"Send error: {e}")

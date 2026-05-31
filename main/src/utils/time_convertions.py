@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 from datetime import datetime, timezone
+from astropy.time import Time
 
 load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
 LOCAL_TZ = os.getenv('LOCAL_TZ') # local time zone
@@ -76,3 +77,6 @@ def utc_now():
         datetime (datetime): Current date and time in UTC
     '''
     return datetime.now(timezone.utc)
+
+def datetime_to_astropy_time(datetime):
+    pass
