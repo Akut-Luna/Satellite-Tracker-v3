@@ -1,7 +1,6 @@
 misc/
 data/
-*.env
-!.env.example
+config_antenna.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
