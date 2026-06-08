@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv 
 from PySide6.QtCore import QThread
 
 from ui.ui_update import update_ui
@@ -14,9 +16,23 @@ class AppCore:
     def __init__(self):
         self.main_window = SatelliteTrackerApp()
 
+        # load settings
+        load_dotenv(os.path.join('main', 'config', 'config_app.env'))
+        load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
+        self.antenna_latitude = float(os.getenv('LATITUDE'))
+        self.antenna_longitude = float(os.getenv('LONGITUDE'))
+        self.antenna_altitude = float(os.getenv('ALTITUDE'))
+        self.min_angle_change_before_update = float(os.getenv('MIN_ANGLE_CHANGE_BEFORE_UPDATE'))
+        self.local_tz = os.getenv('LOCAL_TZ') # local time zone
+
+        # Motor
+        self.motor_IP = os.getenv('IP_ADRESS')
+        self.motor_port = int(os.getenv('PORT'))
+        self.last_time_motor_got_updated = None
+
         # ------------------------------------- initialize workers ------------------------------------
         self.main_loop_worker = MainLoop() # -> core/main_loop.py
-        self.motor_worker = MotorWorker(ip='127.0.0.1', port=65432) # -> utils/motor_controller.py
+        self.motor_worker = MotorWorker(self.motor_IP, self.motor_port) # -> utils/motor_controller.py
 
         # ------------------------------------- initialize threads ------------------------------------
         self.main_loop_thread = QThread()
