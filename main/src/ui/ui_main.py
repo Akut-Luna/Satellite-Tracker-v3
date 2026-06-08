@@ -1,27 +1,37 @@
-from PySide6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QTextEdit
-from PySide6.QtCore import Signal
+import os
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+import cartopy.geodesic as geodesic
+import matplotlib.image as mpimg
+from dotenv import load_dotenv
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+    QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
+    QDateTimeEdit, QRadioButton, QCheckBox, QButtonGroup, QFileDialog,
+    QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,
+    QStackedWidget, QFrame
+)
+from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
+from PySide6.QtGui import QIcon
+from matplotlib.figure import Figure
+from matplotlib.patches import Polygon
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
+
+from ui.ui_setup import setup_ui
 
 class SatelliteTrackerApp(QMainWindow):
-    # Signal to request action from worker
-    request_motor_move = Signal(float, float)
-
     def __init__(self):
+        '''
+        This function initializes the UI.
+        '''
         super().__init__()
         self.setWindowTitle('Satellite Tracker')
-        self.setup_ui()
+        self.setWindowIcon(QIcon(os.path.join('main', 'images', 'satellite_icon_white.svg')))
+        self.setGeometry(100, 100, 1200, 800) # set inital pos and size
 
-    def setup_ui(self):
-        layout = QVBoxLayout()
-        self.console = QTextEdit(readOnly=True)
-        self.btn = QPushButton("Move Motor")
-        self.btn.clicked.connect(lambda: self.request_motor_move.emit(45.0, 10.0))
-        
-        layout.addWidget(self.btn)
-        layout.addWidget(self.console)
-        
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
+        # UI
+        setup_ui(self)
+    
     def log_message(self, msg):
         self.console.append(msg)
+

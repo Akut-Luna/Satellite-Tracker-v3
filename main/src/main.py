@@ -1,39 +1,19 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QThread
-from ui.ui_main import SatelliteTrackerApp
-from utils.motor_controller import MotorWorker
+
+from core.app_core import AppCore
 
 def main():
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv) 
     
-    # 1. Initialize UI and Worker
-    main_window = SatelliteTrackerApp()
-    motor_worker = MotorWorker(ip="127.0.0.1", port=65432)
+    core = AppCore() # -> core/app_core.py
+    core.start() # Tracker app runs now until the main window is closed
     
-    # 2. Move worker to a separate thread
-    motor_thread = QThread()
-    motor_worker.moveToThread(motor_thread)
-    
-    # 3. Connect Signals & Slots
-    # UI -> Worker
-    '''
-        if request_motor_move.emit(data) in ui_main.py gets called
-        then send_command(data) in motor_controller.py gets executed
-    '''
-    main_window.request_motor_move.connect(motor_worker.send_command)
-    
-    # Worker -> UI
-    motor_worker.log_signal.connect(main_window.log_message)
-    
-    # Start thread and connect
-    motor_thread.start()
-    motor_worker.connect_controller() # Start connection attempt
+    exit_code = app.exec() # <- Once the main window is closed the code will resume from here.
+    core.shutdown()
+    sys.exit(exit_code)
 
-    main_window.show()
-    
-    # Clean shutdown
-    sys.exit(app.exec())
+    # TODO: build RA/DEC stack from UI to motor controller
 
 if __name__ == "__main__":
     main()

@@ -2,6 +2,8 @@ misc/
 data/
 archive/
 config_antenna.env
+.vscode
+archive/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
