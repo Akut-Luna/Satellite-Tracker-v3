@@ -2,7 +2,6 @@
 '''
     this will be the new update_continuously
 '''
-# here:
 from PySide6.QtCore import QObject, Signal, QTimer
 
 class MainLoop(QObject):
@@ -10,15 +9,16 @@ class MainLoop(QObject):
 
     def __init__(self):
         super().__init__()
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.main_loop)
 
     def start_loop(self, interval_ms):
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.main_loop) # every interval_ms: call main_loop
         self.timer.start(interval_ms)
 
     def main_loop(self):
 
         data = {} # TODO
+        print('hi from main loop')
 
         self.final_data.emit(data)
 
