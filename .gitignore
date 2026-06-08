@@ -1,5 +1,6 @@
 misc/
 data/
+archive/
 config_antenna.env
 
 # Byte-compiled / optimized / DLL files
