@@ -45,10 +45,12 @@ def setup_tracking_modes_widget(self):
     
     ra_dec_layout.addWidget(QLabel('RA [h]:'), 0, 0)
     self.ra_input = QLineEdit()
+    self.ra_input.textChanged.connect(self.RA_changed.emit) # if text changed emit a signal
     ra_dec_layout.addWidget(self.ra_input, 0, 1)
 
     ra_dec_layout.addWidget(QLabel('DEC [°]:'), 1, 0)
     self.dec_input = QLineEdit()
+    self.dec_input.textChanged.connect(self.DEC_changed.emit)
     ra_dec_layout.addWidget(self.dec_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
 
@@ -65,10 +67,132 @@ def setup_tracking_modes_widget(self):
 
 
 def setup_antenna_widget(self):
-    pass
+    '''
+    Sets up the UI element 'Antenna'
+    '''
+    # Antenna Group
+    self.antenna_group = QGroupBox('Antenna')
+    antenna_layout = QVBoxLayout(self.antenna_group)
+    
+    # ========================================= AZ EL =========================================
+    az_el_layout = QGridLayout()
+
+    # Azimuth ---------------------------------------------------------------------------------
+    self.azimuth_label = QLabel('Azimuth')
+    az_el_layout.addWidget(self.azimuth_label, 1, 0)
+    az_el_layout.addWidget(QLabel('Current'), 0, 1)
+    self.current_azimuth = QLineEdit('0.0°')
+    self.current_azimuth.setReadOnly(True)
+    az_el_layout.addWidget(self.current_azimuth, 1, 1)
+    
+    az_el_layout.addWidget(QLabel('Target'), 0, 2)
+    self.target_azimuth = QLineEdit('0.0°')
+    self.target_azimuth.setReadOnly(True)
+    az_el_layout.addWidget(self.target_azimuth, 1, 2)
+    
+    az_el_layout.addWidget(QLabel('Offset'), 0, 3)
+    self.azimuth_offset = QDoubleSpinBox()
+    self.azimuth_offset.setRange(-360, 360)
+    self.azimuth_offset.setDecimals(1)
+    self.azimuth_offset.setSingleStep(0.1)
+    self.azimuth_offset.setValue(0.0)
+    self.azimuth_offset.setSuffix('°')
+    az_el_layout.addWidget(self.azimuth_offset, 1, 3)
+
+    self.azimuth_offset_reset_btn = QPushButton('reset')
+    self.azimuth_offset_reset_btn.clicked.connect(lambda: self.azimuth_offset.setValue(0.0))
+    az_el_layout.addWidget(self.azimuth_offset_reset_btn, 1, 4)
+    
+    # Elevation -------------------------------------------------------------------------------
+    self.elevation_label = QLabel('Elevation')
+    az_el_layout.addWidget(self.elevation_label, 2, 0)
+    self.current_elevation = QLineEdit('0.0°')
+    self.current_elevation.setReadOnly(True)
+    az_el_layout.addWidget(self.current_elevation, 2, 1)
+    
+    self.target_elevation = QLineEdit('0.0°')
+    self.target_elevation.setReadOnly(True)
+    az_el_layout.addWidget(self.target_elevation, 2, 2)
+    
+    self.elevation_offset = QDoubleSpinBox()
+    self.elevation_offset.setRange(-90, 90)
+    self.elevation_offset.setDecimals(1)
+    self.elevation_offset.setSingleStep(0.1)
+    self.elevation_offset.setValue(0.0)
+    self.elevation_offset.setSuffix('°')
+    az_el_layout.addWidget(self.elevation_offset, 2, 3)
+
+    self.elevation_offset_reset_btn = QPushButton('reset')
+    self.elevation_offset_reset_btn.clicked.connect(lambda: self.elevation_offset.setValue(0.0))
+    az_el_layout.addWidget(self.elevation_offset_reset_btn, 2, 4)
+
+    # Horizontal line -------------------------------------------------------------------------
+    horizontal_line = QFrame()
+    horizontal_line.setFrameShape(QFrame.HLine)
+    horizontal_line.setFrameShadow(QFrame.Sunken)
+    az_el_layout.addWidget(horizontal_line, 3, 0, 1, 5)
+    
+    antenna_layout.addLayout(az_el_layout)
+
+    # ===================================== Doppler shift =====================================
+    doppler_shift_layout = QGridLayout()
+
+    # Doppler shift ---------------------------------------------------------------------------
+    self.doppler_shift_label = QLabel('Doppler Shift')
+    doppler_shift_layout.addWidget(self.doppler_shift_label, 2, 0)
+    doppler_shift_layout.addWidget(QLabel('Emitted freq. [MHz]'), 1, 1)
+    self.doppler_initial_freq = QLineEdit()
+    self.doppler_initial_freq.setText('0.0')
+    doppler_shift_layout.addWidget(self.doppler_initial_freq, 2, 1)
+
+    doppler_shift_layout.addWidget(QLabel('Observed freq. [MHz]'), 1, 2)
+    self.doppler_shifted_freq = QLineEdit()
+    self.doppler_shifted_freq.setText('0.0')
+    self.doppler_shifted_freq.setReadOnly(True)
+    doppler_shift_layout.addWidget(self.doppler_shifted_freq, 2, 2)
+
+    antenna_layout.addLayout(doppler_shift_layout)
+    self.middle_layout.addWidget(self.antenna_group)
 
 def setup_data_widget(self):
-    pass
+    '''
+    Sets up the UI element 'Data'
+    '''
+    # Data Group
+    self.data_group = QGroupBox('Data')
+    data_layout = QGridLayout(self.data_group)
+
+    # UTC ------------------------------------------------------------------------------------
+    data_layout.addWidget(QLabel('UTC'), 0, 0)
+    self.UTC_text = QDateTimeEdit()
+    self.UTC_text.setTimeZone(QTimeZone(b'UTC'))
+    self.UTC_text.setDisplayFormat('hh:mm:ss dd.MM.yyyy')
+    self.UTC_text.setDateTime(QDateTime.currentDateTimeUtc())
+    self.UTC_text.setReadOnly(True)
+    data_layout.addWidget(self.UTC_text, 0, 1)
+
+    # Altitude --------------------------------------------------------------------------------
+    data_layout.addWidget(QLabel('Altitude'), 1, 0)
+    self.altitude_text = QLineEdit()
+    self.altitude_text.setText('0 km')
+    self.altitude_text.setReadOnly(True)
+    data_layout.addWidget(self.altitude_text, 1, 1)
+
+    # Range -----------------------------------------------------------------------------------
+    data_layout.addWidget(QLabel('Range'), 2, 0)
+    self.range_text = QLineEdit()
+    self.range_text.setText('0 km')
+    self.range_text.setReadOnly(True)
+    data_layout.addWidget(self.range_text, 2, 1)
+
+    # Range Rate ------------------------------------------------------------------------------
+    data_layout.addWidget(QLabel('Range Rate'), 3, 0)
+    self.range_rate_text = QLineEdit()
+    self.range_rate_text.setText('0 km/s')
+    self.range_rate_text.setReadOnly(True)
+    data_layout.addWidget(self.range_rate_text, 3, 1)
+    
+    self.middle_layout.addWidget(self.data_group)
 
 def setup_tracking_widget(self):
     pass
@@ -89,7 +213,11 @@ def setup_ui(self):
     main_layout.addLayout(self.top_layout)
 
     # Middle row: Antenna, Data and Tracking
-
+    self.middle_layout = QHBoxLayout()
+    setup_antenna_widget(self)
+    setup_data_widget(self)
+    # self.setup_tracking_widget()
+    main_layout.addLayout(self.middle_layout)
 
     # Bottom row: World map and console
     bottom_layout = QHBoxLayout()

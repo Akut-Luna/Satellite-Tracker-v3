@@ -48,6 +48,10 @@ class AppCore:
             lambda: self.main_loop_worker.start_loop(500)
         )
 
+        # broadcast changes in the UI (by user)
+        self.main_window.RA_changed.connect(self.main_loop_worker.update_current_RA)
+        self.main_window.DEC_changed.connect(self.main_loop_worker.update_current_DEC)
+
         # update UI
         self.main_loop_worker.final_data.connect(update_ui)
 

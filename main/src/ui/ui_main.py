@@ -20,6 +20,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from ui.ui_setup import setup_ui
 
 class SatelliteTrackerApp(QMainWindow):
+    # signals for the UI to broadcast on change
+
+    RA_changed = Signal(str)
+    DEC_changed = Signal(str)
+
     def __init__(self):
         '''
         This function initializes the UI.
