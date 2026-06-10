@@ -3,9 +3,10 @@ import time
 from PySide6.QtCore import QObject, Signal
 
 class MotorWorker(QObject):
-    # Signals to talk back to the UI
+    # ------------------------------------ Signals (send data) ------------------------------------
     status_received = Signal(float, float) # az, el
-    log_signal = Signal(str)
+    log = Signal(str)
+    # ---------------------------------------------------------------------------------------------
 
     def __init__(self, ip, port):
         super().__init__()
@@ -14,14 +15,21 @@ class MotorWorker(QObject):
         self.socket = None
         self.last_time_motor_got_updated = None
 
+    def log_message(self, message):
+        self.log.emit(message)
+
+    # ------------------------------------ Slots (receive data) -----------------------------------
+    
+    # ---------------------------------------------------------------------------------------------
+
     def connect_controller(self):
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(2.0)
             self.socket.connect((self.ip, self.port))
-            self.log_signal.emit(f'Connected to {self.ip}')
+            self.log_message(f'Connected to {self.ip}')
         except Exception as e:
-            self.log_signal.emit(f'Connection failed: {e}')
+            self.log_message(f'Connection failed: {e}')
 
     def create_set_position_packet(self, azimuth, elevation, az_resolution=10, el_resolution=10):
         '''
@@ -74,7 +82,7 @@ class MotorWorker(QObject):
         
         return packet
     
-    def talk_to_motor_controller(self, command, az=0, el=0):
+    def talk_to_motor_controller(self, command, az=0, el=0): # TODO
         '''
         Get the current position from the SPID motor controller using TCP socket.
         

@@ -79,4 +79,10 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 def datetime_to_astropy_time(datetime):
-    pass
+    '''
+    Parameters:
+        datetime (datetime): must be in UTC
+    Returns:
+        astropy time (Time): time in astropy format (UTC)
+    '''
+    return Time(datetime, format='datetime', scale='utc')

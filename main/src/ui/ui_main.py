@@ -1,9 +1,5 @@
 import os
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
-import cartopy.geodesic as geodesic
 import matplotlib.image as mpimg
-from dotenv import load_dotenv
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
@@ -13,29 +9,38 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from PySide6.QtGui import QIcon
-from matplotlib.figure import Figure
-from matplotlib.patches import Polygon
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
 from ui.ui_setup import setup_ui
+from ui.ui_update import update_ui, update_map
+from core.config import AppConfig
 
 class SatelliteTrackerApp(QMainWindow):
-    # signals for the UI to broadcast on change
+    # ------------ bind imported functions (makes it act like normal member functions) ------------
+    setup_ui = setup_ui
+    update_ui = update_ui
+    update_map = update_map
 
-    RA_changed = Signal(str)
-    DEC_changed = Signal(str)
+    # ------------------------------------ Signals (send data) ------------------------------------
+    RA_changed  = Signal(str) # used in ui_setup.py
+    DEC_changed = Signal(str) # used in ui_setup.py
+    # ---------------------------------------------------------------------------------------------
 
-    def __init__(self):
+    def __init__(self, config: AppConfig):
         '''
         This function initializes the UI.
         '''
         super().__init__()
+        self.config = config
         self.setWindowTitle('Satellite Tracker')
         self.setWindowIcon(QIcon(os.path.join('main', 'images', 'satellite_icon_white.svg')))
         self.setGeometry(100, 100, 1200, 800) # set inital pos and size
 
-        # UI
-        setup_ui(self)
+        # Map
+        map_path = os.path.join('main', 'images', 'nasa-topo_1024.jpg')
+        self.earth_img = mpimg.imread(map_path)
+
+        # setup
+        self.setup_ui()
     
     def log_message(self, msg):
         self.console.append(msg)

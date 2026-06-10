@@ -2,34 +2,82 @@
 '''
     this will be the new update_continuously
 '''
-
-import time 
 from PySide6.QtCore import QObject, Signal, QTimer
+from utils.time_convertions import utc_now
+import traceback
+
+from utils.tracking_modes import (
+    tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
+)
+
+from utils.calculations import correction_matrix
 
 class MainLoop(QObject):
-    final_data = Signal(dict) # Send az, el, doppler, etc. to UI
+    # ------------ bind imported functions (makes it act like normal member functions) ------------
+    tracking_mode_List = tracking_mode_List
+    tracking_mode_RA_DEC = tracking_mode_RA_DEC
+    tracking_mode_OMM = tracking_mode_OMM
+    tracking_mode_SPICE = tracking_mode_SPICE
+    tracking_mode_AZ_EL = tracking_mode_AZ_EL
 
-    def __init__(self):
+    # ------------------------------------ Signals (send data) ------------------------------------
+    go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
+    go_update_motors = Signal(dict) # Send az, el to motors
+    log = Signal(str) 
+    # ---------------------------------------------------------------------------------------------
+
+    def __init__(self, config):
         super().__init__()
-        self.t0 = time.time()
+        self.config = config
 
-        # state of the UI
-        self.current_ra = 0.0
-        self.current_dec = 0.0
+        # ------------------------------- variabels to keep track of ------------------------------
 
-    def update_current_RA(self, ra_value):
-        '''
-        This slot receives data from the UI signals
-        '''
-        self.current_ra = float(ra_value)
-        print(f"Worker RA updated to: {self.current_ra}")
+        # local
+        self.last_time_flight_path_got_calculated = None
+        self.flight_path = None
 
-    def update_current_DEC(self, dec_value):
+        # from UI
+        self.tracking_mode = 1  # TODO: Slots and Signals
+        self.tracking = True    # TODO: Slots and Signals
+        self.ra_hours = 0.0
+        self.dec_degrees = 0.0
+
+    def log_message(self, message):
+        self.log.emit(message)
+
+    # ------------------------------------ Slots (receive data) -----------------------------------
+    def update_current_RA(self, ra_value:str):
         '''
-        This slot receives data from the UI signals
+        Parameters:
+            ra_value (str): RA value in h
         '''
-        self.current_dec = float(dec_value)
-        print(f"Worker DEC updated to: {self.current_dec}")
+        try:
+            if ra_value == '':
+                self.ra_hours = 0.0
+            else:
+                self.ra_hours = float(ra_value)
+        except Exception as e:
+            if self.tracking:
+                self.log_message(f'Error: {e}')
+                print(traceback.format_exc())
+            return
+
+    def update_current_DEC(self, dec_value:str):
+        '''
+        Parameters:
+            dec_value (str): DEC value in deg
+        '''
+        try:
+            if dec_value == '':
+                self.dec_degrees = 0.0
+            else:
+                self.dec_degrees = float(dec_value)
+        except Exception as e:
+            if self.tracking:
+                self.log_message(f'Error: {e}')
+                print(traceback.format_exc())
+            return
+    # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):
         self.timer = QTimer()
@@ -37,13 +85,125 @@ class MainLoop(QObject):
         self.timer.start(interval_ms)
 
     def main_loop(self):
+        try:
+            # ----------------------------------- Tracking Modes ----------------------------------
+            t = utc_now()
+            
+            # not all methods return all parameters but the variables need to exist
+            az = 0
+            az_rate = None
+            el = 0
+            el_rate = None
+            slant_range = None
+            range_rate = None
+            latitude = None 
+            longitude = None
+            altitude = None
+            f1 = 0
 
-        # TODO get data from UI
+            try:
+                if self.tracking_mode == 0:    # List
+                    # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_List(t)
+                    pass
 
-        data = {
-            'time' : time.time() - self.t0
-        } 
-        print('hi from main loop')
+                elif self.tracking_mode == 1:  # RA/DEC
+                    az, el, latitude, longitude = self.tracking_mode_RA_DEC(t)
 
-        self.final_data.emit(data)
+                elif self.tracking_mode == 2:  # OMM File
+                    # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_TLE_OMM(t)
+                    pass
+
+                elif self.tracking_mode == 3:  # SPICE
+                    # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_SPICE(t)
+                    pass
+                        
+                elif self.tracking_mode == 4:  # AZ/EL
+                    # az, el = self.tracking_mode_AZ_EL()
+                    pass
+
+            except Exception as e:
+                if self.tracking:
+                    self.log_message(f'Error calculating satellite data: {e}')
+                    print(traceback.format_exc())
+
+            # ------------------------- Correction for not ideal Antenna --------------------------
+            try:
+                az, el = correction_matrix(az, el, roll=0, pitch=0, yaw=0)
+            except Exception as e:
+                if self.tracking:
+                    self.log_message(f'Error calculating correction matrix: {e}')
+                    print(traceback.format_exc())
+
+            # --------------------------------- Update data on UI ---------------------------------
+            data = {
+                'az'          : az,
+                'el'          : el,
+                'slant_range' : slant_range,
+                'range_rate'  : range_rate,
+                'latitude'    : latitude,
+                'longitude'   : longitude,
+                'altitude'    : altitude,
+                'f1'          : f1
+            }
+
+            self.go_update_ui.emit(data)
+
+            # -------------------------------------------------------------------------------------
+
+            # manual offset
+            # az += self.azimuth_offset.value()
+            # el += self.elevation_offset.value()
+
+            # start tacking at AOS
+            # if self.start_tracking_at_AOS_btn.isChecked():
+            #     if not self.tracking and el > 0 and tracking_mode in [0,2,3]:
+            #         self.toggle_tracking(True)
+            #         if self.auto_uncheck_start_tracking_at_AOS_btn:
+            #             self.start_tracking_at_AOS_btn.setChecked(False)
+            #         self.log_message('Tracking was started automatically at expected AOS.')
+
+            # stop tracking when satellite is under the horizon
+            # if self.tracking and el < 0:
+            #     self.toggle_tracking(False)
+            #     self.log_message('Tracking was stopped because the satellite is under the horizon.')
+
+            
+            # Motors ------------------------------------------------------------------------------
+
+            # if self.socket is not None:
+            #     # get current position from antenna
+            #     current_az, current_el = self.talk_to_motor_controller('status')
+                
+            #     self.current_azimuth.setText(f'{current_az:.1f}°')
+            #     self.current_elevation.setText(f'{current_el:.1f}°')
+
+            #     if self.should_update_motors(current_az, current_el, az, el) and self.tracking:
+            #         # calculate target position based on angular rate
+            #         now = self.skyfield_time_to_datetime(t)
+            #         if az_rate is not None and el_rate is not None:
+            #             if self.last_time_motor_got_updated is not None:
+            #                 delta_t = (now - self.last_time_motor_got_updated).total_seconds()
+            #                 az += az_rate*delta_t
+            #                 el += el_rate*delta_t
+            #         self.last_time_motor_got_updated = now
+
+            #         az = np.clip(az, 0, 360)
+            #         el = np.clip(el, 0, 90)
+            #         self.talk_to_motor_controller('set', az, el)
+            
+            data = {
+                'az'      : az,
+                'el'      : el,
+                'az_rate' : az_rate,
+                'el_rate' : el_rate
+            }
+
+            self.go_update_motors.emit(data)
+        
+        except Exception as e:
+            if self.tracking:
+                self.log_message(f'Error: {str(e)}')
+                print(traceback.format_exc())        
+
+
 

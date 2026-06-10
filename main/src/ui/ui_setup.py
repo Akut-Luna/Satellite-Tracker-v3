@@ -38,7 +38,6 @@ def setup_tracking_modes_widget(self):
 
     # 0. List widget --------------------------------------------------------------------------
 
-    
     # 1. RA/DEC widget ------------------------------------------------------------------------
     self.ra_dec_widget = QWidget()
     ra_dec_layout = QGridLayout(self.ra_dec_widget)
@@ -64,7 +63,6 @@ def setup_tracking_modes_widget(self):
 
     tracking_modes_layout.addWidget(self.tracking_mode_stack)
     self.top_layout.addWidget(self.tracking_modes_group)
-
 
 def setup_antenna_widget(self):
     '''
@@ -227,7 +225,7 @@ def setup_ui(self):
     self.map_figure = Figure(figsize=(8, 4))
     self.map_canvas = FigureCanvas(self.map_figure)
     self.map_ax = self.map_figure.add_subplot(111, projection=self.map_projection)
-    # self.update_map(None, None, None) # empty map
+    self.update_map(None, None, None) # empty map
     
     bottom_layout.addWidget(self.map_canvas)
     
@@ -241,7 +239,7 @@ def setup_ui(self):
     
     main_layout.addLayout(bottom_layout)
 
-    # self.set_style()
+    # self.set_style() # TODO
     
     # Log initial message
     self.log_message('Satellite Tracker initialized')
