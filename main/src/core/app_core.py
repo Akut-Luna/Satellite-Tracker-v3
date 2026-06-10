@@ -16,9 +16,11 @@ class AppCore:
     def __init__(self):
         self.main_window = SatelliteTrackerApp()
 
-        # load settings
+        # -------------------------------- load settings from file --------------------------------
         load_dotenv(os.path.join('main', 'config', 'config_app.env'))
         load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
+        
+        # Antenna
         self.antenna_latitude = float(os.getenv('LATITUDE'))
         self.antenna_longitude = float(os.getenv('LONGITUDE'))
         self.antenna_altitude = float(os.getenv('ALTITUDE'))
@@ -28,21 +30,20 @@ class AppCore:
         # Motor
         self.motor_IP = os.getenv('IP_ADRESS')
         self.motor_port = int(os.getenv('PORT'))
-        self.last_time_motor_got_updated = None
 
-        # ------------------------------------- initialize workers ------------------------------------
+        # ----------------------------------- initialize workers ----------------------------------
         self.main_loop_worker = MainLoop() # -> core/main_loop.py
         self.motor_worker = MotorWorker(self.motor_IP, self.motor_port) # -> utils/motor_controller.py
 
-        # ------------------------------------- initialize threads ------------------------------------
+        # ----------------------------------- initialize threads ----------------------------------
         self.main_loop_thread = QThread()
         self.motor_thread = QThread()
         
-        # ----------------------------- move workers to separate threads ------------------------------
+        # --------------------------- move workers to separate threads ----------------------------
         self.main_loop_worker.moveToThread(self.main_loop_thread)
         self.motor_worker.moveToThread(self.motor_thread)
 
-        # ------------------------------------- connect to signals ------------------------------------
+        # ----------------------------------- connect to signals ----------------------------------
         # start timer once main_loop_thread has started
         self.main_loop_thread.started.connect(
             lambda: self.main_loop_worker.start_loop(500)
