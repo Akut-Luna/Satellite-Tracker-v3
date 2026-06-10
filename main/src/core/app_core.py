@@ -72,8 +72,8 @@ class AppCore:
         )
 
         # broadcast changes in the UI (by user)
-        self.main_window.RA_changed.connect(self.main_loop_worker.update_current_RA)
-        self.main_window.DEC_changed.connect(self.main_loop_worker.update_current_DEC)
+        self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
+        self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
 
         # logs
         self.main_loop_worker.log.connect(self.main_window.log_message)

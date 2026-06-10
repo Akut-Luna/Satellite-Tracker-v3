@@ -1,7 +1,3 @@
-
-'''
-    this will be the new update_continuously
-'''
 from PySide6.QtCore import QObject, Signal, QTimer
 from utils.time_convertions import utc_now
 import traceback
@@ -14,11 +10,11 @@ from utils.calculations import correction_matrix
 
 class MainLoop(QObject):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
-    tracking_mode_List = tracking_mode_List
+    tracking_mode_List   = tracking_mode_List
     tracking_mode_RA_DEC = tracking_mode_RA_DEC
-    tracking_mode_OMM = tracking_mode_OMM
-    tracking_mode_SPICE = tracking_mode_SPICE
-    tracking_mode_AZ_EL = tracking_mode_AZ_EL
+    tracking_mode_OMM    = tracking_mode_OMM
+    tracking_mode_SPICE  = tracking_mode_SPICE
+    tracking_mode_AZ_EL  = tracking_mode_AZ_EL
 
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
@@ -46,7 +42,7 @@ class MainLoop(QObject):
         self.log.emit(message)
 
     # ------------------------------------ Slots (receive data) -----------------------------------
-    def update_current_RA(self, ra_value:str):
+    def update_ra_hours(self, ra_value:str):
         '''
         Parameters:
             ra_value (str): RA value in h
@@ -62,7 +58,7 @@ class MainLoop(QObject):
                 print(traceback.format_exc())
             return
 
-    def update_current_DEC(self, dec_value:str):
+    def update_dec_degrees(self, dec_value:str):
         '''
         Parameters:
             dec_value (str): DEC value in deg
@@ -90,16 +86,16 @@ class MainLoop(QObject):
             t = utc_now()
             
             # not all methods return all parameters but the variables need to exist
-            az = 0
+            az = 0.0
+            el = 0.0
             az_rate = None
-            el = 0
             el_rate = None
             slant_range = None
             range_rate = None
             latitude = None 
             longitude = None
             altitude = None
-            f1 = 0
+            f1 = 0.0
 
             try:
                 if self.tracking_mode == 0:    # List
@@ -128,7 +124,7 @@ class MainLoop(QObject):
 
             # ------------------------- Correction for not ideal Antenna --------------------------
             try:
-                az, el = correction_matrix(az, el, roll=0, pitch=0, yaw=0)
+                az, el = correction_matrix(az, el, roll=0, pitch=0, yaw=0) # TODO: load angle from settings
             except Exception as e:
                 if self.tracking:
                     self.log_message(f'Error calculating correction matrix: {e}')
