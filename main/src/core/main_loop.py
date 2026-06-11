@@ -41,7 +41,7 @@ class MainLoop(QObject):
 
         # from UI
         self.tracking_mode = 1
-        self.tracking = True
+        self.tracking = False
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
 
@@ -87,6 +87,7 @@ class MainLoop(QObject):
 
     def update_tracking(self, tracking):
         self.tracking = tracking
+        # TODO (maybe allready done) all the stuff that need to happen on this thread when traking is toggeld
 
     def toggle_tracking(self, checked):
         '''
@@ -96,24 +97,8 @@ class MainLoop(QObject):
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
 
-        self.tracking = checked        # main_loop
-        self.tracking_changed(checked) # -> ui
-        if checked:
-            self.tracking_btn.setText('Stop Tracking')
-
-            # ensures that the button is checked if the function was not called by the button
-            self.tracking_btn.setChecked(True)
-        else:
-            self.tracking_btn.setText('Start Tracking')
-
-            # if self.socket is not None: # send stop command to motors # TODO
-            #     self.talk_to_motor_controller('stop')
-
-            # uncheck "Start Tracking at AOS" to prevent immediate restart of tracking
-            self.start_tracking_at_AOS_btn.setChecked(False)
-
-            # ensures that the button is not checked if the function was not called by the button
-            self.tracking_btn.setChecked(False)
+        self.tracking = checked
+        self.tracking_changed.emit(checked)
     # ---------------------------------------------------------------------------------------------
 
     def load_planet_ephemeris(self):

@@ -1,6 +1,6 @@
 import socket
 import time
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 class MotorWorker(QObject):
     # ------------------------------------ Signals (send data) ------------------------------------
@@ -14,9 +14,30 @@ class MotorWorker(QObject):
         self.port = port
         self.socket = None
         self.last_time_motor_got_updated = None
+        self.tracking = False
 
     def log_message(self, message):
         self.log.emit(message)
+
+    @Slot(bool)
+    def update_tracking(self, tracking):
+        self.tracking = tracking
+        if not tracking:
+            self.log_message('MotorWorker: tracking disabled, stopping motors')
+            self.talk_to_motor_controller('stop')
+        # TODO (maybe allready done) all the stuff that need to happen on this thread when traking is toggeld 
+
+    @Slot(dict)
+    def move_motors(self, data):
+        if not self.tracking:
+            return
+
+        az = data.get('az')
+        el = data.get('el')
+        if az is None or el is None:
+            return
+
+        self.talk_to_motor_controller('set', az, el)
 
     # ------------------------------------ Slots (receive data) -----------------------------------
     

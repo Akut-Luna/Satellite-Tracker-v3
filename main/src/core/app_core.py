@@ -1,18 +1,25 @@
 import os
 from dotenv import load_dotenv 
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QObject, QThread, Signal, Slot
 
 from core.main_loop import MainLoop
 from core.config import AppConfig
 from ui.ui_main import SatelliteTrackerApp
 from utils.motor_controller import MotorWorker
 
-class AppCore:
+class AppCore(QObject):
+    tracking_changed = Signal(bool)
     '''
     This class is the "core" of the Tracker App. It will hold the different threads.
     '''
 
+    # AppCore is the single source of truth for the current tracking state.
+    # All tracking on/off changes are coordinated here and then broadcast to
+    # the UI, main loop, and motor worker.
     def __init__(self):
+        super().__init__()
+        self.tracking = False
+
         # -------------------------------- load settings from file --------------------------------
         load_dotenv(os.path.join('main', 'config', 'config_app.env'))
         load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
@@ -31,7 +38,6 @@ class AppCore:
         # Map
         flight_path_steps = int(os.getenv('FLIGHT_PATH_STEPS'))
         min_before_recalculate_flight_path = int(os.getenv('MIN_BEFORE_RECALCULATING_FLIGHT_PATH'))
-
 
         # immutable config object (passed to workers / exposed to UI)
         self.config = AppConfig(
@@ -78,15 +84,28 @@ class AppCore:
         self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
         self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
         self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
-        self.main_window.tracking_changed.connect(self.main_loop_worker.update_tracking)
+
+        # tracking coordination
+        self.main_window.tracking_changed.connect(self.set_tracking)
+        self.main_loop_worker.tracking_changed.connect(self.set_tracking)
+        self.tracking_changed.connect(self.main_loop_worker.update_tracking)
+        self.tracking_changed.connect(self.main_window.update_tracking)
+        self.tracking_changed.connect(self.motor_worker.update_tracking)
 
         # to UI
         self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
         self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
-        self.main_loop_worker.tracking_changed.connect(self.main_window.update_tracking)
 
         # update Motors
-        # self.main_loop_worker.go_update_motors.connect() # TODO
+        self.main_loop_worker.go_update_motors.connect(self.motor_worker.move_motors)
+
+    @Slot(bool)
+    def set_tracking(self, tracking: bool):
+        if self.tracking == tracking:
+            return
+
+        self.tracking = tracking
+        self.tracking_changed.emit(tracking)
 
     def start(self):
         # start threads

@@ -59,8 +59,22 @@ class SatelliteTrackerApp(QMainWindow):
     def update_flight_path(self, flight_path):
         self.flight_path = flight_path
 
+    def _set_tracking_ui(self, checked):
+        self.tracking_btn.setText('Stop Tracking' if checked else 'Start Tracking')
+        self.tracking_btn.blockSignals(True)
+        self.tracking_btn.setChecked(checked)
+        self.tracking_btn.blockSignals(False)
+
+        if not checked:
+            self.start_tracking_at_AOS_btn.setChecked(False)
+
     def update_tracking(self, tracking):
+        if self.tracking == tracking:
+            return
+
         self.tracking = tracking
+        self._set_tracking_ui(tracking)
+        # TODO (maybe allready done) all the stuff that need to happen on this thread when traking is toggeld
 
     def toggle_tracking(self, checked):
         '''
@@ -70,24 +84,9 @@ class SatelliteTrackerApp(QMainWindow):
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
 
-        self.tracking = checked        # ui
-        self.tracking_changed(checked) # -> main_loop
-        if checked:
-            self.tracking_btn.setText('Stop Tracking')
-
-            # ensures that the button is checked if the function was not called by the button
-            self.tracking_btn.setChecked(True)
-        else:
-            self.tracking_btn.setText('Start Tracking')
-
-            # if self.socket is not None: # send stop command to motors # TODO
-            #     self.talk_to_motor_controller('stop')
-
-            # uncheck "Start Tracking at AOS" to prevent immediate restart of tracking
-            self.start_tracking_at_AOS_btn.setChecked(False)
-
-            # ensures that the button is not checked if the function was not called by the button
-            self.tracking_btn.setChecked(False)
+        self.tracking = checked
+        self._set_tracking_ui(checked)
+        self.tracking_changed.emit(checked)
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):
