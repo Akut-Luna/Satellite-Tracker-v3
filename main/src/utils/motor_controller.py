@@ -185,7 +185,7 @@ class MotorWorker(QObject):
             # Prevent infinite recursion/SegFault by closing before re-opening
             try:
                 self.motor_controller_close_connection()
-                time.sleep(1) # Give the OS time to release the port # TODO: make asynchon <----------------------------------
+                time.sleep(1) # Give the OS time to release the port # TODO: make asynchon
                 self.motor_controller_establish_connection()
             except:
                 pass # Avoid crashing during the recovery attempt

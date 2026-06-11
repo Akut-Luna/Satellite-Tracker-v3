@@ -189,9 +189,7 @@ def update_ui(self, data):
     '''
 
     az          = data['az']
-    az_rate     = data['az_rate']
     el          = data['el']
-    el_rate     = data['el_rate']
     slant_range = data['slant_range']
     range_rate  = data['range_rate']
     latitude    = data['latitude']
