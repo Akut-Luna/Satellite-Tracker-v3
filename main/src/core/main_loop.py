@@ -1,7 +1,10 @@
 from PySide6.QtCore import QObject, Signal, QTimer
 from utils.time_convertions import utc_now
 import traceback
-
+import shutil
+import os
+from skyfield.api import load, Loader
+import numpy as np
 from utils.tracking_modes import (
     tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
@@ -19,12 +22,16 @@ class MainLoop(QObject):
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
     go_update_motors = Signal(dict) # Send az, el to motors
-    log = Signal(str) 
+    log = Signal(str)
+    flight_path_changed = Signal(object) # np.array or None # TODO: maybe handle with empty array?
+    tracking_changed = Signal(bool)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
         super().__init__()
         self.config = config
+        self.load_planet_ephemeris()
+        self.ts = load.timescale()
 
         # ------------------------------- variabels to keep track of ------------------------------
 
@@ -33,8 +40,8 @@ class MainLoop(QObject):
         self.flight_path = None
 
         # from UI
-        self.tracking_mode = 1  # TODO: Slots and Signals
-        self.tracking = True    # TODO: Slots and Signals
+        self.tracking_mode = 1
+        self.tracking = True
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
 
@@ -73,7 +80,58 @@ class MainLoop(QObject):
                 self.log_message(f'Error: {e}')
                 print(traceback.format_exc())
             return
+    
+    def update_tracking_mode(self, index):
+        self.last_time_flight_path_got_calculated = None
+        self.tracking_mode = index
+
+    def update_tracking(self, tracking):
+        self.tracking = tracking
+
+    def toggle_tracking(self, checked):
+        '''
+        This Slot gets call by ui and by this file
+
+        Parameters:
+            checked (bool): True -> turn tracking on, False -> turn tracking off
+        '''
+
+        self.tracking = checked        # main_loop
+        self.tracking_changed(checked) # -> ui
+        if checked:
+            self.tracking_btn.setText('Stop Tracking')
+
+            # ensures that the button is checked if the function was not called by the button
+            self.tracking_btn.setChecked(True)
+        else:
+            self.tracking_btn.setText('Start Tracking')
+
+            # if self.socket is not None: # send stop command to motors # TODO
+            #     self.talk_to_motor_controller('stop')
+
+            # uncheck "Start Tracking at AOS" to prevent immediate restart of tracking
+            self.start_tracking_at_AOS_btn.setChecked(False)
+
+            # ensures that the button is not checked if the function was not called by the button
+            self.tracking_btn.setChecked(False)
     # ---------------------------------------------------------------------------------------------
+
+    def load_planet_ephemeris(self):
+        filename = 'de421.bsp'
+        ephemeris_folder = os.path.join('main', 'data', 'Ephemeris')
+        ephemeris_file = os.path.join(ephemeris_folder, filename)
+
+        # if needed: download
+        if not os.path.exists(ephemeris_file) and not os.path.exists(filename):
+            tmp_loader = Loader('.')
+            tmp_loader.download(filename) 
+
+        # if needed: move to folder
+        if os.path.exists(filename):
+            os.makedirs(ephemeris_folder, exist_ok=True)
+            shutil.move(filename, ephemeris_file)
+
+        self.planet_ephemeris = load(ephemeris_file)  
 
     def start_loop(self, interval_ms):
         self.timer = QTimer()
@@ -103,7 +161,7 @@ class MainLoop(QObject):
                     pass
 
                 elif self.tracking_mode == 1:  # RA/DEC
-                    az, el, latitude, longitude = self.tracking_mode_RA_DEC(t)
+                    az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(t)
 
                 elif self.tracking_mode == 2:  # OMM File
                     # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_TLE_OMM(t)

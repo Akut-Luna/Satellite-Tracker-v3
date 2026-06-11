@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv 
 from PySide6.QtCore import QThread
 
-from ui.ui_update import update_ui
 from core.main_loop import MainLoop
 from core.config import AppConfig
 from ui.ui_main import SatelliteTrackerApp
@@ -71,19 +70,23 @@ class AppCore:
             lambda: self.main_loop_worker.start_loop(500)
         )
 
-        # broadcast changes in the UI (by user)
-        self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
-        self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
-
         # logs
         self.main_loop_worker.log.connect(self.main_window.log_message)
         self.motor_worker.log.connect(self.main_window.log_message)
+        
+        # from UI
+        self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
+        self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
+        self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
+        self.main_window.tracking_changed.connect(self.main_loop_worker.update_tracking)
 
-        # update UI
+        # to UI
         self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
+        self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
+        self.main_loop_worker.tracking_changed.connect(self.main_window.update_tracking)
 
         # update Motors
-        # self.main_loop_worker.go_update_motors.connect(TODO)
+        # self.main_loop_worker.go_update_motors.connect() # TODO
 
     def start(self):
         # start threads

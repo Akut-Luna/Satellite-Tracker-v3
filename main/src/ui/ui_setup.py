@@ -1,9 +1,4 @@
-import os
 import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
-import cartopy.geodesic as geodesic
-import matplotlib.image as mpimg
-from dotenv import load_dotenv
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
@@ -12,9 +7,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QFrame
 )
 from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
-from PySide6.QtGui import QIcon
 from matplotlib.figure import Figure
-from matplotlib.patches import Polygon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
 def setup_find_passes_widget(self):
@@ -29,8 +22,8 @@ def setup_tracking_modes_widget(self):
     
     # tracking option selection
     self.tracking_mode_combo = QComboBox()
-    self.tracking_mode_combo.addItems(['List', 'RA/DEC', 'TLE/OMM File', 'SPICE', 'AZ/EL'])
-    # self.tracking_mode_combo.currentIndexChanged.connect(self.on_tracking_mode_changed) #TODO: solve with Signals
+    self.tracking_mode_combo.addItems(['List', 'RA/DEC', 'OMM File', 'SPICE', 'AZ/EL'])
+    self.tracking_mode_combo.currentIndexChanged.connect(self.on_tracking_mode_changed)
     tracking_modes_layout.addWidget(self.tracking_mode_combo)
     
     # Stacked widget to switch between tracking options input types
@@ -58,7 +51,17 @@ def setup_tracking_modes_widget(self):
     # 3. SPICE widget -------------------------------------------------------------------------
 
     # 4. AZ/EL widget -------------------------------------------------------------------------
+    self.az_el_widget = QWidget()
+    az_el_layout = QGridLayout(self.az_el_widget)
 
+    az_el_layout.addWidget(QLabel('Azimuth [°]:'), 0, 0)
+    self.az_input = QLineEdit()
+    az_el_layout.addWidget(self.az_input, 0, 1)
+
+    az_el_layout.addWidget(QLabel('Elevation [°]:'), 1, 0)
+    self.el_input = QLineEdit()
+    az_el_layout.addWidget(self.el_input, 1, 1)
+    self.tracking_mode_stack.addWidget(self.az_el_widget)
     # -----------------------------------------------------------------------------------------
 
     tracking_modes_layout.addWidget(self.tracking_mode_stack)

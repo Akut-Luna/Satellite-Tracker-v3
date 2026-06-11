@@ -8,18 +8,19 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Polygon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
-def update_map(self, latitude, longitude, altitude, flight_path=None):
+def update_map(self, latitude, longitude, altitude):
     '''
     Parameters:
         latitude (float): Latitude in degrees
         longitude (float): Longitude in degrees
         altitude (float): Altitude in km
     '''
+
     self.map_ax.clear() # Clear the previous plot but keep the axis (image)
-    
+
     # if there is not satellie to plot, the flight plan must be old
-    if latitude is None or longitude is None or altitude is None:
-        flight_path = None 
+    if latitude is None or longitude is None:
+        self.flight_path = None 
     
     img_extent = (-180, 180, -90, 90)
     self.map_ax.imshow(self.earth_img, origin='upper', extent=img_extent, transform=self.map_projection)
@@ -35,10 +36,10 @@ def update_map(self, latitude, longitude, altitude, flight_path=None):
     )
 
     # plot flight path
-    if flight_path is not None:
+    if self.flight_path is not None:
 
         # Split flight path in multiple paths when we go off the map
-        diffs = np.abs(np.diff(flight_path[:, 1]))
+        diffs = np.abs(np.diff(self.flight_path[:, 1]))
         jump_indices = np.where(diffs > 180)[0]
         
         # Split the array at these indices
@@ -46,12 +47,12 @@ def update_map(self, latitude, longitude, altitude, flight_path=None):
         start_idx = 0
         
         for idx in jump_indices:
-            flight_paths.append(flight_path[start_idx:idx+1])
+            flight_paths.append(self.flight_path[start_idx:idx+1])
             start_idx = idx + 1
         
         # Add the last segment
-        if start_idx < len(flight_path):
-            flight_paths.append(flight_path[start_idx:])
+        if start_idx < len(self.flight_path):
+            flight_paths.append(self.flight_path[start_idx:])
 
         for path in flight_paths:
             self.map_ax.plot(
@@ -187,6 +188,8 @@ def update_ui(self, data):
     '''
     This function gets called via Signal and Slot by core/main_loop.py
     '''
+
+    # print(self.flight_path)
 
     az          = data['az']
     el          = data['el']
