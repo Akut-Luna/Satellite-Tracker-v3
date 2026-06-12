@@ -10,8 +10,129 @@ from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
+def set_style(self):
+    '''
+    Set font size and maximum size of UI elements
+    '''
+
+    app = QApplication.instance()
+    app.setStyleSheet(f'''
+        QWidget {{
+            font-size: 15px;
+        }}
+    ''')
+
+    # Find Passes =============================================================================
+    self.find_passes_group.setMaximumHeight(210)
+
+    # Tracking Options ========================================================================
+    self.tracking_modes_group.setMaximumHeight(210)
+
+    # List ------------------------------------------------------------------------------------
+    self.tracking_mode_list_dropdown.setMaxVisibleItems(20)
+
+    # RA/DEC ----------------------------------------------------------------------------------
+    self.ra_dec_widget.setMaximumWidth(300)
+
+    # OMM File ----------------------------------------------------------------------------
+    # self.gp_file_add_to_list_btn.setMaximumWidth(100)
+
+    # SPICE -----------------------------------------------------------------------------------
+
+    # AZ/EL -----------------------------------------------------------------------------------
+    self.az_el_widget.setMaximumWidth(300)
+
+    # Antenna =================================================================================
+    self.antenna_group.setMaximumSize(450, 194)
+    
+    # Azimuth ---------------------------------------------------------------------------------
+    self.azimuth_label.setMaximumWidth(80)
+    self.current_azimuth.setMaximumWidth(60)
+    self.target_azimuth.setMaximumWidth(60)
+    self.azimuth_offset.setMaximumWidth(85)
+    self.azimuth_offset_reset_btn.setMaximumWidth(80)
+    
+    # Elevation -------------------------------------------------------------------------------
+    self.elevation_label.setMaximumWidth(80)
+    self.current_elevation.setMaximumWidth(60)
+    self.target_elevation.setMaximumWidth(60)
+    self.elevation_offset.setMaximumWidth(85)
+    self.elevation_offset_reset_btn.setMaximumWidth(80)
+
+    # Doppler Shift ---------------------------------------------------------------------------
+    self.doppler_initial_freq.setMaximumWidth(150)
+    self.doppler_shifted_freq.setMaximumWidth(150)
+    self.doppler_shift_label.setMaximumWidth(100)
+
+    # Data ====================================================================================
+    self.data_group.setMaximumSize(300, 194)
+
+    # Tracking ================================================================================
+    self.tracking_group.setMaximumHeight(194)
+
+    self.tracking_btn.setMaximumWidth(170)
+    self.tracking_layout.setAlignment(Qt.AlignCenter)
+
+    # Map =====================================================================================
+
+    # Console =================================================================================
+
 def setup_find_passes_widget(self):
-    pass
+    '''
+    Sets up the UI element 'Find Passes'
+    '''
+    self.find_passes_group = QGroupBox('Find Passes')
+    find_passes_layout = QGridLayout(self.find_passes_group)
+
+    # Radio buttons for UTC / Local Time
+    self.time_zone_group = QButtonGroup(self)
+    self.utc_radio_button = QRadioButton('UTC')
+    self.utc_radio_button.setChecked(True)  # Default to UTC
+    self.local_time_radio_button = QRadioButton('Local Time')
+    self.time_zone_group.addButton(self.utc_radio_button)
+    self.time_zone_group.addButton(self.local_time_radio_button)
+
+    find_passes_layout.addWidget(self.utc_radio_button, 0, 0)
+    find_passes_layout.addWidget(self.local_time_radio_button, 0, 1)
+    
+    # Connect the radio button change signal to a function
+    # self.time_zone_group.buttonToggled.connect(self.UTC_local_time_button_func) # TODO
+
+    # Start time
+    find_passes_layout.addWidget(QLabel('Start time:'), 1, 0)
+    self.start_time_input = QDateTimeEdit()
+    self.start_time_input.setDateTime(QDateTime.currentDateTime())
+    self.start_time_input.setTimeZone(QTimeZone(b'UTC'))
+    self.start_time_input.setDisplayFormat('hh:mm dd.MM.yyyy')
+    find_passes_layout.addWidget(self.start_time_input, 1, 1)
+    
+    # End time
+    find_passes_layout.addWidget(QLabel('End time:'), 2, 0)
+    self.end_time_input = QDateTimeEdit()
+    self.end_time_input.setDateTime(QDateTime.currentDateTime().addDays(1))
+    self.end_time_input.setTimeZone(QTimeZone(b'UTC'))
+    self.end_time_input.setDisplayFormat('hh:mm dd.MM.yyyy')
+    find_passes_layout.addWidget(self.end_time_input, 2, 1)
+    
+    # Min elevation
+    find_passes_layout.addWidget(QLabel('Min elevation:'), 3, 0)
+    self.min_elevation_input = QSpinBox()
+    self.min_elevation_input.setRange(0, 90)
+    self.min_elevation_input.setValue(0)
+    self.min_elevation_input.setSuffix('°')
+    find_passes_layout.addWidget(self.min_elevation_input, 3, 1)
+    
+    # Find passes button
+    self.find_passes_btn = QPushButton('Find Passes')
+    # self.find_passes_btn.clicked.connect(self.find_passes) # TODO
+    find_passes_layout.addWidget(self.find_passes_btn, 4, 0, 1, 2)
+
+    # Next Pass Visualisation Button
+    self.next_pass_visualisation_btn = QPushButton('Visualise Next Pass')
+    # self.next_pass_visualisation_btn.clicked.connect(self.visualise_next_pass) # TODO
+    find_passes_layout.addWidget(self.next_pass_visualisation_btn, 5, 0, 1, 2)
+
+    self.top_layout.addWidget(self.find_passes_group)
 
 def setup_tracking_modes_widget(self):
     '''
@@ -30,6 +151,13 @@ def setup_tracking_modes_widget(self):
     self.tracking_mode_stack = QStackedWidget()
 
     # 0. List widget --------------------------------------------------------------------------
+    self.list_widget = QWidget()
+    list_layout = QVBoxLayout(self.list_widget)
+    self.tracking_mode_list_dropdown = QComboBox()
+    # self.tracking_mode_list_dropdown.addItems(self.get_satellite_names_from_file()) # TODO
+    # self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.on_tracking_mode_list_dropdown_changed) # TODO
+    list_layout.addWidget(self.tracking_mode_list_dropdown)
+    self.tracking_mode_stack.addWidget(self.list_widget)
 
     # 1. RA/DEC widget ------------------------------------------------------------------------
     self.ra_dec_widget = QWidget()
@@ -46,9 +174,77 @@ def setup_tracking_modes_widget(self):
     ra_dec_layout.addWidget(self.dec_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
 
-    # 2. TLE/OMM File widget ------------------------------------------------------------------
+    # 2. OMM File widget ------------------------------------------------------------------
+    self.gp_file_widget = QWidget()
+    gp_file_layout = QVBoxLayout(self.gp_file_widget)
+
+    # top -----------------------------------
+    gp_file_top_layout = QHBoxLayout()
+
+    gp_file_top_layout.addWidget(QLabel('TLE/OMM file:'))
+    self.gp_file_input = QLineEdit()
+    self.gp_file_input.setReadOnly(True)
+    gp_file_top_layout.addWidget(self.gp_file_input)
+
+    # browse button
+    self.gp_file_browse_btn = QPushButton('Browse')
+    # self.gp_file_browse_btn.clicked.connect(self.browse_gp_file) # TODO
+    gp_file_top_layout.addWidget(self.gp_file_browse_btn)
+
+    gp_file_layout.addLayout(gp_file_top_layout)
+
+    # middle --------------------------------
+    gp_file_middle_layout = QGridLayout()
+
+    # satellite name
+    gp_file_middle_layout.addWidget(QLabel('Satellite Name'), 0, 0)
+    self.gp_file_satellite_name = QLineEdit()
+    gp_file_middle_layout.addWidget(self.gp_file_satellite_name, 1, 0)
+
+    # Int'l ID
+    gp_file_middle_layout.addWidget(QLabel("Int'l ID"), 0, 1)
+    self.gp_file_intl_id = QLineEdit()
+    gp_file_middle_layout.addWidget(self.gp_file_intl_id, 1, 1)
+
+    # NORAD
+    gp_file_middle_layout.addWidget(QLabel('NORAD ID'), 0, 2)
+    self.gp_file_norad_id = QLineEdit()
+    gp_file_middle_layout.addWidget(self.gp_file_norad_id, 1, 2)
+
+    gp_file_layout.addLayout(gp_file_middle_layout)
+
+    # bottom --------------------------------
+    gp_file_bottom_layout = QHBoxLayout()
+
+    # add to list button
+    self.gp_file_add_to_list_btn = QPushButton('Add to List')
+    # self.gp_file_add_to_list_btn.clicked.connect(self.add_satellite_to_list) # TODO
+    gp_file_bottom_layout.addWidget(self.gp_file_add_to_list_btn)
+    
+    gp_file_layout.addLayout(gp_file_bottom_layout)
+    self.tracking_mode_stack.addWidget(self.gp_file_widget)
 
     # 3. SPICE widget -------------------------------------------------------------------------
+    self.spice_widget = QWidget()
+    spice_layout = QGridLayout(self.spice_widget)
+
+    # (path) input
+    spice_layout.addWidget(QLabel('SPICE Meta Kernel:'), 0, 0)
+    self.spice_input = QLineEdit()
+    self.spice_input.setReadOnly(True)
+    spice_layout.addWidget(self.spice_input, 0, 1)
+
+    # button
+    self.spice_file_browse_btn = QPushButton('Browse')
+    # self.spice_file_browse_btn.clicked.connect(self.browse_spice_file) # TODO
+    spice_layout.addWidget(self.spice_file_browse_btn, 0, 2)
+
+    # Satellite name
+    spice_layout.addWidget(QLabel('Satellite Name:'), 1, 0)
+    self.spice_name = QLineEdit()
+    spice_layout.addWidget(self.spice_name, 1, 1)
+
+    self.tracking_mode_stack.addWidget(self.spice_widget)
 
     # 4. AZ/EL widget -------------------------------------------------------------------------
     self.az_el_widget = QWidget()
@@ -201,17 +397,17 @@ def setup_tracking_widget(self):
     '''
     # Tracking Group
     self.tracking_group = QGroupBox('Tracking')
-    tracking_layout = QVBoxLayout(self.tracking_group)
+    self.tracking_layout = QVBoxLayout(self.tracking_group)
 
     # Start/Stop Tracking button --------------------------------------------------------------
     self.tracking_btn = QPushButton('Start Tracking')
     self.tracking_btn.setCheckable(True)
     self.tracking_btn.toggled.connect(self.toggle_tracking)
-    tracking_layout.addWidget(self.tracking_btn)
+    self.tracking_layout.addWidget(self.tracking_btn)
 
     # Start Tracking at AOS -------------------------------------------------------------------
     self.start_tracking_at_AOS_btn = QCheckBox('Start Tracking at AOS')
-    tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
+    self.tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
 
     # # Light Time Correction button ------------------------------------------------------------
     # # Since the Horizon data is already ligth corrected, my light correction is not needed.
@@ -247,15 +443,15 @@ def setup_ui(self):
 
     # Top row: find passes and tracking method
     self.top_layout = QHBoxLayout()
-    setup_find_passes_widget(self)
-    setup_tracking_modes_widget(self)
+    self.setup_find_passes_widget()
+    self.setup_tracking_modes_widget()
     main_layout.addLayout(self.top_layout)
 
     # Middle row: Antenna, Data and Tracking
     self.middle_layout = QHBoxLayout()
-    setup_antenna_widget(self)
-    setup_data_widget(self)
-    setup_tracking_widget(self)
+    self.setup_antenna_widget()
+    self.setup_data_widget()
+    self.setup_tracking_widget()
     main_layout.addLayout(self.middle_layout)
 
     # Bottom row: World map and console
@@ -280,7 +476,7 @@ def setup_ui(self):
     
     main_layout.addLayout(bottom_layout)
 
-    # self.set_style() # TODO
+    self.set_style() # TODO
     
     # Log initial message
     self.log_message('Satellite Tracker initialized')

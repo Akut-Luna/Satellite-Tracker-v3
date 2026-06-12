@@ -10,13 +10,30 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from PySide6.QtGui import QIcon
 import numpy as np
-from ui.ui_setup import setup_ui
+from ui.ui_setup import (
+    set_style,
+    setup_ui, 
+    setup_find_passes_widget,
+    setup_tracking_modes_widget,
+    setup_antenna_widget,
+    setup_data_widget,
+    setup_tracking_widget
+)
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from core.config import AppConfig
 
 class SatelliteTrackerApp(QMainWindow):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
+    # setup
+    set_style = set_style
     setup_ui = setup_ui
+    setup_find_passes_widget = setup_find_passes_widget
+    setup_tracking_modes_widget = setup_tracking_modes_widget
+    setup_antenna_widget = setup_antenna_widget
+    setup_data_widget = setup_data_widget
+    setup_tracking_widget = setup_tracking_widget
+
+    # update
     update_ui = update_ui
     update_map = update_map
     update_ui_tracking = update_ui_tracking
