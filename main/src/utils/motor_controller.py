@@ -1,5 +1,4 @@
 import socket
-import time
 from PySide6.QtCore import QObject, Signal, Slot
 
 class MotorWorker(QObject):
@@ -8,10 +7,9 @@ class MotorWorker(QObject):
     log = Signal(str)
     # ---------------------------------------------------------------------------------------------
 
-    def __init__(self, ip, port):
+    def __init__(self, config):
         super().__init__()
-        self.ip = ip
-        self.port = port
+        self.config = config
         self.socket = None
         self.last_time_motor_got_updated = None
         self.tracking = False
@@ -19,13 +17,13 @@ class MotorWorker(QObject):
     def log_message(self, message):
         self.log.emit(message)
 
+    # ------------------------------------ Slots (receive data) -----------------------------------
     @Slot(bool)
     def update_tracking(self, tracking):
         self.tracking = tracking
         if not tracking:
-            self.log_message('MotorWorker: tracking disabled, stopping motors')
-            self.talk_to_motor_controller('stop')
-        # TODO (maybe allready done) all the stuff that need to happen on this thread when traking is toggeld 
+            if self.socket is not None: # send stop command to motors
+                self.talk_to_motor_controller('stop')
 
     @Slot(dict)
     def move_motors(self, data):
@@ -38,19 +36,135 @@ class MotorWorker(QObject):
             return
 
         self.talk_to_motor_controller('set', az, el)
-
-    # ------------------------------------ Slots (receive data) -----------------------------------
-    
     # ---------------------------------------------------------------------------------------------
 
-    def connect_controller(self):
+    def establish_connection(self):
+        '''
+        Establish a persistent connection to the motor controller, if available.
+        '''
+
+        host = self.config.motor_IP
+        port = self.config.motor_port
+
+        self.log_message(f'Trying to connect to {host}:{port}...')
         try:
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(2.0)
-            self.socket.connect((self.ip, self.port))
-            self.log_message(f'Connected to {self.ip}')
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(5)  # Set a 5-second timeout for operations
+            s.connect((host, port))
+
+            self.socket = s  # Store socket
+            self.log_message(f'Successfully connected to {host}:{port}')
+        except:
+            self.socket = None
+            self.log_message(f'Could not connect to {host}:{port}')
+
+    def close_connection(self):
+        '''
+        Close the socket connection properly.
+        '''
+
+        if self.socket:
+            self.socket.close()
+            self.socket = None
+            self.log_message('Connection closed.')
+
+    def talk_to_motor_controller(self, command, az=0, el=0):
+        '''
+        Get the current position from the SPID motor controller using TCP socket.
+        
+        Parameters:
+            comand (str): stop, status or set
+            az (float): azimuth in degrees
+            el (float): elevation in degrees
+            
+        Returns:
+            azimuth (float): azimuth in degrees (only when command is 'status' else None)
+            elevation (float): elevation in degrees (only when command is 'status' else None)
+
+        Send to motor controller:
+        ---------------------- packet (13 bytes) ----------------------
+        Format: [START, H1, H2, H3, H4, PH, V1, V2, V3, V4, PV, K, END]
+        
+        S     : Start byte. This is always 0x57 ('W')
+        H1-H4 : Azimuth as ASCII characters 0-9
+        PH    : Azimuth resolution in steps per degree (ignored!)
+        V1-V4 : Elevation as ASCII characters 0-9
+        PV    : Elevation resolution in steps per degree (ignored!)
+        K     : Command (0x0F=stop, 0x1F=status, 0x2F=set)
+        END   : End byte. This is always 0x20 (space)
+        ---------------------------------------------------------------
+
+        Recive from motor controller:
+        ---------------------- packet (12 bytes) ----------------------
+        Format: [START, H1, H2, H3, H4, PH, V1, V2, V3, V4, PV, END]
+        
+        S     : Start byte. This is always 0x57 ('W')
+        H1-H4 : Azimuth as ASCII characters 0-9
+        PH    : Azimuth resolution in steps per degree (ignored!)
+        V1-V4 : Elevation as ASCII characters 0-9
+        PV    : Elevation resolution in steps per degree (ignored!)
+        END   : End byte. This is always 0x20 (space)
+        ---------------------------------------------------------------
+        '''
+        try:
+            # if socket is None, then previous connection / reconnection attempts have failed
+            # and we assume that we are working in offline mode.
+            if self.socket is not None:
+                if command == 'stop':
+                    packet = bytearray(13)
+                    packet[0] = 0x57    # START 'W'
+                    packet[11] = 0x0F   # STOP
+                    packet[12] = 0x20   # END (space)
+                    self.socket.sendall(packet)
+                    return None, None
+
+                elif command == 'set':
+                    packet = self.create_set_position_packet(az, el)
+                    self.socket.sendall(packet)
+                    return None, None
+
+                elif command == 'status':
+                    packet = bytearray(13)
+                    packet[0] = 0x57    # START 'W'
+                    packet[11] = 0x1F   # STATUS
+                    packet[12] = 0x20   # END (space)
+                    self.socket.sendall(packet)
+
+                    # Wait until I get a response or socket times out
+                    response = self.socket.recv(12)
+
+                    # If we got less than 12 bytes, maybe it's a Rot1Prog (5 bytes)
+                    if 5 <= len(response) and len(response) < 12:
+                        # Rot1Prog response format:
+                        # [0x57, H1, H2, H3, 0x20]
+                        azimuth = response[1] * 100 + response[2] * 10 + response[3] - 360
+                        return azimuth, 0
+                        
+                    elif len(response) >= 12:
+                        # Rot2Prog response format:
+                        # [0x57, H1, H2, H3, H4, PH, V1, V2, V3, V4, PV, 0x20]
+                        azimuth = response[1] * 100 + response[2] * 10 + response[3] + response[4] / 10 - 360
+                        elevation = response[6] * 100 + response[7] * 10 + response[8] + response[9] / 10 - 360
+                        return azimuth, elevation
+                    
+                    else:
+                        raise TimeoutError(f'Received only {len(response)} bytes, expected 5 or 12')
+
+                else:
+                    self.log_message(f'Invalid command: {command}')
+                    return None, None
         except Exception as e:
-            self.log_message(f'Connection failed: {e}')
+            '''
+            Attempt to reconnect after disconnection. 
+            If the motor controller responds within 5 seconds, 
+            a new connection will be established. Otherwise, 
+            it will be considered that the controller has completely disconnected 
+            and no further communication attempt will be made.
+            '''            
+            self.log_message(f'Disconnected from motor controller:\n{e}.\nTrying to reconnect...')
+            self.close_connection()
+            self.establish_connection()
+            return None, None       
 
     def create_set_position_packet(self, azimuth, elevation, az_resolution=10, el_resolution=10):
         '''
@@ -102,118 +216,3 @@ class MotorWorker(QObject):
         packet[12] = 0x20  # space
         
         return packet
-    
-    def talk_to_motor_controller(self, command, az=0, el=0): # TODO
-        '''
-        Get the current position from the SPID motor controller using TCP socket.
-        
-        Parameters:
-            comand (str): stop, status or set
-            az (float): azimuth in degrees
-            el (float): elevation in degrees
-            
-        Returns:
-            azimuth (float): azimuth in degrees (only when command is 'status' else None)
-            elevation (float): elevation in degrees (only when command is 'status' else None)
-
-        Send to motor controller:
-        ---------------------- packet (13 bytes) ----------------------
-        Format: [START, H1, H2, H3, H4, PH, V1, V2, V3, V4, PV, K, END]
-        
-        S     : Start byte. This is always 0x57 ('W')
-        H1-H4 : Azimuth as ASCII characters 0-9
-        PH    : Azimuth resolution in steps per degree (ignored!)
-        V1-V4 : Elevation as ASCII characters 0-9
-        PV    : Elevation resolution in steps per degree (ignored!)
-        K     : Command (0x0F=stop, 0x1F=status, 0x2F=set)
-        END   : End byte. This is always 0x20 (space)
-        ---------------------------------------------------------------
-
-        Recive from motor controller:
-        ---------------------- packet (12 bytes) ----------------------
-        Format: [START, H1, H2, H3, H4, PH, V1, V2, V3, V4, PV, END]
-        
-        S     : Start byte. This is always 0x57 ('W')
-        H1-H4 : Azimuth as ASCII characters 0-9
-        PH    : Azimuth resolution in steps per degree (ignored!)
-        V1-V4 : Elevation as ASCII characters 0-9
-        PV    : Elevation resolution in steps per degree (ignored!)
-        END   : End byte. This is always 0x20 (space)
-        ---------------------------------------------------------------
-        '''
-        def recv_exact(N):
-            '''Helper to ensure we get exactly N bytes from a slow controller.'''
-            data = bytearray()
-            self.socket.settimeout(2.0) # 2 second timeout for slow baud rates
-            while len(data) < N:
-                chunk = self.socket.recv(N - len(data))
-                if not chunk:
-                    return None # Connection closed
-                data.extend(chunk)
-            return data
-
-        try:
-            if not self.socket:
-                # Try to connect if socket is missing
-                self.connect_controller()
-                if not self.socket: return None, None
-
-            packet = bytearray(13)
-            packet[0] = 0x57    # START 'W'
-            packet[12] = 0x20   # END (space)
-
-            if command == 'stop':
-                packet[11] = 0x0F
-                self.socket.sendall(packet)
-                return None, None
-
-            elif command == 'set':
-                packet = self.create_set_position_packet(az, el)
-                self.socket.sendall(packet)
-                return None, None
-
-            elif command == 'status':
-                packet[11] = 0x1F
-                self.socket.sendall(packet)
-
-                # Wait until I get a response or socket times out
-                # Read the START byte first to align the stream
-                start_byte = recv_exact(1)
-                if not start_byte or start_byte[0] != 0x57:
-                    raise ConnectionError('Invalid Start Byte received')
-
-                # Read the rest (11 more bytes for Rot2Prog)
-                remaining = recv_exact(11)
-                if not remaining:
-                    raise ConnectionError('Incomplete packet received')
-                
-                # Combine [0x57] + [11 bytes] = 12 bytes
-                response = start_byte + remaining
-
-                # Decode Rot2Prog (12 bytes)
-                azimuth = (response[1] * 100 + response[2] * 10 + response[3] + response[4] / 10 - 360)
-                elevation = (response[6] * 100 + response[7] * 10 + response[8] + response[9] / 10 - 360)
-                
-                return azimuth, elevation
-
-            else:
-                self.log_message(f'Invalid command: {command}')
-                return None, None
-
-        except (socket.error, ConnectionError, TimeoutError) as e:
-            self.log_message(f'Communication error: {e}. Reconnecting...')
-            
-            # Prevent infinite recursion/SegFault by closing before re-opening
-            try:
-                self.motor_controller_close_connection()
-                time.sleep(1) # Give the OS time to release the port # TODO: make asynchon
-                self.motor_controller_establish_connection()
-            except:
-                pass # Avoid crashing during the recovery attempt
-                
-            return None, None
-
-        except Exception as e:
-            # Catch unexpected logic errors that cause SegFaults
-            self.log_message(f'Critical Logic Error: {e}')
-            return None, None

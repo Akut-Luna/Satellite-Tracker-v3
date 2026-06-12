@@ -60,7 +60,7 @@ class AppCore(QObject):
         self.main_loop_worker = MainLoop(self.config) # -> core/main_loop.py
         
         # motor worker
-        self.motor_worker = MotorWorker(self.config.motor_IP, self.config.motor_port) # -> utils/motor_controller.py
+        self.motor_worker = MotorWorker(self.config) # -> utils/motor_controller.py
 
         # ----------------------------------- initialize threads ----------------------------------
         self.main_loop_thread = QThread()
@@ -72,9 +72,10 @@ class AppCore(QObject):
 
         # ------------------------------- connect Signals with Slots ------------------------------
         # start timer once main_loop_thread has started
-        self.main_loop_thread.started.connect(
-            lambda: self.main_loop_worker.start_loop(500)
-        )
+        self.main_loop_thread.started.connect(lambda: self.main_loop_worker.start_loop(500))
+
+        # try to connect to motor controller once motor_thread has started
+        self.motor_thread.started.connect(self.motor_worker.establish_connection)
 
         # logs
         self.main_loop_worker.log.connect(self.main_window.log_message)

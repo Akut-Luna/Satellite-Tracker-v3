@@ -11,7 +11,7 @@ from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from PySide6.QtGui import QIcon
 import numpy as np
 from ui.ui_setup import setup_ui
-from ui.ui_update import update_ui, update_map
+from ui.ui_update import update_ui, update_map, update_ui_tracking
 from core.config import AppConfig
 
 class SatelliteTrackerApp(QMainWindow):
@@ -19,6 +19,7 @@ class SatelliteTrackerApp(QMainWindow):
     setup_ui = setup_ui
     update_ui = update_ui
     update_map = update_map
+    update_ui_tracking = update_ui_tracking
 
     # ------------------------------------ Signals (send data) ------------------------------------
     RA_changed  = Signal(str)
@@ -59,33 +60,17 @@ class SatelliteTrackerApp(QMainWindow):
     def update_flight_path(self, flight_path):
         self.flight_path = flight_path
 
-    def _set_tracking_ui(self, checked):
-        self.tracking_btn.setText('Stop Tracking' if checked else 'Start Tracking')
-        self.tracking_btn.blockSignals(True)
-        self.tracking_btn.setChecked(checked)
-        self.tracking_btn.blockSignals(False)
-
-        if not checked:
-            self.start_tracking_at_AOS_btn.setChecked(False)
-
     def update_tracking(self, tracking):
-        if self.tracking == tracking:
-            return
-
         self.tracking = tracking
-        self._set_tracking_ui(tracking)
-        # TODO (maybe allready done) all the stuff that need to happen on this thread when traking is toggeld
+        self.update_ui_tracking(tracking)
 
     def toggle_tracking(self, checked):
         '''
-        This Slot gets call by main_loop and by this file
+        This function tells AppCore to tell everyone to update self.tracking
 
         Parameters:
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
-
-        self.tracking = checked
-        self._set_tracking_ui(checked)
         self.tracking_changed.emit(checked)
     # ---------------------------------------------------------------------------------------------
 

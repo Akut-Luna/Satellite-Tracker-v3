@@ -16,4 +16,4 @@ def main():
     # TODO: build RA/DEC stack from UI to motor controller
 
 if __name__ == "__main__":
-    main()
+    main() 

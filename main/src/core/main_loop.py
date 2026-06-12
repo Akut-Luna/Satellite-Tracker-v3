@@ -87,17 +87,14 @@ class MainLoop(QObject):
 
     def update_tracking(self, tracking):
         self.tracking = tracking
-        # TODO (maybe allready done) all the stuff that need to happen on this thread when traking is toggeld
 
     def toggle_tracking(self, checked):
         '''
-        This Slot gets call by ui and by this file
+        This function tells AppCore to tell everyone to update self.tracking
 
         Parameters:
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
-
-        self.tracking = checked
         self.tracking_changed.emit(checked)
     # ---------------------------------------------------------------------------------------------
 

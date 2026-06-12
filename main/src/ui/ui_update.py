@@ -231,3 +231,25 @@ def update_ui(self, data):
         self.range_rate_text.setText(f'{range_rate:.3f} km/s')
     else:
         self.range_rate_text.setText('0 km/s')
+
+def update_ui_tracking(self, tracking):
+    '''
+    This function updates the UI when the tracking state changes
+    '''
+    if tracking:
+        self.tracking_btn.setText('Stop Tracking')
+
+        # ensures that the button is checked if the function was not called by the button
+        self.tracking_btn.blockSignals(True)
+        self.tracking_btn.setChecked(True)
+        self.tracking_btn.blockSignals(False)
+    else:
+        self.tracking_btn.setText('Start Tracking')
+
+        # uncheck "Start Tracking at AOS" to prevent immediate restart of tracking
+        self.start_tracking_at_AOS_btn.setChecked(False)
+
+        # ensures that the button is not checked if the function was not called by the button
+        self.tracking_btn.blockSignals(True)
+        self.tracking_btn.setChecked(False)
+        self.tracking_btn.blockSignals(False)
