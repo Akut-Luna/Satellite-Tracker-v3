@@ -18,10 +18,10 @@ def set_style(self):
     self.setStyleSheet('QWidget { font-size: 11pt; }') 
 
     # ======================================== Find Passes ========================================
-    self.find_passes_group.setMaximumHeight(210)
+    self.find_passes_group.setMaximumHeight(220)
 
     # ===================================== Tracking Options ======================================
-    self.tracking_modes_group.setMaximumHeight(210)
+    self.tracking_modes_group.setMaximumHeight(220)
 
     # ------------------------------------------- List --------------------------------------------
     self.tracking_mode_list_dropdown.setMaxVisibleItems(20)
@@ -71,6 +71,7 @@ def set_style(self):
     # ============================================ Map ============================================
 
     # ========================================== Console ==========================================
+    # TODO: such that map is maximised
 
 def setup_find_passes_widget(self):
     '''
