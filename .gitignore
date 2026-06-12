@@ -6,7 +6,8 @@ archive/
 data/
 
 # Exceptions:
-!data/Lists/default_list.json
+!main/data/Lists/default_list.json
+!main/data/Ephemeris/de421.bsp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
