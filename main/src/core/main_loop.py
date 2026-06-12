@@ -124,7 +124,7 @@ class MainLoop(QObject):
         try:
             # ----------------------------------- Tracking Modes ----------------------------------
             t = utc_now()
-            
+
             # not all methods return all parameters but the variables need to exist
             az = 0.0
             el = 0.0
@@ -186,22 +186,22 @@ class MainLoop(QObject):
 
             # -------------------------------------------------------------------------------------
 
-            # manual offset
+            # manual offset # TODO
             # az += self.azimuth_offset.value()
             # el += self.elevation_offset.value()
 
-            # start tacking at AOS
-            # if self.start_tracking_at_AOS_btn.isChecked():
-            #     if not self.tracking and el > 0 and tracking_mode in [0,2,3]:
+            # # start tacking at AOS
+            # if self.start_tracking_at_AOS_btn.isChecked(): # TODO
+            #     if not self.tracking and el > 0 and self.tracking_mode in [0,2,3]:
             #         self.toggle_tracking(True)
-            #         if self.auto_uncheck_start_tracking_at_AOS_btn:
-            #             self.start_tracking_at_AOS_btn.setChecked(False)
+            #         if self.config.auto_uncheck_start_tracking_at_AOS_btn:
+            #             self.start_tracking_at_AOS_btn.setChecked(False)  # TODO
             #         self.log_message('Tracking was started automatically at expected AOS.')
 
             # stop tracking when satellite is under the horizon
-            # if self.tracking and el < 0:
-            #     self.toggle_tracking(False)
-            #     self.log_message('Tracking was stopped because the satellite is under the horizon.')
+            if self.tracking and el < 0:
+                self.toggle_tracking(False)
+                self.log_message('Tracking was stopped because the satellite is under the horizon.')
 
             
             # Motors ------------------------------------------------------------------------------

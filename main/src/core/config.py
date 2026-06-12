@@ -11,6 +11,7 @@ class AppConfig:
     min_angle_change_before_update: float
     min_before_recalculate_flight_path: int
     flight_path_steps: int
+    auto_uncheck_start_tracking_at_AOS_btn: bool
 
     # DISPLAY_LIGHT_TIME_CORRECTION_OPTION
     # DISPLAY_HORIZONS_DIRECTLY_OPTION

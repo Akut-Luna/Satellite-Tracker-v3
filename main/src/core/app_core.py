@@ -31,6 +31,9 @@ class AppCore(QObject):
         local_tz = os.getenv('LOCAL_TZ') # local time zone
         min_angle_change_before_update = float(os.getenv('MIN_ANGLE_CHANGE_BEFORE_UPDATE'))
 
+        # Tracking
+        auto_uncheck_start_tracking_at_AOS_btn = os.getenv('AUTO_UNCHECK_START_TRACKING_AT_AOS_BTN').upper() == 'TRUE'
+
         # Motor
         motor_IP = os.getenv('IP_ADRESS')
         motor_port = int(os.getenv('PORT'))
@@ -49,7 +52,8 @@ class AppCore(QObject):
             motor_IP=motor_IP,
             motor_port=motor_port,
             flight_path_steps=flight_path_steps,
-            min_before_recalculate_flight_path=min_before_recalculate_flight_path
+            min_before_recalculate_flight_path=min_before_recalculate_flight_path,
+            auto_uncheck_start_tracking_at_AOS_btn=auto_uncheck_start_tracking_at_AOS_btn
         )
 
         # ----------------------------------- initialize workers ----------------------------------
