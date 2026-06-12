@@ -40,10 +40,11 @@ class MainLoop(QObject):
         self.flight_path = None
 
         # from UI
-        self.tracking_mode = 1
+        self.tracking_mode = 0
         self.tracking = False
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
+        self.list_idx = 0
 
     def log_message(self, message):
         self.log.emit(message)
@@ -96,9 +97,12 @@ class MainLoop(QObject):
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
         self.tracking_changed.emit(checked)
+    
+    def update_list_idx(self, index):
+        self.list_idx = index
     # ---------------------------------------------------------------------------------------------
 
-    def load_planet_ephemeris(self):
+    def load_planet_ephemeris(self): # TODO: in some sort of helper file
         filename = 'de421.bsp'
         ephemeris_folder = os.path.join('main', 'data', 'Ephemeris')
         ephemeris_file = os.path.join(ephemeris_folder, filename)

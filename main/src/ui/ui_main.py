@@ -43,6 +43,7 @@ class SatelliteTrackerApp(QMainWindow):
     DEC_changed = Signal(str)
     tracking_mode_changed = Signal(int)
     tracking_changed = Signal(bool)
+    list_idx_changed = Signal(int)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):

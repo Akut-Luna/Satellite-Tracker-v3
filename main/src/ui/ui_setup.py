@@ -15,12 +15,7 @@ def set_style(self):
     Set font size and maximum size of UI elements
     '''
 
-    app = QApplication.instance()
-    app.setStyleSheet(f'''
-        QWidget {{
-            font-size: 15px;
-        }}
-    ''')
+    self.setStyleSheet('QWidget { font-size: 11pt; }') 
 
     # Find Passes =============================================================================
     self.find_passes_group.setMaximumHeight(210)
@@ -155,7 +150,8 @@ def setup_tracking_modes_widget(self):
     list_layout = QVBoxLayout(self.list_widget)
     self.tracking_mode_list_dropdown = QComboBox()
     # self.tracking_mode_list_dropdown.addItems(self.get_satellite_names_from_file()) # TODO
-    # self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.on_tracking_mode_list_dropdown_changed) # TODO
+    self.tracking_mode_list_dropdown.addItems(['Satellite 1', 'Satellite 2', 'Satellite 3', 'Satellite 4']) # TODO: TEMP
+    self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.list_idx_changed.emit) # -> main_loop
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     self.tracking_mode_stack.addWidget(self.list_widget)
 
@@ -181,7 +177,7 @@ def setup_tracking_modes_widget(self):
     # top -----------------------------------
     gp_file_top_layout = QHBoxLayout()
 
-    gp_file_top_layout.addWidget(QLabel('TLE/OMM file:'))
+    gp_file_top_layout.addWidget(QLabel('OMM file:'))
     self.gp_file_input = QLineEdit()
     self.gp_file_input.setReadOnly(True)
     gp_file_top_layout.addWidget(self.gp_file_input)

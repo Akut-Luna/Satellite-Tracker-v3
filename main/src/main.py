@@ -5,7 +5,8 @@ from core.app_core import AppCore
 
 def main():
     app = QApplication(sys.argv)
-    
+    # app.setStyleSheet('QWidget { font-size: 11pt; }')
+
     core = AppCore() # -> core/app_core.py
     core.start() # Tracker app runs now until the main window is closed
     

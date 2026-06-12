@@ -89,6 +89,11 @@ class AppCore(QObject):
         self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
         self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
         self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
+        self.main_window.list_idx_changed.connect(self.main_loop_worker.update_list_idx)
+
+        # to UI
+        self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
+        self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
 
         # tracking coordination
         self.main_window.tracking_changed.connect(self.set_tracking)
@@ -96,10 +101,6 @@ class AppCore(QObject):
         self.tracking_changed.connect(self.main_loop_worker.update_tracking)
         self.tracking_changed.connect(self.main_window.update_tracking)
         self.tracking_changed.connect(self.motor_worker.update_tracking)
-
-        # to UI
-        self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
-        self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
 
         # update Motors
         self.main_loop_worker.go_update_motors.connect(self.motor_worker.move_motors)
