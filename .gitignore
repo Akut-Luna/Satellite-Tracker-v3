@@ -1,9 +1,12 @@
 misc/
-data/
 archive/
 config_antenna.env
 .vscode
 archive/
+data/
+
+# Exceptions:
+!data/Lists/default_list.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
