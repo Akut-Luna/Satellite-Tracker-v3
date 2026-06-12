@@ -17,60 +17,60 @@ def set_style(self):
 
     self.setStyleSheet('QWidget { font-size: 11pt; }') 
 
-    # Find Passes =============================================================================
+    # ======================================== Find Passes ========================================
     self.find_passes_group.setMaximumHeight(210)
 
-    # Tracking Options ========================================================================
+    # ===================================== Tracking Options ======================================
     self.tracking_modes_group.setMaximumHeight(210)
 
-    # List ------------------------------------------------------------------------------------
+    # ------------------------------------------- List --------------------------------------------
     self.tracking_mode_list_dropdown.setMaxVisibleItems(20)
 
-    # RA/DEC ----------------------------------------------------------------------------------
+    # ------------------------------------------ RA/DEC -------------------------------------------
     self.ra_dec_widget.setMaximumWidth(300)
 
-    # OMM File ----------------------------------------------------------------------------
+    # ----------------------------------------- OMM File ------------------------------------------
     # self.gp_file_add_to_list_btn.setMaximumWidth(100)
 
-    # SPICE -----------------------------------------------------------------------------------
+    # ------------------------------------------- SPICE -------------------------------------------
 
-    # AZ/EL -----------------------------------------------------------------------------------
+    # ------------------------------------------- AZ/EL -------------------------------------------
     self.az_el_widget.setMaximumWidth(300)
 
-    # Antenna =================================================================================
+    # ========================================== Antenna ==========================================
     self.antenna_group.setMaximumSize(450, 194)
     
-    # Azimuth ---------------------------------------------------------------------------------
+    # ------------------------------------------ Azimuth ------------------------------------------
     self.azimuth_label.setMaximumWidth(80)
     self.current_azimuth.setMaximumWidth(60)
     self.target_azimuth.setMaximumWidth(60)
     self.azimuth_offset.setMaximumWidth(85)
     self.azimuth_offset_reset_btn.setMaximumWidth(80)
     
-    # Elevation -------------------------------------------------------------------------------
+    # ----------------------------------------- Elevation -----------------------------------------
     self.elevation_label.setMaximumWidth(80)
     self.current_elevation.setMaximumWidth(60)
     self.target_elevation.setMaximumWidth(60)
     self.elevation_offset.setMaximumWidth(85)
     self.elevation_offset_reset_btn.setMaximumWidth(80)
 
-    # Doppler Shift ---------------------------------------------------------------------------
+    # --------------------------------------- Doppler Shift ---------------------------------------
     self.doppler_initial_freq.setMaximumWidth(150)
     self.doppler_shifted_freq.setMaximumWidth(150)
     self.doppler_shift_label.setMaximumWidth(100)
 
-    # Data ====================================================================================
+    # =========================================== Data ============================================
     self.data_group.setMaximumSize(300, 194)
 
-    # Tracking ================================================================================
+    # ========================================= Tracking ==========================================
     self.tracking_group.setMaximumHeight(194)
 
     self.tracking_btn.setMaximumWidth(170)
     self.tracking_layout.setAlignment(Qt.AlignCenter)
 
-    # Map =====================================================================================
+    # ============================================ Map ============================================
 
-    # Console =================================================================================
+    # ========================================== Console ==========================================
 
 def setup_find_passes_widget(self):
     '''
@@ -145,7 +145,7 @@ def setup_tracking_modes_widget(self):
     # Stacked widget to switch between tracking options input types
     self.tracking_mode_stack = QStackedWidget()
 
-    # 0. List widget --------------------------------------------------------------------------
+    # -------------------------------------- 0. List widget ---------------------------------------
     self.list_widget = QWidget()
     list_layout = QVBoxLayout(self.list_widget)
     self.tracking_mode_list_dropdown = QComboBox()
@@ -155,7 +155,7 @@ def setup_tracking_modes_widget(self):
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     self.tracking_mode_stack.addWidget(self.list_widget)
 
-    # 1. RA/DEC widget ------------------------------------------------------------------------
+    # -------------------------------------- 1. RA/DEC widget -------------------------------------
     self.ra_dec_widget = QWidget()
     ra_dec_layout = QGridLayout(self.ra_dec_widget)
     
@@ -170,11 +170,11 @@ def setup_tracking_modes_widget(self):
     ra_dec_layout.addWidget(self.dec_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
 
-    # 2. OMM File widget ------------------------------------------------------------------
+    # ------------------------------------- 2. OMM File widget ------------------------------------
     self.gp_file_widget = QWidget()
     gp_file_layout = QVBoxLayout(self.gp_file_widget)
 
-    # top -----------------------------------
+    # ------------------- top -------------------
     gp_file_top_layout = QHBoxLayout()
 
     gp_file_top_layout.addWidget(QLabel('OMM file:'))
@@ -189,7 +189,7 @@ def setup_tracking_modes_widget(self):
 
     gp_file_layout.addLayout(gp_file_top_layout)
 
-    # middle --------------------------------
+    # ----------------- middle ------------------
     gp_file_middle_layout = QGridLayout()
 
     # satellite name
@@ -209,7 +209,7 @@ def setup_tracking_modes_widget(self):
 
     gp_file_layout.addLayout(gp_file_middle_layout)
 
-    # bottom --------------------------------
+    # ----------------- bottom ------------------
     gp_file_bottom_layout = QHBoxLayout()
 
     # add to list button
@@ -220,7 +220,7 @@ def setup_tracking_modes_widget(self):
     gp_file_layout.addLayout(gp_file_bottom_layout)
     self.tracking_mode_stack.addWidget(self.gp_file_widget)
 
-    # 3. SPICE widget -------------------------------------------------------------------------
+    # -------------------------------------- 3. SPICE widget --------------------------------------
     self.spice_widget = QWidget()
     spice_layout = QGridLayout(self.spice_widget)
 
@@ -242,7 +242,7 @@ def setup_tracking_modes_widget(self):
 
     self.tracking_mode_stack.addWidget(self.spice_widget)
 
-    # 4. AZ/EL widget -------------------------------------------------------------------------
+    # -------------------------------------- 4. AZ/EL widget --------------------------------------
     self.az_el_widget = QWidget()
     az_el_layout = QGridLayout(self.az_el_widget)
 
@@ -254,7 +254,7 @@ def setup_tracking_modes_widget(self):
     self.el_input = QLineEdit()
     az_el_layout.addWidget(self.el_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.az_el_widget)
-    # -----------------------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
     tracking_modes_layout.addWidget(self.tracking_mode_stack)
     self.top_layout.addWidget(self.tracking_modes_group)
@@ -267,10 +267,10 @@ def setup_antenna_widget(self):
     self.antenna_group = QGroupBox('Antenna')
     antenna_layout = QVBoxLayout(self.antenna_group)
     
-    # ========================================= AZ EL =========================================
+    # =========================================== AZ EL ===========================================
     az_el_layout = QGridLayout()
 
-    # Azimuth ---------------------------------------------------------------------------------
+    # ------------------------------------------ Azimuth ------------------------------------------
     self.azimuth_label = QLabel('Azimuth')
     az_el_layout.addWidget(self.azimuth_label, 1, 0)
     az_el_layout.addWidget(QLabel('Current'), 0, 1)
@@ -296,7 +296,7 @@ def setup_antenna_widget(self):
     self.azimuth_offset_reset_btn.clicked.connect(lambda: self.azimuth_offset.setValue(0.0))
     az_el_layout.addWidget(self.azimuth_offset_reset_btn, 1, 4)
     
-    # Elevation -------------------------------------------------------------------------------
+    # ----------------------------------------- Elevation -----------------------------------------
     self.elevation_label = QLabel('Elevation')
     az_el_layout.addWidget(self.elevation_label, 2, 0)
     self.current_elevation = QLineEdit('0.0°')
@@ -319,7 +319,7 @@ def setup_antenna_widget(self):
     self.elevation_offset_reset_btn.clicked.connect(lambda: self.elevation_offset.setValue(0.0))
     az_el_layout.addWidget(self.elevation_offset_reset_btn, 2, 4)
 
-    # Horizontal line -------------------------------------------------------------------------
+    # ----------------------------------------- Horizontal line -----------------------------------
     horizontal_line = QFrame()
     horizontal_line.setFrameShape(QFrame.HLine)
     horizontal_line.setFrameShadow(QFrame.Sunken)
@@ -327,10 +327,10 @@ def setup_antenna_widget(self):
     
     antenna_layout.addLayout(az_el_layout)
 
-    # ===================================== Doppler shift =====================================
+    # ======================================= Doppler shift =======================================
     doppler_shift_layout = QGridLayout()
 
-    # Doppler shift ---------------------------------------------------------------------------
+    # --------------------------------------- Doppler shift ---------------------------------------
     self.doppler_shift_label = QLabel('Doppler Shift')
     doppler_shift_layout.addWidget(self.doppler_shift_label, 2, 0)
     doppler_shift_layout.addWidget(QLabel('Emitted freq. [MHz]'), 1, 1)
@@ -355,7 +355,7 @@ def setup_data_widget(self):
     self.data_group = QGroupBox('Data')
     data_layout = QGridLayout(self.data_group)
 
-    # UTC ------------------------------------------------------------------------------------
+    # --------------------------------------- UTC -------------------------------------------------
     data_layout.addWidget(QLabel('UTC'), 0, 0)
     self.UTC_text = QDateTimeEdit()
     self.UTC_text.setTimeZone(QTimeZone(b'UTC'))
@@ -364,21 +364,21 @@ def setup_data_widget(self):
     self.UTC_text.setReadOnly(True)
     data_layout.addWidget(self.UTC_text, 0, 1)
 
-    # Altitude --------------------------------------------------------------------------------
+    # --------------------------------------- Altitude --------------------------------------------
     data_layout.addWidget(QLabel('Altitude'), 1, 0)
     self.altitude_text = QLineEdit()
     self.altitude_text.setText('0 km')
     self.altitude_text.setReadOnly(True)
     data_layout.addWidget(self.altitude_text, 1, 1)
 
-    # Range -----------------------------------------------------------------------------------
+    # --------------------------------------- Range -----------------------------------------------
     data_layout.addWidget(QLabel('Range'), 2, 0)
     self.range_text = QLineEdit()
     self.range_text.setText('0 km')
     self.range_text.setReadOnly(True)
     data_layout.addWidget(self.range_text, 2, 1)
 
-    # Range Rate ------------------------------------------------------------------------------
+    # --------------------------------------- Range Rate ------------------------------------------
     data_layout.addWidget(QLabel('Range Rate'), 3, 0)
     self.range_rate_text = QLineEdit()
     self.range_rate_text.setText('0 km/s')
@@ -391,21 +391,21 @@ def setup_tracking_widget(self):
     '''
     Sets up the UI element 'Tracking'
     '''
-    # Tracking Group
+    # --------------------------------------- Tracking Group --------------------------------------
     self.tracking_group = QGroupBox('Tracking')
     self.tracking_layout = QVBoxLayout(self.tracking_group)
 
-    # Start/Stop Tracking button --------------------------------------------------------------
+    # --------------------------------- Start/Stop Tracking button --------------------------------
     self.tracking_btn = QPushButton('Start Tracking')
     self.tracking_btn.setCheckable(True)
     self.tracking_btn.toggled.connect(self.toggle_tracking)
     self.tracking_layout.addWidget(self.tracking_btn)
 
-    # Start Tracking at AOS -------------------------------------------------------------------
+    # ----------------------------------- Start Tracking at AOS -----------------------------------
     self.start_tracking_at_AOS_btn = QCheckBox('Start Tracking at AOS')
     self.tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
 
-    # # Light Time Correction button ------------------------------------------------------------
+    # ------------------------------- Light Time Correction button --------------------------------
     # # Since the Horizon data is already ligth corrected, my light correction is not needed.
     # # I'm still leaving this feature in because it might be usefull in the future with data
     # # from a different source. In the config file you can set DISPLAY_LIGHT_TIME_CORRECTION_OPTION 
@@ -414,7 +414,7 @@ def setup_tracking_widget(self):
     #     self.light_time_correction_btn = QCheckBox('Light Time Correction')
     #     self.tracking_layout.addWidget(self.light_time_correction_btn)
 
-    # # Horizons direct button ------------------------------------------------------------------
+    # ----------------------------------- Horizons direct button ----------------------------------
     # # During the Artemis II mission a mismatch between the calculations for AZ/EL of this program 
     # # based on Horizons data, and the AZ/EL data from Horizons itself was noticed. So an option 
     # # the use the AZ/EL data from Horizons direcly was added. In the config file you can set 
@@ -472,7 +472,7 @@ def setup_ui(self):
     
     main_layout.addLayout(bottom_layout)
 
-    self.set_style() # TODO
+    self.set_style()
     
     # Log initial message
     self.log_message('Satellite Tracker initialized')
