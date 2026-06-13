@@ -20,3 +20,6 @@ def browse_list(self):
         relative_path = os.path.relpath(file_path, base_path) # absolut path is a bit long
         self.list_input.setText(relative_path)
 
+def add_to_list(self):
+    pass # TODO
+

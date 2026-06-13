@@ -9,6 +9,7 @@ from utils.tracking_modes import (
     tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 
+from utils.helper import ra_dec_parser
 from utils.calculations import correction_matrix
 
 class MainLoop(QObject):
@@ -59,7 +60,7 @@ class MainLoop(QObject):
             if ra_value == '':
                 self.ra_hours = 0.0
             else:
-                self.ra_hours = float(ra_value)
+                self.ra_hours = ra_dec_parser(ra_value)
         except Exception as e:
             if self.tracking:
                 self.log_message(f'Error: {e}')
@@ -75,7 +76,7 @@ class MainLoop(QObject):
             if dec_value == '':
                 self.dec_degrees = 0.0
             else:
-                self.dec_degrees = float(dec_value)
+                self.dec_degrees = ra_dec_parser(dec_value)
         except Exception as e:
             if self.tracking:
                 self.log_message(f'Error: {e}')

@@ -28,7 +28,6 @@ def set_style(self):
     self.tracking_mode_list_dropdown.setMaxVisibleItems(20)
 
     # ------------------------------------------ RA/DEC -------------------------------------------
-    self.ra_dec_widget.setMaximumWidth(300)
 
     # ----------------------------------------- OMM File ------------------------------------------
     # self.gp_file_add_to_list_btn.setMaximumWidth(100)
@@ -154,16 +153,17 @@ def setup_tracking_modes_widget(self):
     # ------------------- top -------------------
     list_top_layout = QHBoxLayout()
 
+    default_list = os.path.join('main', 'data', 'Lists', 'default_list.json')
+
     list_top_layout.addWidget(QLabel('List:'))
     self.list_input = QLineEdit()
     self.list_input.setReadOnly(True)
+    self.list_input.setText(default_list)
     list_top_layout.addWidget(self.list_input)
 
     # browse button
     self.list_browse_btn = QPushButton('Browse')
     self.list_browse_btn.clicked.connect(self.browse_list)
-    default_list = os.path.join('main', 'data', 'Lists', 'default_list.json')
-    self.list_input.setText(default_list)
     list_top_layout.addWidget(self.list_browse_btn)
 
     list_layout.addLayout(list_top_layout)
@@ -176,7 +176,10 @@ def setup_tracking_modes_widget(self):
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     
     # ----------------- bottom ------------------
-    
+    self.list_add_btn = QPushButton('Add to List')
+    self.list_add_btn.clicked.connect(self.add_to_list)
+    list_layout.addWidget(self.list_add_btn)
+
     self.tracking_mode_stack.addWidget(self.list_widget)
 
     # -------------------------------------- 1. RA/DEC widget -------------------------------------
@@ -187,11 +190,13 @@ def setup_tracking_modes_widget(self):
     self.ra_input = QLineEdit()
     self.ra_input.textChanged.connect(self.RA_changed.emit) # if text changed emit a signal
     ra_dec_layout.addWidget(self.ra_input, 0, 1)
+    ra_dec_layout.addWidget(QLabel('Accepted format: xx.xxxx or xxh xxm xxs'), 0, 2)
 
     ra_dec_layout.addWidget(QLabel('DEC [°]:'), 1, 0)
     self.dec_input = QLineEdit()
     self.dec_input.textChanged.connect(self.DEC_changed.emit)
     ra_dec_layout.addWidget(self.dec_input, 1, 1)
+    ra_dec_layout.addWidget(QLabel('Accepted format: xx.xxxx or +xx°' + " xx'" +' xx"'), 1, 2)
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
 
     # ------------------------------------- 2. OMM File widget ------------------------------------
