@@ -3,13 +3,13 @@ from utils.time_convertions import utc_now
 import traceback
 import shutil
 import os
-from skyfield.api import load, Loader
+from skyfield.api import load
 import numpy as np
 from utils.tracking_modes import (
     tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 
-from utils.helper import ra_dec_parser
+from utils.helper import ra_dec_parser, load_planet_ephemeris
 from utils.calculations import correction_matrix
 
 class MainLoop(QObject):
@@ -20,12 +20,16 @@ class MainLoop(QObject):
     tracking_mode_SPICE  = tracking_mode_SPICE
     tracking_mode_AZ_EL  = tracking_mode_AZ_EL
 
+    # helper
+    load_planet_ephemeris = load_planet_ephemeris
+
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
     go_update_motors = Signal(dict) # Send az, el to motors
     log = Signal(str)
     flight_path_changed = Signal(object) # np.array or None # TODO: maybe handle with empty array?
     tracking_changed = Signal(bool)
+    update_antenna_status = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
@@ -103,23 +107,6 @@ class MainLoop(QObject):
         self.list_idx = index
     # ---------------------------------------------------------------------------------------------
 
-    def load_planet_ephemeris(self): # TODO: in some sort of helper file
-        filename = 'de421.bsp'
-        ephemeris_folder = os.path.join('main', 'data', 'Ephemeris')
-        ephemeris_file = os.path.join(ephemeris_folder, filename)
-
-        # if needed: download
-        if not os.path.exists(ephemeris_file) and not os.path.exists(filename):
-            tmp_loader = Loader('.')
-            tmp_loader.download(filename) 
-
-        # if needed: move to folder
-        if os.path.exists(filename):
-            os.makedirs(ephemeris_folder, exist_ok=True)
-            shutil.move(filename, ephemeris_file)
-
-        self.planet_ephemeris = load(ephemeris_file)  
-
     def start_loop(self, interval_ms):
         self.timer = QTimer()
         self.timer.timeout.connect(self.main_loop) # every interval_ms: call main_loop
@@ -188,6 +175,7 @@ class MainLoop(QObject):
             }
 
             self.go_update_ui.emit(data)
+            self.update_antenna_status.emit()
 
             # -------------------------------------------------------------------------------------
 

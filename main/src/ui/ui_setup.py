@@ -30,7 +30,7 @@ def set_style(self):
     # ------------------------------------------ RA/DEC -------------------------------------------
 
     # ----------------------------------------- OMM File ------------------------------------------
-    # self.gp_file_add_to_list_btn.setMaximumWidth(100)
+    # self.OMM_file_add_to_list_btn.setMaximumWidth(100)
 
     # ------------------------------------------- SPICE -------------------------------------------
 
@@ -200,54 +200,49 @@ def setup_tracking_modes_widget(self):
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
 
     # ------------------------------------- 2. OMM File widget ------------------------------------
-    self.gp_file_widget = QWidget()
-    gp_file_layout = QVBoxLayout(self.gp_file_widget)
+    self.OMM_file_widget = QWidget()
+    OMM_file_layout = QVBoxLayout(self.OMM_file_widget)
 
     # ------------------- top -------------------
-    gp_file_top_layout = QHBoxLayout()
+    OMM_file_top_layout = QHBoxLayout()
 
-    gp_file_top_layout.addWidget(QLabel('OMM file:'))
-    self.gp_file_input = QLineEdit()
-    self.gp_file_input.setReadOnly(True)
-    gp_file_top_layout.addWidget(self.gp_file_input)
+    OMM_file_top_layout.addWidget(QLabel('OMM file:'))
+    self.OMM_file_input = QLineEdit()
+    self.OMM_file_input.setReadOnly(True)
+    OMM_file_top_layout.addWidget(self.OMM_file_input)
 
     # browse button
-    self.gp_file_browse_btn = QPushButton('Browse')
-    # self.gp_file_browse_btn.clicked.connect(self.browse_gp_file) # TODO
-    gp_file_top_layout.addWidget(self.gp_file_browse_btn)
+    self.OMM_file_browse_btn = QPushButton('Browse')
+    self.OMM_file_browse_btn.clicked.connect(self.browse_OMM_file)
+    OMM_file_top_layout.addWidget(self.OMM_file_browse_btn)
 
-    gp_file_layout.addLayout(gp_file_top_layout)
+    OMM_file_layout.addLayout(OMM_file_top_layout)
 
     # ----------------- middle ------------------
-    gp_file_middle_layout = QGridLayout()
+    OMM_file_middle_layout = QGridLayout()
 
     # satellite name
-    gp_file_middle_layout.addWidget(QLabel('Satellite Name'), 0, 0)
-    self.gp_file_satellite_name = QLineEdit()
-    gp_file_middle_layout.addWidget(self.gp_file_satellite_name, 1, 0)
-
-    # Int'l ID
-    gp_file_middle_layout.addWidget(QLabel("Int'l ID"), 0, 1)
-    self.gp_file_intl_id = QLineEdit()
-    gp_file_middle_layout.addWidget(self.gp_file_intl_id, 1, 1)
+    OMM_file_middle_layout.addWidget(QLabel('Satellite Name'), 0, 0)
+    self.OMM_file_satellite_name = QLineEdit()
+    OMM_file_middle_layout.addWidget(self.OMM_file_satellite_name, 1, 0)
 
     # NORAD
-    gp_file_middle_layout.addWidget(QLabel('NORAD ID'), 0, 2)
-    self.gp_file_norad_id = QLineEdit()
-    gp_file_middle_layout.addWidget(self.gp_file_norad_id, 1, 2)
+    OMM_file_middle_layout.addWidget(QLabel('NORAD ID'), 0, 1)
+    self.OMM_file_norad_id = QLineEdit()
+    OMM_file_middle_layout.addWidget(self.OMM_file_norad_id, 1, 1)
 
-    gp_file_layout.addLayout(gp_file_middle_layout)
+    OMM_file_layout.addLayout(OMM_file_middle_layout)
 
     # ----------------- bottom ------------------
-    gp_file_bottom_layout = QHBoxLayout()
+    OMM_file_bottom_layout = QHBoxLayout()
 
     # add to list button
-    self.gp_file_add_to_list_btn = QPushButton('Add to List')
-    # self.gp_file_add_to_list_btn.clicked.connect(self.add_satellite_to_list) # TODO
-    gp_file_bottom_layout.addWidget(self.gp_file_add_to_list_btn)
+    self.OMM_file_add_to_list_btn = QPushButton('Add to List')
+    # self.OMM_file_add_to_list_btn.clicked.connect(self.add_satellite_to_list) # TODO
+    OMM_file_bottom_layout.addWidget(self.OMM_file_add_to_list_btn)
     
-    gp_file_layout.addLayout(gp_file_bottom_layout)
-    self.tracking_mode_stack.addWidget(self.gp_file_widget)
+    OMM_file_layout.addLayout(OMM_file_bottom_layout)
+    self.tracking_mode_stack.addWidget(self.OMM_file_widget)
 
     # -------------------------------------- 3. SPICE widget --------------------------------------
     self.spice_widget = QWidget()
@@ -261,7 +256,7 @@ def setup_tracking_modes_widget(self):
 
     # button
     self.spice_file_browse_btn = QPushButton('Browse')
-    # self.spice_file_browse_btn.clicked.connect(self.browse_spice_file) # TODO
+    self.spice_file_browse_btn.clicked.connect(self.browse_spice_file)
     spice_layout.addWidget(self.spice_file_browse_btn, 0, 2)
 
     # Satellite name

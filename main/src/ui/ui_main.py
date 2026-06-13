@@ -7,12 +7,11 @@ from PySide6.QtWidgets import (
     QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,
     QStackedWidget, QFrame
 )
-from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
+from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal, Slot
 from PySide6.QtGui import QIcon
 import numpy as np
 from ui.ui_setup import (
-    set_style,
-    setup_ui, 
+    set_style, setup_ui, 
     setup_find_passes_widget,
     setup_tracking_modes_widget,
     setup_antenna_widget,
@@ -21,7 +20,9 @@ from ui.ui_setup import (
 )
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from ui.ui_buttons import browse_list, add_to_list
-from utils.helper import get_target_names_from_file
+from utils.helper import (
+    get_target_names_from_file, browse_OMM_file, browse_spice_file
+)
 from core.config import AppConfig
 
 class SatelliteTrackerApp(QMainWindow):
@@ -41,6 +42,8 @@ class SatelliteTrackerApp(QMainWindow):
 
     # helper
     get_target_names_from_file = get_target_names_from_file
+    browse_OMM_file = browse_OMM_file
+    browse_spice_file = browse_spice_file
 
     # update
     update_ui = update_ui
@@ -87,10 +90,12 @@ class SatelliteTrackerApp(QMainWindow):
     def update_flight_path(self, flight_path):
         self.flight_path = flight_path
 
+    @Slot(bool)
     def update_tracking(self, tracking):
         self.tracking = tracking
         self.update_ui_tracking(tracking)
 
+    @Slot(bool)
     def toggle_tracking(self, checked):
         '''
         This function tells AppCore to tell everyone to update self.tracking
@@ -99,6 +104,15 @@ class SatelliteTrackerApp(QMainWindow):
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
         self.tracking_changed.emit(checked)
+    
+    @Slot(float, float)
+    def update_antenna_status(self, antenna_az, antenna_el):
+        if antenna_az == 9999: # no connection
+            self.current_azimuth.setText('N/A')
+            self.current_elevation.setText('N/A')
+        else:
+            self.current_azimuth.setText(f'{antenna_az:.1f}°')
+            self.current_elevation.setText(f'{antenna_el:.1f}°')
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):

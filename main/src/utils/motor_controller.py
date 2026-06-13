@@ -3,8 +3,8 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 class MotorWorker(QObject):
     # ------------------------------------ Signals (send data) ------------------------------------
-    status_received = Signal(float, float) # az, el
     log = Signal(str)
+    antenna_status_changed = Signal(float, float)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
@@ -13,6 +13,10 @@ class MotorWorker(QObject):
         self.socket = None
         self.last_time_motor_got_updated = None
         self.tracking = False
+
+        # Antenna Status
+        self.current_az = 0.0
+        self.current_el = 0.0
 
     def log_message(self, message):
         self.log.emit(message)
@@ -36,6 +40,28 @@ class MotorWorker(QObject):
             return
 
         self.talk_to_motor_controller('set', az, el)
+
+    @Slot()
+    def update_antenna_status(self):
+        res = self.talk_to_motor_controller('status')
+
+        # treat None or partial None results as no connection
+        if (
+            res is not None
+            and isinstance(res, (tuple, list))
+            and len(res) == 2
+            and res[0] is not None
+            and res[1] is not None
+        ):
+            current_az, current_el = res
+        else: # no connection or invalid response
+            current_az, current_el = 9999, 9999
+
+        # only emit when the values actually changed
+        if (self.current_az != current_az) or (self.current_el != current_el):
+            self.current_az = current_az
+            self.current_el = current_el
+            self.antenna_status_changed.emit(current_az, current_el)
     # ---------------------------------------------------------------------------------------------
 
     def establish_connection(self):

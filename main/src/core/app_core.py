@@ -13,9 +13,6 @@ class AppCore(QObject):
     This class is the "core" of the Tracker App. It will hold the different threads.
     '''
 
-    # AppCore is the single source of truth for the current tracking state.
-    # All tracking on/off changes are coordinated here and then broadcast to
-    # the UI, main loop, and motor worker.
     def __init__(self):
         super().__init__()
         self.tracking = False
@@ -81,30 +78,39 @@ class AppCore(QObject):
         # try to connect to motor controller once motor_thread has started
         self.motor_thread.started.connect(self.motor_worker.establish_connection)
 
-        # logs
-        self.main_loop_worker.log.connect(self.main_window.log_message)
-        self.motor_worker.log.connect(self.main_window.log_message)
-        
-        # from UI
+        # ----------- UI -> Main Loop -----------
         self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
         self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
         self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
         self.main_window.list_idx_changed.connect(self.main_loop_worker.update_list_idx)
+        
+        # ------- UI -> Motor Controller  -------
 
-        # to UI
+        # ----------- Main Loop -> UI -----------
         self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
         self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
 
-        # tracking coordination
-        self.main_window.tracking_changed.connect(self.set_tracking)
-        self.main_loop_worker.tracking_changed.connect(self.set_tracking)
-        self.tracking_changed.connect(self.main_loop_worker.update_tracking)
-        self.tracking_changed.connect(self.main_window.update_tracking)
-        self.tracking_changed.connect(self.motor_worker.update_tracking)
-
-        # update Motors
+        # ---- Main Loop -> Motor Controller ----
         self.main_loop_worker.go_update_motors.connect(self.motor_worker.move_motors)
+        self.main_loop_worker.update_antenna_status.connect(self.motor_worker.update_antenna_status)
+        
+        # ---- Motor Controller -> Main Loop ----
 
+        # ------- Motor Controller -> UI --------
+        self.motor_worker.antenna_status_changed.connect(self.main_window.update_antenna_status)
+
+        # ----------------- logs ----------------
+        self.main_loop_worker.log.connect(self.main_window.log_message)
+        self.motor_worker.log.connect(self.main_window.log_message)
+
+        # -------- tracking coordination --------
+        self.main_window.tracking_changed.connect(self.set_tracking)         # UI -> App Core
+        self.main_loop_worker.tracking_changed.connect(self.set_tracking)    # Main Loop -> App Core
+        self.tracking_changed.connect(self.main_window.update_tracking)      # App Core -> UI
+        self.tracking_changed.connect(self.main_loop_worker.update_tracking) # App Core -> Main Loop
+        self.tracking_changed.connect(self.motor_worker.update_tracking)     # App Core -> Motor Controller
+
+    # ------------------------------------ Slots (receive data) -----------------------------------
     @Slot(bool)
     def set_tracking(self, tracking: bool):
         if self.tracking == tracking:
@@ -112,6 +118,7 @@ class AppCore(QObject):
 
         self.tracking = tracking
         self.tracking_changed.emit(tracking)
+    # ---------------------------------------------------------------------------------------------
 
     def start(self):
         # start threads
