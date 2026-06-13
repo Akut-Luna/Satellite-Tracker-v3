@@ -20,6 +20,8 @@ from ui.ui_setup import (
     setup_tracking_widget
 )
 from ui.ui_update import update_ui, update_map, update_ui_tracking
+from ui.ui_buttons import browse_list
+from utils.helper import get_target_names_from_file
 from core.config import AppConfig
 
 class SatelliteTrackerApp(QMainWindow):
@@ -32,6 +34,12 @@ class SatelliteTrackerApp(QMainWindow):
     setup_antenna_widget = setup_antenna_widget
     setup_data_widget = setup_data_widget
     setup_tracking_widget = setup_tracking_widget
+
+    # buttons
+    browse_list = browse_list
+
+    # helper
+    get_target_names_from_file = get_target_names_from_file
 
     # update
     update_ui = update_ui

@@ -41,7 +41,7 @@ def tracking_mode_RA_DEC(self, t):
     sky_pos = SkyCoord(
         ra=self.ra_hours * u.hourangle, 
         dec=self.dec_degrees * u.deg,
-        distance=1e9 * u.km,
+        distance=(1e9 + 6378) * u.km,
         frame='gcrs', 
         obstime=obstime
     )

@@ -1,0 +1,21 @@
+[
+    {
+        "type": "LEO",
+        "name": "ISS (ZARYA)",
+        "frequency": 145.825,
+        "NORAD": 25544
+    },
+    {
+        "type": "DS",
+        "name": "Lunar Reconnaissance Orbiter",
+        "frequency": 0.0,
+        "Horizons": -85
+    },
+    {
+        "type": "ASTRO",
+        "name": "Messier 51 (Whirlpool-Galaxy)",
+        "frequency": 0.0,
+        "RA": 13.4979722,
+        "DEC": 47.1952778
+    }
+]

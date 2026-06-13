@@ -1,4 +1,5 @@
 import cartopy.crs as ccrs
+import os
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
@@ -149,11 +150,33 @@ def setup_tracking_modes_widget(self):
     # -------------------------------------- 0. List widget ---------------------------------------
     self.list_widget = QWidget()
     list_layout = QVBoxLayout(self.list_widget)
+
+    # ------------------- top -------------------
+    list_top_layout = QHBoxLayout()
+
+    list_top_layout.addWidget(QLabel('List:'))
+    self.list_input = QLineEdit()
+    self.list_input.setReadOnly(True)
+    list_top_layout.addWidget(self.list_input)
+
+    # browse button
+    self.list_browse_btn = QPushButton('Browse')
+    self.list_browse_btn.clicked.connect(self.browse_list)
+    default_list = os.path.join('main', 'data', 'Lists', 'default_list.json')
+    self.list_input.setText(default_list)
+    list_top_layout.addWidget(self.list_browse_btn)
+
+    list_layout.addLayout(list_top_layout)
+
+    # ----------------- middle ------------------
     self.tracking_mode_list_dropdown = QComboBox()
-    # self.tracking_mode_list_dropdown.addItems(self.get_satellite_names_from_file()) # TODO
-    self.tracking_mode_list_dropdown.addItems(['Satellite 1', 'Satellite 2', 'Satellite 3', 'Satellite 4']) # TODO: TEMP
+    self.tracking_mode_list_dropdown.addItems(self.get_target_names_from_file(default_list))
     self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.list_idx_changed.emit) # -> main_loop
+    
     list_layout.addWidget(self.tracking_mode_list_dropdown)
+    
+    # ----------------- bottom ------------------
+    
     self.tracking_mode_stack.addWidget(self.list_widget)
 
     # -------------------------------------- 1. RA/DEC widget -------------------------------------
