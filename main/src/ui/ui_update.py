@@ -201,11 +201,18 @@ def update_ui(self, data):
     f1          = data['f1']
 
     # Target Azimuth and Elevation
-    self.target_azimuth.setText(f'{az:.1f}°')
-    self.target_elevation.setText(f'{el:.1f}°')
+    if az is not None and el is not None:
+        self.target_azimuth.setText(f'{az:.1f}°')
+        self.target_elevation.setText(f'{el:.1f}°')
+    else:
+        self.target_azimuth.setText('N/A')
+        self.target_elevation.setText('N/A')
     
     # Doppler Shift
-    self.doppler_shifted_freq.setText(f'{f1:.6f}')
+    if f1 is not None:
+        self.doppler_shifted_freq.setText(f'{f1:.6f}')
+    else:
+        self.doppler_shifted_freq.setText('N/A')
 
     # World Map
     try:
@@ -218,19 +225,19 @@ def update_ui(self, data):
     if altitude is not None:
         self.altitude_text.setText(f'{altitude:.0f} km')
     else:
-        self.altitude_text.setText('0 km')
+        self.altitude_text.setText('N/A')
 
     # Range
     if slant_range is not None:
         self.range_text.setText(f'{slant_range:.0f} km')
     else:
-        self.range_text.setText('0 km')
+        self.range_text.setText('N/A')
 
     # Range Rate
     if range_rate is not None:
         self.range_rate_text.setText(f'{range_rate:.3f} km/s')
     else:
-        self.range_rate_text.setText('0 km/s')
+        self.range_rate_text.setText('N/A')
 
 def update_ui_tracking(self, tracking):
     '''

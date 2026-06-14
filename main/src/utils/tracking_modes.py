@@ -135,15 +135,15 @@ def tracking_mode_OMM(self, t):
     sat_id = self.OMM_satellite_id
     sat_name = self.OMM_satellite_name
 
-    if self.omm_df is not None and (sat_name != '' or sat_id != -1):
+    if self.OMM_df is not None and (sat_name != '' or sat_id != -1):
         # find satellite in data
         if sat_name != '':
-            row = self.omm_df[self.omm_df['OBJECT_NAME'] == sat_name]
+            row = self.OMM_df[self.OMM_df['OBJECT_NAME'] == sat_name]
             if row.empty and self.tracking:
                 self.log_message(f'Could not find {sat_name} in file data.')
 
         elif sat_id != -1:
-            row = self.omm_df[self.omm_df['NORAD_CAT_ID'] == sat_id]
+            row = self.OMM_df[self.OMM_df['NORAD_CAT_ID'] == sat_id]
             if row.empty and self.tracking:
                 self.log_message(f'Could not find {sat_id} in data.')
 
@@ -160,15 +160,20 @@ def tracking_mode_OMM(self, t):
             now_datetime = t
             t = datetime_to_skyfield_time(self.skyfield_ts, t)
             self.OMM_satellite = satellite
+            antenna_pos = wgs84.latlon(
+                self.config.antenna_latitude, 
+                self.config.antenna_longitude, 
+                self.config.antenna_altitude
+            )
 
             # relative position vector
-            relative_pos = satellite - self.skyfield_antenna_pos 
+            relative_pos = satellite - antenna_pos 
             
             # relative position object
             topocentric = relative_pos.at(t)
             satellite = satellite.at(t)
 
-            el, az, slant_range, el_rate, az_rate, range_rate = topocentric.frame_latlon_and_rates(self.skyfield_antenna_pos)
+            el, az, slant_range, el_rate, az_rate, range_rate = topocentric.frame_latlon_and_rates(antenna_pos)
 
             subpoint = wgs84.subpoint_of(satellite)
             altitude = wgs84.height_of(satellite)
@@ -223,7 +228,6 @@ def tracking_mode_OMM(self, t):
                     if self.tracking:
                         self.log_message(f'Error calculating flight path: {str(e)}')
                         print(traceback.format_exc())
-
             return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     return None, None, None, None, None, None, None, None, None, None
 

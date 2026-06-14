@@ -51,8 +51,8 @@ class MainLoop(QObject):
         self.dec_degrees = 0.0
         self.list_idx = 0
         self.OMM_df = None
-        self.OMM_satellite_name = None
-        self.OMM_satellite_id = None
+        self.OMM_satellite_name = ''
+        self.OMM_satellite_id = -1
         self.doppler_init_freq = 0.0
 
     def log_message(self, message):
@@ -159,23 +159,19 @@ class MainLoop(QObject):
 
             try:
                 if self.tracking_mode == 0:    # List
-                    # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_List(t)
-                    pass
+                    az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_List(t)
 
                 elif self.tracking_mode == 1:  # RA/DEC
                     az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(t)
 
                 elif self.tracking_mode == 2:  # OMM File
-                    # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_TLE_OMM(t)
-                    pass
+                    az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_OMM(t)
 
                 elif self.tracking_mode == 3:  # SPICE
-                    # az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_SPICE(t)
-                    pass
+                    az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1 = self.tracking_mode_SPICE(t)
                         
                 elif self.tracking_mode == 4:  # AZ/EL
-                    # az, el = self.tracking_mode_AZ_EL()
-                    pass
+                    az, el = self.tracking_mode_AZ_EL()
 
             except Exception as e:
                 if self.tracking:
