@@ -36,7 +36,7 @@ class MainLoop(QObject):
         super().__init__()
         self.config = config
         self.load_planet_ephemeris()
-        self.ts = load.timescale()
+        self.skyfield_ts = load.timescale()
 
         # ------------------------------- variabels to keep track of ------------------------------
 
@@ -53,9 +53,10 @@ class MainLoop(QObject):
         self.OMM_df = None
         self.OMM_satellite_name = None
         self.OMM_satellite_id = None
+        self.doppler_init_freq = 0.0
 
     def log_message(self, message):
-        self.log.emit(message)
+        self.log.emit(message) # -> ui
 
     # ------------------------------------ Slots (receive data) -----------------------------------
     def update_ra_hours(self, ra_value:str):
@@ -104,7 +105,7 @@ class MainLoop(QObject):
         Parameters:
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
-        self.tracking_changed.emit(checked)
+        self.tracking_changed.emit(checked) # -> app_core
     
     def update_list_idx(self, index):
         self.list_idx = index
@@ -113,7 +114,7 @@ class MainLoop(QObject):
         self.OMM_df = df
 
     def update_OMM_satellite_name(self, name):
-        self.OMM_satellite_name = name
+        self.OMM_satellite_name = name.upper()
 
     def update_OMM_satellite_id(self, sat_id):
         if sat_id != '':
@@ -121,6 +122,17 @@ class MainLoop(QObject):
                 self.OMM_satellite_id = int(sat_id)
             except:
                 self.log_message(f'Invalid ID: {sat_id}')
+        else:
+            self.OMM_satellite_id = -1
+
+    def update_doppler_init_freq(self, freq):
+        if freq != '':
+            try:
+                self.doppler_init_freq = int(freq)
+            except:
+                self.log_message(f'Invalid frequency: {freq}')
+        else:
+            self.doppler_init_freq = 0.0
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):
@@ -190,8 +202,8 @@ class MainLoop(QObject):
                 'f1'          : f1
             }
 
-            self.go_update_ui.emit(data)
-            self.update_antenna_status.emit()
+            self.go_update_ui.emit(data) # -> ui
+            self.update_antenna_status.emit() # -> motor_controller
 
             # -------------------------------------------------------------------------------------
 
@@ -243,7 +255,7 @@ class MainLoop(QObject):
                 'el_rate' : el_rate
             }
 
-            self.go_update_motors.emit(data)
+            self.go_update_motors.emit(data) # -> motor_controller
         
         except Exception as e:
             if self.tracking:

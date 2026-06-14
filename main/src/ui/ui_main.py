@@ -60,6 +60,7 @@ class SatelliteTrackerApp(QMainWindow):
     OMM_df_changed = Signal(pd.DataFrame)
     OMM_satellite_name_changed = Signal(str)
     OMM_satellite_id_changed = Signal(str)
+    doppler_init_freq_changed = Signal(str)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -107,7 +108,7 @@ class SatelliteTrackerApp(QMainWindow):
         Parameters:
             checked (bool): True -> turn tracking on, False -> turn tracking off
         '''
-        self.tracking_changed.emit(checked)
+        self.tracking_changed.emit(checked) # -> app_core
     
     @Slot(float, float)
     def update_antenna_status(self, antenna_az, antenna_el):
@@ -129,7 +130,7 @@ class SatelliteTrackerApp(QMainWindow):
             self.log_message('Tracking stopped because tracking methode was changed')
         self.tracking_mode_stack.setCurrentIndex(index)
         self.doppler_initial_freq.setText('0.0')
-        self.tracking_mode_changed.emit(index)
+        self.tracking_mode_changed.emit(index) # -> main_loop
 
 
 

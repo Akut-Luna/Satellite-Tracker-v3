@@ -19,7 +19,7 @@ class MotorWorker(QObject):
         self.current_el = 0.0
 
     def log_message(self, message):
-        self.log.emit(message)
+        self.log.emit(message) # -> ui
 
     # ------------------------------------ Slots (receive data) -----------------------------------
     @Slot(bool)
@@ -61,7 +61,7 @@ class MotorWorker(QObject):
         if (self.current_az != current_az) or (self.current_el != current_el):
             self.current_az = current_az
             self.current_el = current_el
-            self.antenna_status_changed.emit(current_az, current_el)
+            self.antenna_status_changed.emit(current_az, current_el) # -> ui
     # ---------------------------------------------------------------------------------------------
 
     def establish_connection(self):

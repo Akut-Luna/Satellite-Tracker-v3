@@ -35,7 +35,7 @@ def browse_OMM(self):
     if file_path:
         try: # read file
             OMM_df = pd.read_csv(file_path)
-            self.OMM_df_changed.emit(OMM_df)
+            self.OMM_df_changed.emit(OMM_df) # -> main_loop
         except Exception as e:
             self.log_message(f'Error reading data from file {file_path}: {e}')
             print(traceback.format_exc())

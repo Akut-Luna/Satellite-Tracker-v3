@@ -86,6 +86,7 @@ class AppCore(QObject):
         self.main_window.OMM_df_changed.connect(self.main_loop_worker.update_OMM_df)
         self.main_window.OMM_satellite_name_changed.connect(self.main_loop_worker.update_OMM_satellite_name)
         self.main_window.OMM_satellite_id_changed.connect(self.main_loop_worker.update_OMM_satellite_id)
+        self.main_window.doppler_init_freq_changed.connect(self.main_loop_worker.update_doppler_init_freq)
         
         # ------- UI -> Motor Controller  -------
 
@@ -120,7 +121,7 @@ class AppCore(QObject):
             return
 
         self.tracking = tracking
-        self.tracking_changed.emit(tracking)
+        self.tracking_changed.emit(tracking) # -> ui, main_loop, motor_controller
     # ---------------------------------------------------------------------------------------------
 
     def start(self):
