@@ -19,7 +19,7 @@ def browse_list(self):
         # add new list
         self.tracking_mode_list_dropdown.addItems(self.get_target_names_from_file(file_path))
 
-        self.list_path_changed.emit(file_path) # -> main_loop
+        self.target_list_path_changed.emit(file_path) # -> main_loop
 
         try: # update UI
             file_path = os.path.relpath(file_path, base_path) # absolut path is a bit long

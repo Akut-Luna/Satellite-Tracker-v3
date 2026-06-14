@@ -34,7 +34,7 @@ class MainLoop(QObject):
     go_update_motors = Signal(dict) # Send az, el to motors
     go_update_f0 = Signal(float)
     log = Signal(str)
-    flight_path_changed = Signal(object) # np.array or None # TODO: maybe handle with empty array?
+    flight_path_changed = Signal(object)
     tracking_changed = Signal(bool)
     update_antenna_status = Signal()
     # ---------------------------------------------------------------------------------------------
@@ -194,7 +194,6 @@ class MainLoop(QObject):
                         
                 elif self.tracking_mode == 4:  # AZ/EL
                     az, el = self.tracking_mode_AZ_EL()
-
             except Exception as e:
                 if self.tracking:
                     self.log_message(f'Error calculating satellite data: {e}')

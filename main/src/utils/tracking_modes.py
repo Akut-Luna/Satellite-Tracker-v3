@@ -82,7 +82,6 @@ def tracking_mode_List(self, t):
 
         # ------------------------------------- doppler shift -------------------------------------
         f0 = self.doppler_init_freq
-        # print(f0)
         try:
             f1 = doppler_shift(f0, range_rate)
         except Exception as e:
