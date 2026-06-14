@@ -262,7 +262,7 @@ def setup_tracking_modes_widget(self):
 
     # button
     self.spice_file_browse_btn = QPushButton('Browse')
-    self.spice_file_browse_btn.clicked.connect(self.browse_spice_file)
+    self.spice_file_browse_btn.clicked.connect(self.browse_spice)
     spice_layout.addWidget(self.spice_file_browse_btn, 0, 2)
 
     # Satellite name

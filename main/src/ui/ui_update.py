@@ -189,8 +189,6 @@ def update_ui(self, data):
     This function gets called via Signal and Slot by core/main_loop.py
     '''
 
-    # print(self.flight_path)
-
     az          = data['az']
     el          = data['el']
     slant_range = data['slant_range']

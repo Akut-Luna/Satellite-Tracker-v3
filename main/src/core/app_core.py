@@ -87,6 +87,7 @@ class AppCore(QObject):
         self.main_window.OMM_satellite_name_changed.connect(self.main_loop_worker.update_OMM_satellite_name)
         self.main_window.OMM_satellite_id_changed.connect(self.main_loop_worker.update_OMM_satellite_id)
         self.main_window.doppler_init_freq_changed.connect(self.main_loop_worker.update_doppler_init_freq)
+        self.main_window.target_list_path_changed.connect(self.main_loop_worker.update_target_list_path)
         
         # ------- UI -> Motor Controller  -------
 

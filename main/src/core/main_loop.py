@@ -9,7 +9,7 @@ from utils.tracking_modes import (
     tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 
-from utils.helper import ra_dec_parser, load_planet_ephemeris
+from utils.helper import ra_dec_parser, load_planet_ephemeris, load_target_list
 from utils.calculations import correction_matrix
 
 class MainLoop(QObject):
@@ -22,6 +22,7 @@ class MainLoop(QObject):
 
     # helper
     load_planet_ephemeris = load_planet_ephemeris
+    load_target_list = load_target_list
 
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
@@ -39,21 +40,25 @@ class MainLoop(QObject):
         self.skyfield_ts = load.timescale()
 
         # ------------------------------- variabels to keep track of ------------------------------
-
-        # local
-        self.last_time_flight_path_got_calculated = None
-        self.flight_path = None
-
         # from UI
         self.tracking_mode = 0
         self.tracking = False
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
         self.list_idx = 0
-        self.OMM_df = None
-        self.OMM_satellite_name = ''
-        self.OMM_satellite_id = -1
+        self.OMM_df = None              # gets loaded by browse_OMM()
+        self.OMM_satellite_name = ''    # gets loaded by browse_OMM()
+        self.OMM_satellite_id = -1      # gets loaded by browse_OMM()
+        self.OMM_satellite = None       # gets set by tracking_mode_OMM()
         self.doppler_init_freq = 0.0
+        self.target_list_path = os.path.join('main', 'data', 'Lists', 'default_list.json')
+
+        # local
+        self.last_time_flight_path_got_calculated = None
+        self.flight_path = None
+        self.target_list = self.load_target_list()
+        # self.satellite_metadata = self.load_satellite_metadata() # TODO
+        # self.spice_kernels_loaded = False # gets set by browse_spice_file() # TODO
 
     def log_message(self, message):
         self.log.emit(message) # -> ui
@@ -133,6 +138,10 @@ class MainLoop(QObject):
                 self.log_message(f'Invalid frequency: {freq}')
         else:
             self.doppler_init_freq = 0.0
+    
+    def update_target_list_path(self, path):
+        self.target_list_path = path
+        self.target_list = self.load_target_list() # update list in memory
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):

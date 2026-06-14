@@ -178,7 +178,7 @@ def tracking_mode_OMM(self, t):
             subpoint = wgs84.subpoint_of(satellite)
             altitude = wgs84.height_of(satellite)
 
-            # units ---------------------------------------------------------------------------
+            # --------------------------------------- units ---------------------------------------
             az = az.degrees
             el = el.degrees
             slant_range = slant_range.km
@@ -191,7 +191,7 @@ def tracking_mode_OMM(self, t):
             longitude = subpoint.longitude.degrees
             altitude = altitude.km
 
-            # --------------------------------- doppler shift ---------------------------------
+            # ----------------------------------- doppler shift -----------------------------------
             f0 = self.doppler_init_freq
             try:
                 f1 = doppler_shift(f0, range_rate)
@@ -200,7 +200,7 @@ def tracking_mode_OMM(self, t):
                     self.log_message(f'Error calculating doppler shift: {str(e)}')
                     print(traceback.format_exc())
     
-            # ---------------------------------- flight path ----------------------------------
+            # ------------------------------------ flight path ------------------------------------
             if self.last_time_flight_path_got_calculated is not None:
                 delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
             else:
