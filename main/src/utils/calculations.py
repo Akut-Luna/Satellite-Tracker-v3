@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def doppler_shift(f0, range_rate):
     '''
@@ -133,3 +134,18 @@ def correction_matrix(az, el, roll, pitch, yaw):
     vector = rotate_by_euler(vector, (roll, pitch, yaw))
     az, el = cartesian_to_az_el(vector)
     return az, el
+
+def calc_satellite_and_topocentric_OMM(self, current_satellite, t):
+    '''
+    calculates skyfield satellite and topocentric position from OMM data
+    Parameters:
+        current_satellite (dir): data about the satellite from self.target_list
+        t (skyfield time): time for which the position should be calculated
+    
+    Returns:
+        satellite (Skyfield position): Skyfield satellite position vector at time t
+        topocentric (Skyfield position): Skyfield position vector (vector from antenna to satellite)
+    '''
+
+    
+    return satellite_at_t, topocentric_at_t

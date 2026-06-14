@@ -11,6 +11,7 @@ from utils.tracking_modes import (
 
 from utils.helper import ra_dec_parser, load_planet_ephemeris, load_target_list
 from utils.calculations import correction_matrix
+from utils.get_data import load_metadata, query_celestrak_api, save_metadata, update_data_if_needed
 
 class MainLoop(QObject):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -23,6 +24,10 @@ class MainLoop(QObject):
     # helper
     load_planet_ephemeris = load_planet_ephemeris
     load_target_list = load_target_list
+    load_metadata = load_metadata
+    query_celestrak_api = query_celestrak_api
+    save_metadata = save_metadata
+    update_data_if_needed = update_data_if_needed
 
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
@@ -57,7 +62,7 @@ class MainLoop(QObject):
         self.last_time_flight_path_got_calculated = None
         self.flight_path = None
         self.target_list = self.load_target_list()
-        # self.satellite_metadata = self.load_satellite_metadata() # TODO
+        self.metadata = self.load_metadata()
         # self.spice_kernels_loaded = False # gets set by browse_spice_file() # TODO
 
     def log_message(self, message):
@@ -164,7 +169,7 @@ class MainLoop(QObject):
             latitude = None 
             longitude = None
             altitude = None
-            f1 = 0.0
+            f1 = None
 
             try:
                 if self.tracking_mode == 0:    # List

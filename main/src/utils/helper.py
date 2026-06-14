@@ -129,7 +129,7 @@ def OMM_add_to_list(self):
     else:
         self.log_message('No satellite selected!')
 
-def load_target_list(self):
+def load_target_list(self, OMM_only=False):
     '''
     This function first loads the currently selected list from JSON.
     Then it will load the needed data for each target and add it to the list.
@@ -167,15 +167,17 @@ def load_target_list(self):
     
     try:
         for target in target_list:
-            if target['type'].upper() == 'LEO':
+            target['type'] = target['type'].upper()
+            if target['type'] == 'LEO':
                 fields = OMM_df[OMM_df['NORAD_CAT_ID'] == target['NORAD']]
                 if not fields.empty:
+                    fields = fields.iloc[0].to_dict()
                     satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
                     target['EarthSatellite'] = satellite
                 else:
                     self.log_message(f'Data for {target} is empty.')
 
-            elif target['type'].upper() == 'DS':
+            elif target['type'] == 'DS':
                 pass # TODO
             
             # for ASTRO we don't need to do anything
