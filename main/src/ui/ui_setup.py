@@ -30,7 +30,7 @@ def set_style(self):
     # ------------------------------------------ RA/DEC -------------------------------------------
 
     # ----------------------------------------- OMM File ------------------------------------------
-    # self.OMM_file_add_to_list_btn.setMaximumWidth(100)
+    # self.OMM_add_to_list_btn.setMaximumWidth(100)
 
     # ------------------------------------------- SPICE -------------------------------------------
 
@@ -200,49 +200,51 @@ def setup_tracking_modes_widget(self):
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
 
     # ------------------------------------- 2. OMM File widget ------------------------------------
-    self.OMM_file_widget = QWidget()
-    OMM_file_layout = QVBoxLayout(self.OMM_file_widget)
+    self.OMM_widget = QWidget()
+    OMM_layout = QVBoxLayout(self.OMM_widget)
 
     # ------------------- top -------------------
-    OMM_file_top_layout = QHBoxLayout()
+    OMM_top_layout = QHBoxLayout()
 
-    OMM_file_top_layout.addWidget(QLabel('OMM file:'))
-    self.OMM_file_input = QLineEdit()
-    self.OMM_file_input.setReadOnly(True)
-    OMM_file_top_layout.addWidget(self.OMM_file_input)
+    OMM_top_layout.addWidget(QLabel('OMM file:'))
+    self.OMM_input = QLineEdit()
+    self.OMM_input.setReadOnly(True)
+    OMM_top_layout.addWidget(self.OMM_input)
 
     # browse button
-    self.OMM_file_browse_btn = QPushButton('Browse')
-    self.OMM_file_browse_btn.clicked.connect(self.browse_OMM_file)
-    OMM_file_top_layout.addWidget(self.OMM_file_browse_btn)
+    self.OMM_browse_btn = QPushButton('Browse')
+    self.OMM_browse_btn.clicked.connect(self.browse_OMM)
+    OMM_top_layout.addWidget(self.OMM_browse_btn)
 
-    OMM_file_layout.addLayout(OMM_file_top_layout)
+    OMM_layout.addLayout(OMM_top_layout)
 
     # ----------------- middle ------------------
-    OMM_file_middle_layout = QGridLayout()
+    OMM_middle_layout = QGridLayout()
 
     # satellite name
-    OMM_file_middle_layout.addWidget(QLabel('Satellite Name'), 0, 0)
-    self.OMM_file_satellite_name = QLineEdit()
-    OMM_file_middle_layout.addWidget(self.OMM_file_satellite_name, 1, 0)
+    OMM_middle_layout.addWidget(QLabel('Satellite Name'), 0, 0)
+    self.OMM_satellite_name_input = QLineEdit()
+    self.OMM_satellite_name_input.textChanged.connect(self.OMM_satellite_name_changed)
+    OMM_middle_layout.addWidget(self.OMM_satellite_name, 1, 0)
 
-    # NORAD
-    OMM_file_middle_layout.addWidget(QLabel('NORAD ID'), 0, 1)
-    self.OMM_file_norad_id = QLineEdit()
-    OMM_file_middle_layout.addWidget(self.OMM_file_norad_id, 1, 1)
+    # NORAD id
+    OMM_middle_layout.addWidget(QLabel('NORAD ID'), 0, 1)
+    self.OMM_satellite_id_input = QLineEdit()
+    self.OMM_satellite_id_input.textChanged.connect(self.OMM_satellite_id_changed)
+    OMM_middle_layout.addWidget(self.OMM_norad_id, 1, 1)
 
-    OMM_file_layout.addLayout(OMM_file_middle_layout)
+    OMM_layout.addLayout(OMM_middle_layout)
 
     # ----------------- bottom ------------------
-    OMM_file_bottom_layout = QHBoxLayout()
+    OMM_bottom_layout = QHBoxLayout()
 
     # add to list button
-    self.OMM_file_add_to_list_btn = QPushButton('Add to List')
-    # self.OMM_file_add_to_list_btn.clicked.connect(self.add_satellite_to_list) # TODO
-    OMM_file_bottom_layout.addWidget(self.OMM_file_add_to_list_btn)
+    self.OMM_add_to_list_btn = QPushButton('Add to List')
+    # self.OMM_add_to_list_btn.clicked.connect(self.add_satellite_to_list) # TODO
+    OMM_bottom_layout.addWidget(self.OMM_add_to_list_btn)
     
-    OMM_file_layout.addLayout(OMM_file_bottom_layout)
-    self.tracking_mode_stack.addWidget(self.OMM_file_widget)
+    OMM_layout.addLayout(OMM_bottom_layout)
+    self.tracking_mode_stack.addWidget(self.OMM_widget)
 
     # -------------------------------------- 3. SPICE widget --------------------------------------
     self.spice_widget = QWidget()

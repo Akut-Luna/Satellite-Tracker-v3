@@ -51,6 +51,8 @@ class MainLoop(QObject):
         self.dec_degrees = 0.0
         self.list_idx = 0
         self.OMM_df = None
+        self.OMM_satellite_name = None
+        self.OMM_satellite_id = None
 
     def log_message(self, message):
         self.log.emit(message)
@@ -109,6 +111,16 @@ class MainLoop(QObject):
     
     def update_OMM_df(self, df):
         self.OMM_df = df
+
+    def update_OMM_satellite_name(self, name):
+        self.OMM_satellite_name = name
+
+    def update_OMM_satellite_id(self, sat_id):
+        if sat_id != '':
+            try:
+                self.OMM_satellite_id = int(sat_id)
+            except:
+                self.log_message(f'Invalid ID: {sat_id}')
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):

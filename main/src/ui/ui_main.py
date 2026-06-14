@@ -20,7 +20,7 @@ from ui.ui_setup import (
 )
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from ui.ui_buttons import (
-    browse_list, add_to_list, browse_OMM_file, browse_spice_file
+    browse_list, add_to_list, browse_OMM, browse_spice_file
 )
 from utils.helper import get_target_names_from_file
 from core.config import AppConfig
@@ -43,7 +43,7 @@ class SatelliteTrackerApp(QMainWindow):
 
     # helper
     get_target_names_from_file = get_target_names_from_file
-    browse_OMM_file = browse_OMM_file
+    browse_OMM = browse_OMM
     browse_spice_file = browse_spice_file
 
     # update
@@ -58,6 +58,8 @@ class SatelliteTrackerApp(QMainWindow):
     tracking_changed = Signal(bool)
     list_idx_changed = Signal(int)
     OMM_df_changed = Signal(pd.DataFrame)
+    OMM_satellite_name_changed = Signal(str)
+    OMM_satellite_id_changed = Signal(str)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):

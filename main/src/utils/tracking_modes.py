@@ -128,8 +128,6 @@ def tracking_mode_OMM(self, t):
     necessary information. Now we no longer ignore error messages in order to warn the user, if the given information is
     not valid.
     '''
-    file_path = self.OMM_file_input.text()
-    file_ending = file_path.split('.')[-1]
 
     satellite_name = self.OMM_file_satellite_name.text().upper()
     satellite_intl_id = self.OMM_file_intl_id.text()

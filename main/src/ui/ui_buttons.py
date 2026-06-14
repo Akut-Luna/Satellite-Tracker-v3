@@ -4,7 +4,6 @@ import os
 import spiceypy
 import pandas as pd
 
-
 def browse_list(self):
     base_path = os.getcwd()
     default_folder = os.path.join(base_path, 'main', 'data', 'Lists')
@@ -26,7 +25,7 @@ def browse_list(self):
         except:
             pass # it will automatically set the absolut path
 
-def browse_OMM_file(self):
+def browse_OMM(self):
     base_path = os.getcwd()
     default_folder = os.path.join(base_path, 'main', 'data', 'OMM')
     os.makedirs(default_folder, exist_ok=True)
@@ -43,7 +42,7 @@ def browse_OMM_file(self):
         
         try: # update UI
             file_path = os.path.relpath(file_path, base_path) # absolut path is a bit long
-            self.OMM_file_input.setText(file_path)
+            self.OMM_input.setText(file_path)
         except:
             pass # it will automatically set the absolut path
 
@@ -66,8 +65,8 @@ def browse_spice_file(self):
 
         # Load all kernels from meta-kernel
         try:
-            spiceypy.furnsh(file_path)
-            self.spice_kernels_loaded = True
+            spiceypy.furnsh(file_path) # TODO?
+            self.spice_kernels_loaded = True # TODO
         except Exception as e:
             self.log_message(f'Could not load SPICE Kernels: {e}')
             print(traceback.format_exc())
