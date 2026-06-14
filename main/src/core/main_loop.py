@@ -279,6 +279,3 @@ class MainLoop(QObject):
             if self.tracking:
                 self.log_message(f'Error: {str(e)}')
                 print(traceback.format_exc())        
-
-
-
