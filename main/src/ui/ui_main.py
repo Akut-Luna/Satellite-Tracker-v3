@@ -24,6 +24,7 @@ from ui.ui_buttons import (
 )
 from utils.helper import get_target_names_from_file
 from core.config import AppConfig
+import pandas as pd
 
 class SatelliteTrackerApp(QMainWindow):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -56,6 +57,7 @@ class SatelliteTrackerApp(QMainWindow):
     tracking_mode_changed = Signal(int)
     tracking_changed = Signal(bool)
     list_idx_changed = Signal(int)
+    OMM_df_changed = Signal(pd.DataFrame)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):

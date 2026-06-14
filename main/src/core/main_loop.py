@@ -50,6 +50,7 @@ class MainLoop(QObject):
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
         self.list_idx = 0
+        self.OMM_df = None
 
     def log_message(self, message):
         self.log.emit(message)
@@ -105,6 +106,9 @@ class MainLoop(QObject):
     
     def update_list_idx(self, index):
         self.list_idx = index
+    
+    def update_OMM_df(self, df):
+        self.OMM_df = df
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):
