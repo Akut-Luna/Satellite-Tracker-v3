@@ -219,24 +219,28 @@ def setup_tracking_modes_widget(self):
     OMM_layout.addLayout(OMM_top_layout)
 
     # ----------------- middle ------------------
-    OMM_middle_layout = QGridLayout()
+    OMM_middle_layout = QHBoxLayout()
 
     # satellite name
-    OMM_middle_layout.addWidget(QLabel('Satellite Name'), 0, 0)
+    OMM_middle_layout.addWidget(QLabel('Satellite Name:'))
     self.OMM_satellite_name_input = QLineEdit()
     self.OMM_satellite_name_input.textChanged.connect(self.OMM_satellite_name_changed)
-    OMM_middle_layout.addWidget(self.OMM_satellite_name, 1, 0)
+    OMM_middle_layout.addWidget(self.OMM_satellite_name_input)
 
     # NORAD id
-    OMM_middle_layout.addWidget(QLabel('NORAD ID'), 0, 1)
+    OMM_middle_layout.addWidget(QLabel('NORAD ID:'))
     self.OMM_satellite_id_input = QLineEdit()
     self.OMM_satellite_id_input.textChanged.connect(self.OMM_satellite_id_changed)
-    OMM_middle_layout.addWidget(self.OMM_norad_id, 1, 1)
+    OMM_middle_layout.addWidget(self.OMM_satellite_id_input)
 
     OMM_layout.addLayout(OMM_middle_layout)
 
     # ----------------- bottom ------------------
     OMM_bottom_layout = QHBoxLayout()
+
+    # info text
+    info_text = QLabel('Provide Satellite Name or ID. If both are provided, ID will be ignored.')
+    OMM_bottom_layout.addWidget(info_text)
 
     # add to list button
     self.OMM_add_to_list_btn = QPushButton('Add to List')
@@ -362,6 +366,7 @@ def setup_antenna_widget(self):
     doppler_shift_layout.addWidget(QLabel('Emitted freq. [MHz]'), 1, 1)
     self.doppler_initial_freq = QLineEdit()
     self.doppler_initial_freq.setText('0.0')
+    self.doppler_initial_freq.textChanged.connect(self.doppler_init_freq_changed)
     doppler_shift_layout.addWidget(self.doppler_initial_freq, 2, 1)
 
     doppler_shift_layout.addWidget(QLabel('Observed freq. [MHz]'), 1, 2)

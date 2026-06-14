@@ -1,12 +1,14 @@
 from astropy.coordinates import ICRS, AltAz, SkyCoord, ITRS, EarthLocation
-from skyfield.api import wgs84, Star
+from skyfield.api import wgs84, Star, EarthSatellite
 import astropy.units as u
 import traceback
 from datetime import timedelta
 import numpy as np
 import time
+import os
 
-from utils.time_convertions import datetime_to_astropy_time
+from utils.time_convertions import datetime_to_astropy_time, datetime_to_skyfield_time
+from utils.calculations import doppler_shift
 
 def tracking_mode_List(self, t):
     pass
@@ -63,7 +65,7 @@ def tracking_mode_RA_DEC(self, t):
     longitude = subpoint.lon.value   # deg
     altitude = subpoint.height.value # km
     
-    # flight path -----------------------------------------------------------------------------
+    # ---------------------------------------- flight path ----------------------------------------
     '''
     Note: Skyfield is less precise than astropy, but faster by a factor of 10. 
     Therefore we are using Skyfield for the calculation of the flight_path.
@@ -81,7 +83,7 @@ def tracking_mode_RA_DEC(self, t):
             target_dir = Star(ra_hours=self.ra_hours, dec_degrees=self.dec_degrees)
             if self.config.flight_path_steps > 0:
                 future_times = [t + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
-                future_times = self.ts.from_datetimes(future_times)
+                future_times = self.skyfield_ts.from_datetimes(future_times)
                 
                 # Note: Since RA/Dec is fixed in GCRS, we observe from Earth center
                 path_astrometric = self.planet_ephemeris['earth'].at(future_times).observe(target_dir)
@@ -107,7 +109,7 @@ def tracking_mode_RA_DEC(self, t):
 def tracking_mode_OMM(self, t):
     '''
     Parameters:
-        t (skyfield timescale): Skyfield time
+        t (datetime): time of observation
 
     Returns:
         az (float): Azimuth in degrees 
@@ -129,70 +131,35 @@ def tracking_mode_OMM(self, t):
     not valid.
     '''
 
-    satellite_name = self.OMM_file_satellite_name.text().upper()
-    satellite_intl_id = self.OMM_file_intl_id.text()
-    if self.OMM_file_norad_id.text() == '':
-        satellite_norad_id = -1
-    else:
-        satellite_norad_id = int(self.OMM_file_norad_id.text())
-
     satellite = None
+    sat_id = self.OMM_satellite_id
+    sat_name = self.OMM_satellite_name
 
-    if os.path.isfile(file_path) and (satellite_name != '' or satellite_intl_id != '' or satellite_norad_id != -1):
-        if file_ending == 'csv': # OMM ------------------------------------------------
+    if self.omm_df is not None and (sat_name != '' or sat_id != -1):
+        # find satellite in data
+        if sat_name != '':
+            row = self.omm_df[self.omm_df['OBJECT_NAME'] == sat_name]
+            if row.empty and self.tracking:
+                self.log_message(f'Could not find {sat_name} in file data.')
 
-            # find satellite in data
-            if satellite_name != '':
-                row = self.omm_df[self.omm_df['OBJECT_NAME'] == satellite_name]
-                if row.empty and self.tracking:
-                    self.log_message(f'Could not find {satellite_name} in file {file_path}')
+        elif sat_id != -1:
+            row = self.omm_df[self.omm_df['NORAD_CAT_ID'] == sat_id]
+            if row.empty and self.tracking:
+                self.log_message(f'Could not find {sat_id} in data.')
 
-            elif satellite_intl_id != '':
-                row = self.omm_df[self.omm_df['OBJECT_ID'] == satellite_intl_id]
-                if row.empty and self.tracking:
-                    self.log_message(f'Could not find {satellite_intl_id} in file {file_path}')
-            
-            elif satellite_norad_id != -1:
-                row = self.omm_df[self.omm_df['NORAD_CAT_ID'] == satellite_norad_id]
-                if row.empty and self.tracking:
-                    self.log_message(f'Could not find {satellite_norad_id} in file {file_path}')
-
-            if not row.empty: # create EarthSatellite
-                fields = row.to_dict(orient='records')[0]
-                satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
-
-        elif file_ending == 'tle': # TLE ----------------------------------------------
-
-            if satellite_name != '':
-                try:                
-                    satellite = self.tle_by_name[satellite_name]
-                except:
-                    if self.tracking:
-                        self.log_message(f'Could not find {satellite_name} in file {file_path}')
-            
-            elif satellite_intl_id != '':
-                # adjust to TLE norm for international designator
-                if '-' in satellite_intl_id:
-                    satellite_intl_id = satellite_intl_id[2:].replace('-', '')
-
-                try:                
-                    satellite = self.tle_by_intl[satellite_intl_id]
-                except:
-                    if self.tracking:
-                        self.log_message(f'Could not find {satellite_intl_id} in file {file_path}')
-            
-            elif satellite_norad_id != -1:
-                try:                
-                    satellite = self.tle_by_norad[satellite_norad_id]
-                except:
-                    if self.tracking:
-                        self.log_message(f'Could not find {satellite_norad_id} in file {file_path}')
-                        
+        if not row.empty: # create EarthSatellite
+            fields = row.to_dict(orient='records')[0]
+            satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
         else:
             self.log_message('Invalide file')
 
         if satellite is not None:
-            self.OMM_file_satellite = satellite
+            '''
+            Skyfield is optimized for this case, so we are using Skyfield instead of astropy here.
+            '''
+            now_datetime = t
+            t = datetime_to_skyfield_time(self.skyfield_ts, t)
+            self.OMM_satellite = satellite
 
             # relative position vector
             relative_pos = satellite - self.skyfield_antenna_pos 
@@ -219,39 +186,37 @@ def tracking_mode_OMM(self, t):
             longitude = subpoint.longitude.degrees
             altitude = altitude.km
 
-            # doppler shift -------------------------------------------------------------------
-            # get frequency from UI
-            if self.doppler_initial_freq.text() == '':
-                f0 = 0 
-            else:
-                f0 = float(self.doppler_initial_freq.text())
-            
+            # --------------------------------- doppler shift ---------------------------------
+            f0 = self.doppler_init_freq
             try:
-                f1 = self.doppler_shift(f0, range_rate)
+                f1 = doppler_shift(f0, range_rate)
             except Exception as e:
                 if self.tracking:
                     self.log_message(f'Error calculating doppler shift: {str(e)}')
                     print(traceback.format_exc())
     
-            # flight path -----------------------------------------------------------------------------
-            now_datetime = self.skyfield_time_to_datetime(t)
+            # ---------------------------------- flight path ----------------------------------
             if self.last_time_flight_path_got_calculated is not None:
                 delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
             else:
-                delta_t_min = self.min_before_recalculate_flight_path
+                delta_t_min = self.config.min_before_recalculate_flight_path
                 self.last_time_flight_path_got_calculated = now_datetime
 
-            if delta_t_min >= self.min_before_recalculate_flight_path:
+            if delta_t_min >= self.config.min_before_recalculate_flight_path:
                 try:
-                    flight_path = np.zeros((self.flight_path_steps,2))
-                    for i in range(self.flight_path_steps):
-                        t = self.datetime_to_skyfield_time(now_datetime + timedelta(minutes=i))
-                        satellite = self.OMM_file_satellite.at(t)
-                        subpoint = wgs84.subpoint_of(satellite)
-                        flight_path[i][0] = subpoint.latitude.degrees
-                        flight_path[i][1] = subpoint.longitude.degrees
+                    if self.config.flight_path_steps > 0:
+                        future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
+                        future_times = self.skyfield_ts.from_datetimes(future_times)
+                        satellites = self.OMM_satellite.at(future_times)
+                        subpoints = wgs84.subpoint_of(satellites)
+                        flight_path = np.column_stack((
+                            subpoints.latitude.degrees,
+                            subpoints.longitude.degrees
+                        ))
+                    else:
+                        flight_path = np.zeros((0, 2))
                     
-                    self.flight_path = flight_path
+                    self.flight_path_changed.emit(flight_path) # -> ui
                     self.last_time_flight_path_got_calculated = now_datetime
 
                 except Exception as e:
@@ -260,6 +225,7 @@ def tracking_mode_OMM(self, t):
                         print(traceback.format_exc())
 
             return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
+    return None, None, None, None, None, None, None, None, None, None
 
 def tracking_mode_SPICE(self, t):
     pass
@@ -289,6 +255,6 @@ def tracking_mode_AZ_EL(self):
         return
     
     # flight path -----------------------------------------------------------------------------
-    self.flight_path_changed.emit(None) # -> ui
+    self.flight_path_changed.emit(np.zeros((0, 2))) # -> ui
 
     return az, el
