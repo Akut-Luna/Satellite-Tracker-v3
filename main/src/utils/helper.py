@@ -89,4 +89,41 @@ def ra_dec_parser(value: str) -> float:
                 + units['"'] / 3600
             )
 
+def OMM_add_to_list(self):
+    if self.OMM_satellite is not None:
+        sat_name = self.OMM_satellite.name
+        sat_id = self.OMM_satellite.model.satnum
+        f0 = self.doppler_init_freq
+
+        new_entry = {
+            'type': 'LEO',
+            'name': sat_name,
+            'frequency': f0,
+            'NORAD': sat_id
+        }
+
+        # TODO
+        # json_file = os.path.join('Main', 'config', 'satellite_list.json')
+
+        # # Load existing data or start with an empty list
+        # try:
+        #     with open(json_file, 'r') as file:
+        #         data = json.load(file)
+        # except (FileNotFoundError, json.JSONDecodeError):
+        #     data = []
+
+        # # Check if the satellie is already in json
+        # if not any(entry.get('name') == new_entry['name'] for entry in data):
+        #     data.append(new_entry)
+        #     with open(json_file, 'w') as file:
+        #         json.dump(data, file, indent=4)
+        #     self.log_message(f'{name} was added to the list.')
+        #     new_entry['EarthSatellite'] = self.OMM_satellite
+        #     self.satellite_list.append(new_entry)
+        #     self.tracking_mode_list_dropdown.addItems([name])
+        # else:
+        #     self.log_message(f'{name} is already in the list.')
+
+    else:
+        self.log_message('No satellite selected!')
 
