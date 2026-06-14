@@ -82,7 +82,7 @@ class AppCore(QObject):
         self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
         self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
         self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
-        self.main_window.list_idx_changed.connect(self.main_loop_worker.update_list_idx)
+        self.main_window.target_list_idx_changed.connect(self.main_loop_worker.update_target_list_idx)
         self.main_window.OMM_df_changed.connect(self.main_loop_worker.update_OMM_df)
         self.main_window.OMM_satellite_name_changed.connect(self.main_loop_worker.update_OMM_satellite_name)
         self.main_window.OMM_satellite_id_changed.connect(self.main_loop_worker.update_OMM_satellite_id)

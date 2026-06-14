@@ -171,7 +171,7 @@ def setup_tracking_modes_widget(self):
     # ----------------- middle ------------------
     self.tracking_mode_list_dropdown = QComboBox()
     self.tracking_mode_list_dropdown.addItems(self.get_target_names_from_file(default_list))
-    self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.list_idx_changed.emit) # -> main_loop
+    self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.target_list_idx_changed.emit) # -> main_loop
     
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     

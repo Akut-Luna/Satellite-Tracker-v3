@@ -45,12 +45,12 @@ class MainLoop(QObject):
         self.tracking = False
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
-        self.list_idx = 0
         self.OMM_df = None              # gets loaded by browse_OMM()
         self.OMM_satellite_name = ''    # gets loaded by browse_OMM()
         self.OMM_satellite_id = -1      # gets loaded by browse_OMM()
         self.OMM_satellite = None       # gets set by tracking_mode_OMM()
         self.doppler_init_freq = 0.0
+        self.target_list_idx = 0
         self.target_list_path = os.path.join('main', 'data', 'Lists', 'default_list.json')
 
         # local
@@ -112,8 +112,8 @@ class MainLoop(QObject):
         '''
         self.tracking_changed.emit(checked) # -> app_core
     
-    def update_list_idx(self, index):
-        self.list_idx = index
+    def update_target_list_idx(self, index):
+        self.target_list_idx = index
     
     def update_OMM_df(self, df):
         self.OMM_df = df
