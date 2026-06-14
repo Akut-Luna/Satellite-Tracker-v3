@@ -94,6 +94,8 @@ class AppCore(QObject):
         # ----------- Main Loop -> UI -----------
         self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
         self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
+        self.main_loop_worker.go_update_f0.connect(self.main_window.update_ui_f0)
+
 
         # ---- Main Loop -> Motor Controller ----
         self.main_loop_worker.go_update_motors.connect(self.motor_worker.move_motors)
@@ -115,6 +117,11 @@ class AppCore(QObject):
         self.tracking_changed.connect(self.main_loop_worker.update_tracking) # App Core -> Main Loop
         self.tracking_changed.connect(self.motor_worker.update_tracking)     # App Core -> Motor Controller
 
+        # ------------------------------------- inital stetup -------------------------------------
+        # load inital frequency
+        current_target = self.main_loop_worker.target_list[self.main_loop_worker.target_list_idx]
+        f0 = current_target['frequency']
+        self.main_loop_worker.go_update_f0.emit(f0)
     # ------------------------------------ Slots (receive data) -----------------------------------
     @Slot(bool)
     def set_tracking(self, tracking: bool):

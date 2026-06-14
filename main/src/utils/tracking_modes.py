@@ -50,6 +50,7 @@ def tracking_mode_List(self, t):
 
             # relative position vector
             satellite = current_target['EarthSatellite']
+            list_satellite = satellite # save for use in flight path
             relative_pos = satellite - antenna_pos 
             
             # relative position object
@@ -100,7 +101,7 @@ def tracking_mode_List(self, t):
                 if self.config.flight_path_steps > 0:
                     future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
                     future_times = self.skyfield_ts.from_datetimes(future_times)
-                    satellites = self.OMM_satellite.at(future_times)
+                    satellites = list_satellite.at(future_times)
                     subpoints = wgs84.subpoint_of(satellites)
                     flight_path = np.column_stack((
                         subpoints.latitude.degrees,

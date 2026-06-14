@@ -119,6 +119,10 @@ class SatelliteTrackerApp(QMainWindow):
         else:
             self.current_azimuth.setText(f'{antenna_az:.1f}°')
             self.current_elevation.setText(f'{antenna_el:.1f}°')
+    
+    def update_ui_f0(self, f0):
+        print(f0)
+        self.doppler_initial_freq.setText(str(f0))
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):

@@ -257,4 +257,4 @@ def update_ui_tracking(self, tracking):
         # ensures that the button is not checked if the function was not called by the button
         self.tracking_btn.blockSignals(True)
         self.tracking_btn.setChecked(False)
-        self.tracking_btn.blockSignals(False)
+        self.tracking_btn.blockSignals(False)    

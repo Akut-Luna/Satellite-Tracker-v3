@@ -32,6 +32,7 @@ class MainLoop(QObject):
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
     go_update_motors = Signal(dict) # Send az, el to motors
+    go_update_f0 = Signal(float)
     log = Signal(str)
     flight_path_changed = Signal(object) # np.array or None # TODO: maybe handle with empty array?
     tracking_changed = Signal(bool)
@@ -64,7 +65,6 @@ class MainLoop(QObject):
         self.target_list = self.load_target_list()
         self.metadata = self.load_metadata()
         # self.spice_kernels_loaded = False # gets set by browse_spice_file() # TODO
-
     def log_message(self, message):
         self.log.emit(message) # -> ui
 
@@ -104,6 +104,10 @@ class MainLoop(QObject):
     def update_tracking_mode(self, index):
         self.last_time_flight_path_got_calculated = None
         self.tracking_mode = index
+        if index == 0:
+            current_target = self.target_list[self.target_list_idx]
+            f0 = current_target['frequency']
+            self.go_update_f0.emit(f0) # -> ui
 
     def update_tracking(self, tracking):
         self.tracking = tracking
@@ -119,6 +123,9 @@ class MainLoop(QObject):
     
     def update_target_list_idx(self, index):
         self.target_list_idx = index
+        current_target = self.target_list[index]
+        f0 = current_target['frequency']
+        self.go_update_f0.emit(f0) # -> ui
     
     def update_OMM_df(self, df):
         self.OMM_df = df
