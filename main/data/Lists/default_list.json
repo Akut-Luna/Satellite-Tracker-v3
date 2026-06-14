@@ -8,13 +8,13 @@
     {
         "type": "DS",
         "name": "Lunar Reconnaissance Orbiter",
-        "frequency": 0.0,
+        "frequency": 300.0,
         "Horizons": -85
     },
     {
         "type": "ASTRO",
         "name": "Messier 51 (Whirlpool-Galaxy)",
-        "frequency": 0.0,
+        "frequency": 400.4,
         "RA": 13.4979722,
         "DEC": 47.1952778
     }

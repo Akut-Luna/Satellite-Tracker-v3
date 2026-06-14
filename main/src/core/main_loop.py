@@ -65,6 +65,7 @@ class MainLoop(QObject):
         self.target_list = self.load_target_list()
         self.metadata = self.load_metadata()
         # self.spice_kernels_loaded = False # gets set by browse_spice_file() # TODO
+
     def log_message(self, message):
         self.log.emit(message) # -> ui
 
@@ -145,12 +146,12 @@ class MainLoop(QObject):
     def update_doppler_init_freq(self, freq):
         if freq != '':
             try:
-                self.doppler_init_freq = int(freq)
+                self.doppler_init_freq = float(freq)
             except:
                 self.log_message(f'Invalid frequency: {freq}')
         else:
             self.doppler_init_freq = 0.0
-    
+
     def update_target_list_path(self, path):
         self.target_list_path = path
         self.target_list = self.load_target_list() # update list in memory
