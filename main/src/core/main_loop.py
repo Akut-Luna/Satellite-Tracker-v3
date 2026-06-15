@@ -251,6 +251,8 @@ class MainLoop(QObject):
             #     self.current_azimuth.setText(f'{current_az:.1f}°')
             #     self.current_elevation.setText(f'{current_el:.1f}°')
 
+            # TODO: use angular_separation(lon1, lat1, lon2, lat2), cartesian_to_spherical(x, y, z) from astropy
+            # 
             #     if self.should_update_motors(current_az, current_el, az, el) and self.tracking:
             #         # calculate target position based on angular rate
             #         now = self.skyfield_time_to_datetime(t)

@@ -117,3 +117,6 @@ def save_metadata(self):
     except Exception as e:
         self.log_message(f'Error saving metadata file: {e}')
         print(traceback.format_exc())
+
+# TODO: seperate thread for data collection?
+
