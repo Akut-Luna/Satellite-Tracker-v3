@@ -83,6 +83,9 @@ class AppCore(QObject):
 
         # try to connect to motor controller once motor_thread has started
         self.motor_thread.started.connect(self.motor_worker.establish_connection)
+        
+        # ------------ init setup that can only happen once everything else is loaded -------------
+        self.main_loop_thread.started.connect(self.main_loop_worker.load_init_f0)
 
         # ----------- UI -> Main Loop -----------
         self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
@@ -123,11 +126,6 @@ class AppCore(QObject):
         self.tracking_changed.connect(self.main_loop_worker.update_tracking) # App Core -> Main Loop
         self.tracking_changed.connect(self.motor_worker.update_tracking)     # App Core -> Motor Controller
 
-        # ------------------------------------- inital stetup -------------------------------------
-        # load inital frequency
-        current_target = self.main_loop_worker.target_list[self.main_loop_worker.target_list_idx]
-        f0 = current_target['frequency']
-        self.main_loop_worker.go_update_f0.emit(f0)
     # ------------------------------------ Slots (receive data) -----------------------------------
     @Slot(bool)
     def set_tracking(self, tracking: bool):

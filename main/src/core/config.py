@@ -12,7 +12,5 @@ class AppConfig:
     min_before_recalculate_flight_path: int
     flight_path_steps: int
     auto_uncheck_start_tracking_at_AOS_btn: bool
-
-    # DISPLAY_LIGHT_TIME_CORRECTION_OPTION
-    # DISPLAY_HORIZONS_DIRECTLY_OPTION
-    # AUTO_UNCHECK_START_TRACKING_AT_AOS_BTN
+    time_resolution_horizons_state_vector: int
+    time_resolution_horizons_directly: int

@@ -1,11 +1,10 @@
-from astropy.coordinates import ICRS, AltAz, SkyCoord, ITRS, EarthLocation
-from skyfield.api import wgs84, Star, EarthSatellite
-import astropy.units as u
-import traceback
-from datetime import timedelta
-import numpy as np
-import time
 import os
+import traceback
+import numpy as np
+import astropy.units as u
+from datetime import timedelta
+from skyfield.api import wgs84, Star, EarthSatellite
+from astropy.coordinates import AltAz, SkyCoord, ITRS, EarthLocation
 
 from utils.time_convertions import datetime_to_astropy_time, datetime_to_skyfield_time
 from utils.calculations import doppler_shift
@@ -25,20 +24,14 @@ def tracking_mode_List(self, t):
         latitude (float): Subpoint latitude in degrees
         longitude (float): Subpoint longitude in degrees
         altitude (float): Altitude of satellite above the ground in km
-        f1 (float): Doppler shifted frequency in MHz
-    
-    NOTE: IF TRACKING IS TURNED OFF, ALL ERROR MESSAGES ARE GETTING IGNORED! 
-    The reason for that is that, if the user has not yet finished typing in all necessary information the program would 
-    raise lots of errors. So, the idea is that we just display the data that we can calculate with the information
-    that we curretly have. However as soon as tracking is turned on we have to assume that the user has entered all 
-    necessary information. Now we no longer ignore error messages in order to warn the user, if the given information is
-    not valid.
+        f1 (float): Doppler shifted frequency in MHz  
     '''
     current_target = self.target_list[self.target_list_idx]
+    # TODO: put the following in its own function: func(current_target, t)
+    # this function could then be reused in a future planer feature
     self.update_data_if_needed(current_target)                 
 
-    # get skyfield satellite object and topocentric position object
-    if current_target['type'] == 'LEO':
+    if current_target['type'] == 'LEO': # ---------------------------------------------------------
         now_datetime = t
         t = datetime_to_skyfield_time(self.skyfield_ts, t)
         try:
@@ -58,9 +51,8 @@ def tracking_mode_List(self, t):
             satellite = satellite.at(t) # geocentric
 
         except Exception as e:
-            if self.tracking:
-                self.log_message(f'Error calculating satellite position: {str(e)}')
-                print(traceback.format_exc())
+            self.log_message(f'Error calculating satellite position: {str(e)}')
+            print(traceback.format_exc())
 
         el, az, slant_range, el_rate, az_rate, range_rate = topocentric.frame_latlon_and_rates(antenna_pos)
 
@@ -85,18 +77,11 @@ def tracking_mode_List(self, t):
         try:
             f1 = doppler_shift(f0, range_rate)
         except Exception as e:
-            if self.tracking:
-                self.log_message(f'Error calculating doppler shift: {str(e)}')
-                print(traceback.format_exc())
+            self.log_message(f'Error calculating doppler shift: {str(e)}')
+            print(traceback.format_exc())
 
         # -------------------------------------- flight path --------------------------------------
-        if self.last_time_flight_path_got_calculated is not None:
-            delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
-        else:
-            delta_t_min = self.config.min_before_recalculate_flight_path
-            self.last_time_flight_path_got_calculated = now_datetime
-
-        if delta_t_min >= self.config.min_before_recalculate_flight_path:
+        if self.should_flight_path_get_calculated(now_datetime):
             try:
                 if self.config.flight_path_steps > 0:
                     future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
@@ -114,141 +99,75 @@ def tracking_mode_List(self, t):
                 self.last_time_flight_path_got_calculated = now_datetime
 
             except Exception as e:
-                if self.tracking:
-                    self.log_message(f'Error calculating flight path: {str(e)}')
-                    print(traceback.format_exc())
+                self.log_message(f'Error calculating flight path: {str(e)}')
+                print(traceback.format_exc())
         return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     
-    elif current_target['type'] == 'DS':
-        pass # TODO
+    elif current_target['type'] == 'DS': # --------------------------------------------------------
+        # ------------------------------ data from Horizons directly ------------------------------
+        interpolators = current_target['interpolators_directly']
+        start_time = current_target['start_time_directly']
+        target_x = (t - start_time).total_seconds()
 
-    elif current_target['type'] == 'ASTRO':
+        az = float(interpolators['az_deg'](target_x))
+        el = float(interpolators['el_deg'](target_x))
+
+        az_rate = float(interpolators['az_rate_deg_s'](target_x))
+        el_rate = float(interpolators['el_rate_deg_s'](target_x))
+
+        slant_range = float(interpolators['slant_range_km'](target_x))
+        range_rate = float(interpolators['range_rate_km_s'](target_x))
+
+        # --------------------------- data calculated from state vector ---------------------------
+        interpolators = current_target['interpolators_from_vector'] # NOTE: start_time_form_vector 
+        start_time = current_target['start_time_from_vector']       # could differ from start_time_directly
+        target_x = (t - start_time).total_seconds()                 # so, we recalculate target_x
+
+        latitude = float(interpolators['subpoint_lat'](target_x))
+        longitude = float(interpolators['subpoint_lon'](target_x))
+        altitude = float(interpolators['subpoint_alt_km'](target_x))
+
+        # ------------------------------------- doppler shift -------------------------------------
+        f0 = self.doppler_init_freq
+        try:
+            f1 = doppler_shift(f0, range_rate)
+        except Exception as e:
+            self.log_message(f'Error calculating doppler shift: {str(e)}')
+            print(traceback.format_exc())
+
+        # -------------------------------------- flight path --------------------------------------
+        if self.should_flight_path_get_calculated(now_datetime):
+            try:
+                if self.config.flight_path_steps > 0:
+                    base_offset = (now_datetime - start_time).total_seconds()
+                    future_x = [base_offset + (i * 60) for i in range(self.config.flight_path_steps)]
+                    latitudes = float(interpolators['subpoint_lat'](future_x))
+                    longitudes = float(interpolators['subpoint_lon'](future_x))
+                    flight_path = np.column_stack((
+                        latitudes,
+                        longitudes
+                    ))
+                else:
+                    flight_path = np.zeros((0, 2))
+                
+                self.flight_path_changed.emit(flight_path) # -> ui
+                self.last_time_flight_path_got_calculated = now_datetime
+
+            except Exception as e:
+                self.log_message(f'Error calculating flight path: {str(e)}')
+                print(traceback.format_exc())
+        return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
+
+    elif current_target['type'] == 'ASTRO': # -----------------------------------------------------
         ra = current_target['RA']
         dec = current_target['DEC']
         az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(t, ra, dec)
         return az, None, el, None, None, None, latitude, longitude, altitude, None
 
-    else: 
+    else: # ---------------------------------------------------------------------------------------
         self.log_message(f'Unknowen target type: {current_target['type']}')
+    
     return None, None, None, None, None, None, None, None, None, None
-
-
-
-        # # Horizons directly -----------------------------------------------------------------------
-        # # During the Artemis II mission a mismatch between the calculations for AZ/EL of this program based on Horizons 
-        # # data, and the AZ/EL data from Horizons itself was noticed. So an option the use the AZ/EL data from Horizons
-        # # direcly was added.
-        # if self.display_horizons_directly_option and self.horizons_directly_btn.isChecked():            
-        #     df_direct = current_satellite['df_direct']
-        #     datetime_t = self.skyfield_time_to_datetime(t)
-
-        #     # Convert time data in df to timezone-aware datetime object if needed
-        #     if isinstance(df_direct['Calendar Date (UTC)'].iloc[0], str):
-        #         df_direct['Calendar Date (UTC)'] = pd.to_datetime(df_direct['Calendar Date (UTC)']).dt.tz_localize('UTC')
-
-        #     # find two data points closest in time
-        #     closest_rows = df_direct.iloc[(df_direct['Calendar Date (UTC)'] - datetime_t).abs().argsort()[:2]]
-            
-        #     # linear interpolation between the two data points ------------------------------------
-        #     t1, t2 = closest_rows['Calendar Date (UTC)']
-            
-        #     az_1, az_2 = closest_rows['Az']
-        #     el_1, el_2 = closest_rows['El']
-
-        #     delta_1,  delta_2  = closest_rows['Delta']
-        #     deldot_1, deldot_2 = closest_rows['Deldot']
-
-        #     t1 = pd.to_datetime(t1)
-        #     t2 = pd.to_datetime(t2)
-
-        #     factor = (datetime_t - t1) / (t2 - t1)
-
-        #     az_now = az_1 + factor * (az_2 - az_1) # deg
-        #     el_now = el_1 + factor * (el_2 - el_1) # deg
-
-        #     delta_now = delta_1 + factor * (delta_2 - delta_1) # AU
-        #     deldot_now = deldot_1 + factor * (deldot_2 - deldot_1) # km/s
-        #     # -------------------------------------------------------------------------------------
-        
-        #     # over wite with direct values
-        #     az = az_now 
-        #     el = el_now 
-        #     slant_range = delta_now * 149597870.7 # km
-        #     range_rate = deldot_now
-        # # -----------------------------------------------------------------------------------------
-
-        # # light travel time -----------------------------------------------------------------------
-        # # Since the Horizon data is already ligth corrected, my light correction is not needed.
-        # # I'm still leaving this feature in because it might be usefull in the future with data
-        # # from a different source. In the config file you can set DISPLAY_LIGHT_TIME_CORRECTION_OPTION 
-        # # to True in order to display a button, that allows the activation of this feature. 
-        # if self.display_light_time_correction_option and self.light_time_correction_btn.isChecked():
-        #     c = 299792458 # m/s                       # if the travel time of the signal gets large
-        #     light_travel_time = slant_range.m/c # s   # we need to take that into account                   
-        #     t -= timedelta(seconds=light_travel_time) # and redo the calculations with an earlier time
-        #     satellite, topocentric = self.calculate_satellite_and_topocentric(current_satellite, t)
-        #     el, az, slant_range, el_rate, az_rate, range_rate = topocentric.frame_latlon_and_rates(self.skyfield_antenna_pos)
-        # # -----------------------------------------------------------------------------------------
-
-        # subpoint = wgs84.subpoint_of(satellite)
-        # altitude = wgs84.height_of(satellite)
-        
-        # # units -----------------------------------------------------------------------------------
-        # if not (self.display_horizons_directly_option and self.horizons_directly_btn.isChecked()):
-        #     # if Horizons directly is used they are already floats
-        #     az = az.degrees
-        #     el = el.degrees
-        #     slant_range = slant_range.km
-        #     range_rate = range_rate.km_per_s
-
-        # az_rate = az_rate.degrees.per_second
-        # el_rate = el_rate.degrees.per_second
-        
-        # latitude = subpoint.latitude.degrees
-        # longitude = subpoint.longitude.degrees
-        # altitude = altitude.km
-
-        # # doppler shift ---------------------------------------------------------------------------
-        # # get frequency from config file
-        # f0 = current_satellite['frequency']
-        
-        # # show initial frequency on UI
-        # self.doppler_initial_freq.setText(f'{f0:.6f}')
-
-        # try:
-        #     f1 = self.doppler_shift(f0, range_rate)
-        # except Exception as e:
-        #     if self.tracking:
-        #         self.log_message(f'Error calculating doppler shift: {str(e)}')
-        #         print(traceback.format_exc())
-
-        # # flight path -----------------------------------------------------------------------------
-        # now_datetime = self.skyfield_time_to_datetime(t)
-        # if self.last_time_flight_path_got_calculated is not None:
-        #     delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
-        # else:
-        #     delta_t_min = self.min_before_recalculate_flight_path
-        #     self.last_time_flight_path_got_calculated = now_datetime
-
-        # if delta_t_min >= self.min_before_recalculate_flight_path:
-        #     try:
-        #         flight_path = np.zeros((self.flight_path_steps,2))
-        #         for i in range(self.flight_path_steps):
-        #             t = self.datetime_to_skyfield_time(now_datetime + timedelta(minutes=i))
-        #             satellite, _ = self.calculate_satellite_and_topocentric(current_satellite, t)
-        #             subpoint = wgs84.subpoint_of(satellite)
-        #             flight_path[i][0] = subpoint.latitude.degrees
-        #             flight_path[i][1] = subpoint.longitude.degrees
-                
-        #         self.flight_path = flight_path
-        #         self.last_time_flight_path_got_calculated = now_datetime
-
-        #     except Exception as e:
-        #         if self.tracking:
-        #             self.log_message(f'Error calculating flight path: {str(e)}')
-        #             print(traceback.format_exc())
-
-        # return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
 
 def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
     '''
@@ -263,13 +182,6 @@ def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
         latitude (float): Subpoint latitude in degrees
         longitude (float): Subpoint longitude in degrees
         altitude (float): Altitude of satellite above the ground in km
-
-    NOTE: IF TRACKING IS TURNED OFF, ALL ERROR MESSAGES ARE GETTING IGNORED! 
-    The reason for that is that, if the user has not yet finished typing in all necessary information the program would 
-    raise lots of errors. So, the idea is that we just display the data that we can calculate with the information
-    that we curretly have. However as soon as tracking is turned on we have to assume that the user has entered all 
-    necessary information. Now we no longer ignore error messages in order to warn the user, if the given information is
-    not valid.
     '''
     
     obstime = datetime_to_astropy_time(t)
@@ -314,13 +226,7 @@ def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
     Note: Skyfield is less precise than astropy, but faster by a factor of 10. 
     Therefore we are using Skyfield for the calculation of the flight_path.
     '''
-    if self.last_time_flight_path_got_calculated is not None:
-        delta_t_min = (t - self.last_time_flight_path_got_calculated).total_seconds() // 60
-    else:
-        delta_t_min = self.config.min_before_recalculate_flight_path
-        self.last_time_flight_path_got_calculated = t
-
-    if delta_t_min >= self.config.min_before_recalculate_flight_path:
+    if self.should_flight_path_get_calculated(t):
         try:
             # Vectorized calculation
             target_dir = Star(ra_hours=ra_hours, dec_degrees=dec_degrees)
@@ -343,9 +249,8 @@ def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
             self.last_time_flight_path_got_calculated = t
 
         except Exception as e:
-            if self.tracking:
-                self.log_message(f'Error calculating flight path: {str(e)}')
-                print(traceback.format_exc())
+            self.log_message(f'Error calculating flight path: {str(e)}')
+            print(traceback.format_exc())
     return az, el, latitude, longitude, altitude
 
 def tracking_mode_OMM(self, t):
@@ -363,14 +268,7 @@ def tracking_mode_OMM(self, t):
         latitude (float): Subpoint latitude in degrees
         longitude (float): Subpoint longitude in degrees
         altitude (float): Altitude of satellite above the ground in km
-        f1 (float): Doppler shifted frequency in MHz            
-
-    NOTE: IF TRACKING IS TURNED OFF, (ALMOST) ALL ERROR MESSAGES ARE GETTING IGNORED! 
-    The reason for that is that, if the user has not yet finished typing in all necessary information the program would 
-    raise lots of errors. So, the idea is that we just display the data that we can calculate with the information
-    that we curretly have. However as soon as tracking is turned on we have to assume that the user has entered all 
-    necessary information. Now we no longer ignore error messages in order to warn the user, if the given information is
-    not valid.
+        f1 (float): Doppler shifted frequency in MHz 
     '''
 
     satellite = None
@@ -379,21 +277,31 @@ def tracking_mode_OMM(self, t):
 
     if self.OMM_df is not None and (sat_name != '' or sat_id != -1):
         # find satellite in data
+        '''
+        NOTE: while tracking is turned off, we will not inform the user
+        about an error! If the user has not yet finished typing in all 
+        necessary information, the get spamed with error messages. 
+        If tracking is turned on we can assume that the user has finished
+        entering all necessary information and needs to be informed if
+        something is wrong.
+        '''
         if sat_name != '':
             row = self.OMM_df[self.OMM_df['OBJECT_NAME'] == sat_name]
             if row.empty and self.tracking:
-                self.log_message(f'Could not find {sat_name} in file data.')
+                raise ValueError(f'Could not find ID {sat_id} in data.')
 
         elif sat_id != -1:
             row = self.OMM_df[self.OMM_df['NORAD_CAT_ID'] == sat_id]
             if row.empty and self.tracking:
-                self.log_message(f'Could not find {sat_id} in data.')
+                raise ValueError(f'Could not find ID {sat_id} in data.')
 
-        if not row.empty: # create EarthSatellite
+        # create EarthSatellite
+        try:
             fields = row.to_dict(orient='records')[0]
             satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
-        else:
-            self.log_message('Invalide file')
+        except Exception as e:
+            if self.tracking:
+                raise ValueError(f'Could not create EarthSatellite: {str(e)}')
 
         if satellite is not None:
             '''
@@ -438,18 +346,11 @@ def tracking_mode_OMM(self, t):
             try:
                 f1 = doppler_shift(f0, range_rate)
             except Exception as e:
-                if self.tracking:
-                    self.log_message(f'Error calculating doppler shift: {str(e)}')
-                    print(traceback.format_exc())
-    
-            # ------------------------------------ flight path ------------------------------------
-            if self.last_time_flight_path_got_calculated is not None:
-                delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
-            else:
-                delta_t_min = self.config.min_before_recalculate_flight_path
-                self.last_time_flight_path_got_calculated = now_datetime
+                self.log_message(f'Error calculating doppler shift: {str(e)}')
+                print(traceback.format_exc())
 
-            if delta_t_min >= self.config.min_before_recalculate_flight_path:
+            # ------------------------------------ flight path ------------------------------------
+            if self.should_flight_path_get_calculated(now_datetime):
                 try:
                     if self.config.flight_path_steps > 0:
                         future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
@@ -467,9 +368,8 @@ def tracking_mode_OMM(self, t):
                     self.last_time_flight_path_got_calculated = now_datetime
 
                 except Exception as e:
-                    if self.tracking:
-                        self.log_message(f'Error calculating flight path: {str(e)}')
-                        print(traceback.format_exc())
+                    self.log_message(f'Error calculating flight path: {str(e)}')
+                    print(traceback.format_exc())
             return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     return None, None, None, None, None, None, None, None, None, None
 

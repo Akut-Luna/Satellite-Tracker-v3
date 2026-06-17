@@ -3,8 +3,10 @@ import os
 import json
 import shutil
 import traceback
+import numpy as np
 import pandas as pd
-from pprint import pprint
+from datetime import datetime
+from scipy.interpolate import interp1d
 from skyfield.api import load, Loader, EarthSatellite
 
 def load_planet_ephemeris(self):
@@ -49,47 +51,33 @@ def ra_dec_parser(value: str) -> float:
     try:
         res = float(value) # if it can be turned into a float
         return res         # it is allready in the decimal form
-    except:
+    except ValueError:
+        pass
 
-        s = (
-            s.replace("º", "°")
-            .replace("′", "'")
-            .replace("’", "'")
-            .replace("″", '"')
-            .replace("''", '"')
-        )
+    s = (
+        s.replace("º", "°")
+        .replace("′", "'")
+        .replace("’", "'")
+        .replace("″", '"')
+        .replace("''", '"')
+    )
 
-        sign = -1 if re.match(r"^\s*-", s) else 1
+    matches = re.findall(
+        r"([+-]?\d+(?:\.\d+)?)\s*(h|m|s|°|d|'|\")", s, flags=re.IGNORECASE
+    )
 
-        units = {
-            "h": 0.0,
-            "m": 0.0,
-            "s": 0.0,
-            "°": 0.0,
-            "'": 0.0,
-            '"': 0.0,
-        }
-
-        for num, unit in re.findall(
-            r"([+-]?\d+(?:\.\d+)?)\s*(h|m|s|°|d|'|\")",
-            s,
-            flags=re.IGNORECASE,
-        ):
-            units[unit.lower()] = abs(float(num))
-
+    if not matches:
+        raise ValueError(f"Could not parse coordinate string: {value}")
         
-        if any(u in s for u in ("h", "m", "s")):
-            return sign * ( # RA
-                units["h"]
-                + units["m"] / 60
-                + units["s"] / 3600
-            )
-        else: 
-            return sign * ( # DEC
-                units["°"]
-                + units["'"] / 60
-                + units['"'] / 3600
-            )
+    sign = -1 if "-" in s else 1
+    units = {u: 0.0 for u in ["h", "m", "s", "°", "'", '"']}
+
+    for num, unit in matches:
+        units[unit.lower()] = abs(float(num))
+
+    if any(u in s.lower() for u in ("h", "m", "s")):
+        return sign * (units["h"] + units["m"] / 60 + units["s"] / 3600) # RA
+    return sign * (units["°"] + units["'"] / 60 + units['"'] / 3600)     # DEC
 
 def OMM_add_to_list(self):
     if self.OMM_satellite is not None:
@@ -129,7 +117,21 @@ def OMM_add_to_list(self):
     else:
         self.log_message('No satellite selected!')
 
-def load_target_list(self, OMM_only=False):
+def make_interpolators(df):
+    # turn time into a monoton increasing number
+    start_time = datetime.strptime(df['time_UTC'].min(), '%Y-%m-%d %H:%M:%S.%f')
+    times = pd.to_datetime(df['time_UTC'])
+    x = (times - start_time).dt.total_seconds().to_numpy()
+
+    # create a dictionary of interpolators for all numeric columns
+    cols = df.columns.drop("time_UTC")
+    interpolators = {
+        col: interp1d(x, df[col].values, kind="cubic") for col in cols
+    }
+
+    return interpolators, start_time
+
+def load_target_list(self, OMM_only=False, Horizons_id=None):
     '''
     This function first loads the currently selected list from JSON.
     Then it will load the needed data for each target and add it to the list.
@@ -168,7 +170,71 @@ def load_target_list(self, OMM_only=False):
     try:
         for target in target_list:
             target['type'] = target['type'].upper()
-            if target['type'] == 'LEO':
+            
+            if target['type'] == 'DS': # ----------------------------------------------------------
+                
+                if OMM_only: # When only OMM data was updated there
+                    continue # is no need to reload Horizon data.
+
+                spacecraft_id = target['Horizons'] # When the Horizons data for one target got updated
+                if Horizons_id is not None:        # there is no need to update the other targets too.
+                    if Horizons_id != spacecraft_id: 
+                        continue
+
+                '''
+                NOTE: We do not combine the two data sets into one. The reason for this is, that the can 
+                have different resolutions. So using two different interpolators is easier. 
+                '''
+
+                # first load the data that comes directly from Horizons
+                df = None
+                file_name = f'{spacecraft_id}_from_observer_ephemerides.csv'
+                file_path = os.path.join('main', 'data', 'Horizons', file_name)
+                if os.path.exists(file_path):
+                    df = pd.read_csv(file_path)
+                else:
+                    self.log_message(f'File does not exist: {file_path}')
+                    try:
+                        # download data
+                        self.log_message(f'Downloading new data for Spacecraft {spacecraft_id}...')
+                        self.query_horizons_api(spacecraft_id)
+                        
+                        # and try again
+                        df = pd.read_csv(file_path)
+                    except Exception as e:
+                        self.log_message(f'Error downloading and reading data: {str(e)}')
+                        print(traceback.format_exc())
+
+                if df is not None:
+                    interpolators, start_time = make_interpolators(df)
+                    target['interpolators_directly'] = interpolators
+                    target['start_time_directly'] = start_time
+                
+                # then load the data calculated from state vectors
+                df = None
+                file_name = f'{spacecraft_id}_from_state_vectors.csv'
+                file_path = os.path.join('main', 'data', 'Horizons', file_name)
+                if os.path.exists(file_path):
+                    df = pd.read_csv(file_path)
+                else:
+                    self.log_message(f'File does not exist: {file_path}')
+                    try:
+                        # download data
+                        self.log_message(f'Downloading new data for Spacecraft {spacecraft_id}...')
+                        self.query_horizons_api(spacecraft_id)
+                        
+                        # and try again
+                        df = pd.read_csv(file_path)
+                    except Exception as e:
+                        self.log_message(f'Error downloading and reading data: {str(e)}')
+                        print(traceback.format_exc())
+
+                if df is not None:
+                    interpolators, start_time = make_interpolators(df)
+                    target['interpolators_from_vector'] = interpolators
+                    target['start_time_from_vector'] = start_time
+
+            elif target['type'] == 'LEO': # -------------------------------------------------------
                 fields = OMM_df[OMM_df['NORAD_CAT_ID'] == target['NORAD']]
                 if not fields.empty:
                     fields = fields.iloc[0].to_dict()
@@ -176,13 +242,25 @@ def load_target_list(self, OMM_only=False):
                     target['EarthSatellite'] = satellite
                 else:
                     self.log_message(f'Data for {target} is empty.')
+    
+            elif target['type'] == 'ASTRO': # -----------------------------------------------------
+                pass # for ASTRO there is nothing to do
 
-            elif target['type'] == 'DS':
-                pass # TODO
-            
-            # for ASTRO we don't need to do anything
+            else: # -------------------------------------------------------------------------------
+                self.log_message(f'Unknowen target type: {target['type']}')
+
         return target_list
     except Exception as e:
         print(traceback.format_exc())
         self.log_message(f'Error while adding data to target list: {e}')
         return []
+    
+def should_flight_path_get_calculated(self, now_datetime):
+    if self.last_time_flight_path_got_calculated is not None:
+        delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
+    else:
+        delta_t_min = self.config.min_before_recalculate_flight_path
+        self.last_time_flight_path_got_calculated = now_datetime
+
+    return delta_t_min >= self.config.min_before_recalculate_flight_path
+

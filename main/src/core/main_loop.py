@@ -9,9 +9,11 @@ from utils.tracking_modes import (
     tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 
-from utils.helper import ra_dec_parser, load_planet_ephemeris, load_target_list
+from utils.helper import ra_dec_parser, load_planet_ephemeris, load_target_list, should_flight_path_get_calculated
 from utils.calculations import correction_matrix
-from utils.get_data import load_metadata, query_celestrak_api, save_metadata, update_data_if_needed
+from utils.get_data import save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
+
+from pprint import pprint
 
 class MainLoop(QObject):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -24,10 +26,12 @@ class MainLoop(QObject):
     # helper
     load_planet_ephemeris = load_planet_ephemeris
     load_target_list = load_target_list
-    load_metadata = load_metadata
-    query_celestrak_api = query_celestrak_api
     save_metadata = save_metadata
+    load_metadata = load_metadata
+    query_horizons_api = query_horizons_api
+    query_celestrak_api = query_celestrak_api
     update_data_if_needed = update_data_if_needed
+    should_flight_path_get_calculated = should_flight_path_get_calculated
 
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
@@ -81,10 +85,9 @@ class MainLoop(QObject):
             else:
                 self.ra_hours = ra_dec_parser(ra_value)
         except Exception as e:
-            if self.tracking:
-                self.log_message(f'Error: {e}')
-                print(traceback.format_exc())
-            return
+            self.log_message(f'Error: {e}')
+            print(traceback.format_exc())
+        print(self.ra_hours)
 
     def update_dec_degrees(self, dec_value:str):
         '''
@@ -97,11 +100,10 @@ class MainLoop(QObject):
             else:
                 self.dec_degrees = ra_dec_parser(dec_value)
         except Exception as e:
-            if self.tracking:
-                self.log_message(f'Error: {e}')
-                print(traceback.format_exc())
-            return
-    
+            self.log_message(f'Error: {e}')
+            print(traceback.format_exc())
+        print(self.dec_degrees)
+
     def update_tracking_mode(self, index):
         self.last_time_flight_path_got_calculated = None
         self.tracking_mode = index
@@ -162,6 +164,11 @@ class MainLoop(QObject):
         self.timer.timeout.connect(self.main_loop) # every interval_ms: call main_loop
         self.timer.start(interval_ms)
 
+    def load_init_f0(self):
+        current_target = self.target_list[self.target_list_idx]
+        f0 = current_target['frequency']
+        self.go_update_f0.emit(f0)
+
     def main_loop(self):
         try:
             # ----------------------------------- Tracking Modes ----------------------------------
@@ -195,17 +202,67 @@ class MainLoop(QObject):
                 elif self.tracking_mode == 4:  # AZ/EL
                     az, el = self.tracking_mode_AZ_EL()
             except Exception as e:
-                if self.tracking:
-                    self.log_message(f'Error calculating satellite data: {e}')
-                    print(traceback.format_exc())
+                self.log_message(f'Error calculating satellite data: {e}')
+                print(traceback.format_exc())
 
-            # ------------------------- Correction for not ideal Antenna --------------------------
-            try:
-                az, el = correction_matrix(az, el, roll=0, pitch=0, yaw=0) # TODO: load angle from settings
-            except Exception as e:
-                if self.tracking:
+            if az is not None and el is not None:
+                # ----------------------- Correction for not ideal Antenna ------------------------
+                try:
+                    az, el = correction_matrix(az, el, roll=0, pitch=0, yaw=0) # TODO: load angle from settings
+                except Exception as e:
                     self.log_message(f'Error calculating correction matrix: {e}')
                     print(traceback.format_exc())
+
+                # --------------------------------- manual offset ---------------------------------
+                az += self.azimuth_offset
+                el += self.elevation_offset
+
+                # ------------------------------ start tacking at AOS -----------------------------
+                # if self.start_tracking_at_AOS_btn.isChecked(): # TODO
+                #     if not self.tracking and el > 0 and self.tracking_mode in [0,2,3]:
+                #         self.toggle_tracking(True)
+                #         if self.config.auto_uncheck_start_tracking_at_AOS_btn:
+                #             self.start_tracking_at_AOS_btn.setChecked(False)  # TODO
+                #         self.log_message('Tracking was started automatically at expected AOS.')
+
+                # stop tracking when satellite is under the horizon
+                if self.tracking and el < 0:
+                    self.toggle_tracking(False)
+                    self.log_message('Tracking was stopped because the satellite is under the horizon.')
+
+                # ------------------------------------- Motors ------------------------------------
+
+                # if self.socket is not None:
+                #     # get current position from antenna
+                #     current_az, current_el = self.talk_to_motor_controller('status')
+                    
+                #     self.current_azimuth.setText(f'{current_az:.1f}°')
+                #     self.current_elevation.setText(f'{current_el:.1f}°')
+
+                # TODO: use angular_separation(lon1, lat1, lon2, lat2), cartesian_to_spherical(x, y, z) from astropy
+                # 
+                #     if self.should_update_motors(current_az, current_el, az, el) and self.tracking:
+                #         # calculate target position based on angular rate
+                #         now = self.skyfield_time_to_datetime(t)
+                #         if az_rate is not None and el_rate is not None:
+                #             if self.last_time_motor_got_updated is not None:
+                #                 delta_t = (now - self.last_time_motor_got_updated).total_seconds()
+                #                 az += az_rate*delta_t
+                #                 el += el_rate*delta_t
+                #         self.last_time_motor_got_updated = now
+
+                #         az = np.clip(az, 0, 360)
+                #         el = np.clip(el, 0, 90)
+                #         self.talk_to_motor_controller('set', az, el)
+                
+                data = {
+                    'az'      : az,
+                    'el'      : el,
+                    'az_rate' : az_rate,
+                    'el_rate' : el_rate
+                }
+
+                self.go_update_motors.emit(data) # -> motor_controller
 
             # --------------------------------- Update data on UI ---------------------------------
             data = {
@@ -221,62 +278,7 @@ class MainLoop(QObject):
 
             self.go_update_ui.emit(data) # -> ui
             self.update_antenna_status.emit() # -> motor_controller
-
-            # -------------------------------------------------------------------------------------
-
-            # manual offset # TODO
-            # az += self.azimuth_offset.value()
-            # el += self.elevation_offset.value()
-
-            # # start tacking at AOS
-            # if self.start_tracking_at_AOS_btn.isChecked(): # TODO
-            #     if not self.tracking and el > 0 and self.tracking_mode in [0,2,3]:
-            #         self.toggle_tracking(True)
-            #         if self.config.auto_uncheck_start_tracking_at_AOS_btn:
-            #             self.start_tracking_at_AOS_btn.setChecked(False)  # TODO
-            #         self.log_message('Tracking was started automatically at expected AOS.')
-
-            # stop tracking when satellite is under the horizon
-            if self.tracking and el < 0:
-                self.toggle_tracking(False)
-                self.log_message('Tracking was stopped because the satellite is under the horizon.')
-
-            
-            # Motors ------------------------------------------------------------------------------
-
-            # if self.socket is not None:
-            #     # get current position from antenna
-            #     current_az, current_el = self.talk_to_motor_controller('status')
-                
-            #     self.current_azimuth.setText(f'{current_az:.1f}°')
-            #     self.current_elevation.setText(f'{current_el:.1f}°')
-
-            # TODO: use angular_separation(lon1, lat1, lon2, lat2), cartesian_to_spherical(x, y, z) from astropy
-            # 
-            #     if self.should_update_motors(current_az, current_el, az, el) and self.tracking:
-            #         # calculate target position based on angular rate
-            #         now = self.skyfield_time_to_datetime(t)
-            #         if az_rate is not None and el_rate is not None:
-            #             if self.last_time_motor_got_updated is not None:
-            #                 delta_t = (now - self.last_time_motor_got_updated).total_seconds()
-            #                 az += az_rate*delta_t
-            #                 el += el_rate*delta_t
-            #         self.last_time_motor_got_updated = now
-
-            #         az = np.clip(az, 0, 360)
-            #         el = np.clip(el, 0, 90)
-            #         self.talk_to_motor_controller('set', az, el)
-            
-            data = {
-                'az'      : az,
-                'el'      : el,
-                'az_rate' : az_rate,
-                'el_rate' : el_rate
-            }
-
-            self.go_update_motors.emit(data) # -> motor_controller
         
         except Exception as e:
-            if self.tracking:
-                self.log_message(f'Error: {str(e)}')
-                print(traceback.format_exc())        
+            self.log_message(f'Error: {str(e)}')
+            print(traceback.format_exc())        

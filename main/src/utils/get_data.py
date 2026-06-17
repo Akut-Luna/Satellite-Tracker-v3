@@ -27,7 +27,7 @@ def update_data_if_needed(self, current_target):
 
     '''
     t = utc_now().isoformat()
-    # t_30_min_later = (datetime.fromisoformat(t) + timedelta(minutes=30)).isoformat()
+    t_30_min_later = (datetime.fromisoformat(t) + timedelta(minutes=30)).isoformat()
 
     # check if Horizons or CelesTrak data is used
     if current_target['type'] == 'LEO':
@@ -48,33 +48,34 @@ def update_data_if_needed(self, current_target):
             self.query_celestrak_api()
             self.load_target_list(OMM_only=True) # update list in memory
 
+    elif current_target['type'] == 'DS':
+        spacecraft_id = current_target['Horizons']
+        need_to_update = False
+        
+        # if data does not exist we need to update even during tracking
+        if not (str(spacecraft_id) in self.metadata['DS']):
+            need_to_update = True
+        else:
+            metadata = self.metadata['DS'][f'{spacecraft_id}']
+                       
+            # if we have run out of data we need to update even during tracking
+            if metadata['valid until'] < t:
+                need_to_update = True
+
+            # if we are not tracking and there is less then 30 min of data left we update
+            elif not self.tracking and metadata['valid until'] < t_30_min_later:
+                need_to_update = True
+
+        if need_to_update:
+            self.log_message(f'Downloading new data for Spacecraft {spacecraft_id} ...')
+            self.query_horizons_api(spacecraft_id)
+            self.self.load_target_list(Horizons_id=spacecraft_id) # update list in memory
+
+    elif current_target['type'] == 'ASTRO':
+        pass # for ASTRO there is no data to update
+
     else:
-        pass # TODO
-    #     satellite_id = current_satellite['catalogs']['Horizons']
-    #     need_to_update = False
-        
-    #     # if data does not exist we need to update even during tracking
-    #     if not (str(satellite_id) in self.satellite_metadata['Horizons']):
-    #         need_to_update = True
-    #     else:
-    #         metadata = self.satellite_metadata['Horizons'][f'{satellite_id}']
-            
-    #         # if data does not exist or we run out of data we need to update even during tracking
-    #         if metadata['valid until'] == "" or metadata['valid until'] < t:
-    #             need_to_update = True
-
-    #         # if we are not tracking and there is less then 30 min of data left we update
-    #         elif not self.tracking and metadata['valid until'] < t_30_min_later:
-    #             need_to_update = True
-
-    #     if need_to_update:
-    #         self.log_message(f'Downloading new data for Spacecraft {satellite_id} ...')
-    #         self.query_horizons_api(satellite_id)
-    #         self.query_horizons_api_AZ_EL(satellite_id)
-
-    #         self.load_all_satellite_data(ID=satellite_id)
-        
-    # else:
+        self.log_message(f'Unknowen target type: {current_target['type']}')
 
 def save_metadata(self):
     config_file_path = os.path.join('main', 'data', 'Metadata', 'metadata.json')
@@ -169,7 +170,7 @@ def query_horizons_api(self, spacecraft_id):
 
     # -------------- vectors table --------------
     def fetch_data_vectors(spacecraft_id, start, stop):
-        time_res = f'{self.config.time_resolution_horizons_state_vector}'
+        time_res = f'{self.config.time_resolution_horizons_state_vector}m'
         obj = Horizons(
             id=spacecraft_id,       # The ID of the spacecraft
             location='@0',          # Sun barycenter as origin
@@ -305,7 +306,12 @@ def query_horizons_api(self, spacecraft_id):
     if df is None:
         return # did not manage to get data
 
-    df = process_vectors_data(df, 47.397490, 8.550440, 499.5)
+    df = process_vectors_data(
+        df, 
+        self.config.antenna_latitude, 
+        self.config.antenna_longitude, 
+        self.config.antenna_altitude, 
+    )
     
     # save data
     file_name = f'{spacecraft_id}_from_state_vectors.csv'
@@ -318,7 +324,7 @@ def query_horizons_api(self, spacecraft_id):
     # -------------- observer table -------------
     def fetch_data_observer(spacecraft_id, start, stop):
         # NOTE: lighttime correction is enabled by default for observer tables.
-        time_res = f'{self.config.time_resolution_horizons_directly}'
+        time_res = f'{self.config.time_resolution_horizons_directly}m'
         
         # 4 = Apparent AZ & EL
         # 5 = Rates; AZ & EL 
@@ -373,15 +379,15 @@ def query_horizons_api(self, spacecraft_id):
     for attempt in range(10):
         if st != start_time: # start_time got adjusted
             # %b handles the abbreviated month name (e.g., APR)
-            st = datetime.strptime(st, "%Y-%b-%d %H:%M:%S.%f")
+            st = datetime.strptime(st, '%Y-%b-%d %H:%M:%S.%f')
             st += timedelta(minutes=1)
-            st = st.strftime("%Y-%b-%d %H:%M:%S.%f")[:-2].upper()
+            st = st.strftime('%Y-%b-%d %H:%M:%S.%f')[:-2].upper()
         
         if et != end_time: # end_time got adjusted
             # %b handles the abbreviated month name (e.g., APR)
-            et = datetime.strptime(et, "%Y-%b-%d %H:%M:%S.%f")
+            et = datetime.strptime(et, '%Y-%b-%d %H:%M:%S.%f')
             et -= timedelta(minutes=1)
-            et = et.strftime("%Y-%b-%d %H:%M:%S.%f")[:-2].upper()
+            et = et.strftime('%Y-%b-%d %H:%M:%S.%f')[:-2].upper()
 
         # get data
         try:
@@ -405,10 +411,22 @@ def query_horizons_api(self, spacecraft_id):
     df.to_csv(file_path, index=False)
     self.log_message(f'Data saved to {file_path}') 
 
-    # Update metadata
-    final_end_time = datetime.strptime(et, "%Y-%b-%d %H:%M:%S.%f")
-    self.metadata['Horizons'][spacecraft_id]['last download'] = utc_now().isoformat()
-    self.metadata['Horizons'][spacecraft_id]['valid until'] = final_end_time.isoformat()
+    # update metadata
+    formats = ['%Y-%m-%dT%H:%M:%S', '%Y-%b-%d %H:%M:%S.%f']
+    final_end_time = None
+
+    for fmt in formats:
+        try:
+            final_end_time = datetime.strptime(et, fmt)
+            break
+        except ValueError:
+            continue
+
+    if not final_end_time:
+        raise ValueError(f'Time data {et} does not match any recognized format')    
+    
+    self.metadata['DS'][f'{spacecraft_id}']['last download'] = utc_now().isoformat()
+    self.metadata['DS'][f'{spacecraft_id}']['valid until'] = final_end_time.isoformat()
     self.save_metadata()
 
 # TODO: mulitprocessing?
