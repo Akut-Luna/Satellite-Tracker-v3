@@ -62,6 +62,8 @@ class SatelliteTrackerApp(QMainWindow):
     OMM_satellite_id_changed = Signal(str)
     doppler_init_freq_changed = Signal(str)
     target_list_path_changed = Signal(str)
+    azimuth_offset_changed = Signal(float)
+    elevation_offset_changed = Signal(float)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -122,7 +124,6 @@ class SatelliteTrackerApp(QMainWindow):
     
     def update_ui_f0(self, f0):
         self.doppler_initial_freq.setText(str(f0))
-        # self.doppler_init_freq_changed.emit(str(f0)) # -> main_loop
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):

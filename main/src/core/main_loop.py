@@ -62,6 +62,8 @@ class MainLoop(QObject):
         self.doppler_init_freq = 0.0
         self.target_list_idx = 0
         self.target_list_path = os.path.join('main', 'data', 'Lists', 'default_list.json')
+        self.azimuth_offset = 0.0
+        self.elevation_offset = 0.0
 
         # local
         self.last_time_flight_path_got_calculated = None
@@ -157,6 +159,12 @@ class MainLoop(QObject):
     def update_target_list_path(self, path):
         self.target_list_path = path
         self.target_list = self.load_target_list() # update list in memory
+    
+    def update_azimuth_offset(self, offset):
+        self.azimuth_offset = offset
+
+    def update_elevation_offset(self, offset):
+        self.elevation_offset = offset
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):
