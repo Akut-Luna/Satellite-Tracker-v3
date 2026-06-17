@@ -41,6 +41,7 @@ class MainLoop(QObject):
     flight_path_changed = Signal(object)
     tracking_changed = Signal(bool)
     update_antenna_status = Signal()
+    uncheck_start_tracking_at_AOS_btn = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
@@ -64,6 +65,7 @@ class MainLoop(QObject):
         self.target_list_path = os.path.join('main', 'data', 'Lists', 'default_list.json')
         self.azimuth_offset = 0.0
         self.elevation_offset = 0.0
+        self.start_tracking_at_AOS = False
 
         # local
         self.last_time_flight_path_got_calculated = None
@@ -165,6 +167,9 @@ class MainLoop(QObject):
 
     def update_elevation_offset(self, offset):
         self.elevation_offset = offset
+    
+    def update_start_tracking_at_AOS(self, status):
+        self.start_tracking_at_AOS = status
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):
@@ -226,14 +231,14 @@ class MainLoop(QObject):
                 el += self.elevation_offset
 
                 # ------------------------------ start tacking at AOS -----------------------------
-                # if self.start_tracking_at_AOS_btn.isChecked(): # TODO
-                #     if not self.tracking and el > 0 and self.tracking_mode in [0,2,3]:
-                #         self.toggle_tracking(True)
-                #         if self.config.auto_uncheck_start_tracking_at_AOS_btn:
-                #             self.start_tracking_at_AOS_btn.setChecked(False)  # TODO
-                #         self.log_message('Tracking was started automatically at expected AOS.')
+                if self.start_tracking_at_AOS:
+                    if not self.tracking and el > 0 and self.tracking_mode != 4:
+                        self.toggle_tracking(True)
+                        if self.config.auto_uncheck_start_tracking_at_AOS_btn:
+                            self.uncheck_start_tracking_at_AOS_btn.emit()  # -> ui
+                        self.log_message('Tracking was started automatically at expected AOS.')
 
-                # stop tracking when satellite is under the horizon
+                # ------------------------------ stop tracking at LOS -----------------------------
                 if self.tracking and el < 0:
                     self.toggle_tracking(False)
                     self.log_message('Tracking was stopped because the satellite is under the horizon.')
@@ -267,7 +272,8 @@ class MainLoop(QObject):
                     'az'      : az,
                     'el'      : el,
                     'az_rate' : az_rate,
-                    'el_rate' : el_rate
+                    'el_rate' : el_rate,
+                    't'       : t
                 }
 
                 self.go_update_motors.emit(data) # -> motor_controller

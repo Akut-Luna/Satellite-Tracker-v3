@@ -64,6 +64,7 @@ class SatelliteTrackerApp(QMainWindow):
     target_list_path_changed = Signal(str)
     azimuth_offset_changed = Signal(float)
     elevation_offset_changed = Signal(float)
+    start_tracking_at_AOS_changed = Signal(bool)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -124,6 +125,9 @@ class SatelliteTrackerApp(QMainWindow):
     
     def update_ui_f0(self, f0):
         self.doppler_initial_freq.setText(str(f0))
+    
+    def uncheck_start_tracking_at_AOS_btn(self):
+        self.start_tracking_at_AOS_btn.setChecked(False)
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):
