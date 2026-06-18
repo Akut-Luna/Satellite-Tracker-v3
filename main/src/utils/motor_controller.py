@@ -47,9 +47,6 @@ class MotorWorker(QObject):
 
         if target_az is None or target_el is None:
             return
-
-        if target_az_rate is None or target_el_rate is None:
-            return
                        
         if self.socket is not None:
             # get current position from antenna
@@ -58,10 +55,11 @@ class MotorWorker(QObject):
                     
             if self.should_update_motors(antenna_az, antenna_el, target_az, target_el):
                 # calculate target position based on angular rate
-                if self.last_time_motor_got_updated is not None:
-                    delta_t = (now - self.last_time_motor_got_updated).total_seconds()
-                    target_az += target_az_rate*delta_t
-                    target_el += target_el_rate*delta_t
+                if target_az_rate is not None and target_el_rate is not None:
+                    if self.last_time_motor_got_updated is not None:
+                        delta_t = (now - self.last_time_motor_got_updated).total_seconds()
+                        target_az += target_az_rate*delta_t
+                        target_el += target_el_rate*delta_t
                 self.last_time_motor_got_updated = now
 
                 target_az = np.clip(target_az, 0, 360)
@@ -289,5 +287,5 @@ class MotorWorker(QObject):
         target_az *= u.deg
         target_el *= u.deg
         angle_change = angular_separation(antenna_az, antenna_el, target_az, target_el)
-        return angle_change.value >= self.config.min_angle_change_before_update
+        return angle_change.to(u.deg).value >= self.config.min_angle_change_before_update
 

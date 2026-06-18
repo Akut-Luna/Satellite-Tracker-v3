@@ -107,7 +107,7 @@ def tracking_mode_List(self, t):
         # ------------------------------ data from Horizons directly ------------------------------
         interpolators = current_target['interpolators_directly']
         start_time = current_target['start_time_directly']
-        target_x = (t - start_time).total_seconds()
+        target_x = (t - start_time).total_seconds() # BUG: TypeError: can't subtract offset-naive and offset-aware datetimes
 
         az = float(interpolators['az_deg'](target_x))
         el = float(interpolators['el_deg'](target_x))
