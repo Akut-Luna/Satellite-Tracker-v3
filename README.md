@@ -3,11 +3,11 @@
 Instructions
 
 Make the script executable:
-bash'''
+```bash 
 chmod +x setup.sh
-'''
+```
 
 Run the script:
-bash'''
+```bash
 ./setup.sh
-'''
+```
