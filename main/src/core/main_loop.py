@@ -255,29 +255,6 @@ class MainLoop(QObject):
                     self.log_message('Tracking was stopped because the satellite is under the horizon.')
 
                 # ------------------------------------- Motors ------------------------------------
-
-                # if self.socket is not None:
-                #     # get current position from antenna
-                #     current_az, current_el = self.talk_to_motor_controller('status')
-                    
-                #     self.current_azimuth.setText(f'{current_az:.1f}°')
-                #     self.current_elevation.setText(f'{current_el:.1f}°')
-
-                # TODO: use angular_separation(lon1, lat1, lon2, lat2), cartesian_to_spherical(x, y, z) from astropy
-                # 
-                #     if self.should_update_motors(current_az, current_el, az, el) and self.tracking:
-                #         # calculate target position based on angular rate
-                #         now = self.skyfield_time_to_datetime(t)
-                #         if az_rate is not None and el_rate is not None:
-                #             if self.last_time_motor_got_updated is not None:
-                #                 delta_t = (now - self.last_time_motor_got_updated).total_seconds()
-                #                 az += az_rate*delta_t
-                #                 el += el_rate*delta_t
-                #         self.last_time_motor_got_updated = now
-
-                #         az = np.clip(az, 0, 360)
-                #         el = np.clip(el, 0, 90)
-                #         self.talk_to_motor_controller('set', az, el)
                 
                 data = {
                     'az'      : az,

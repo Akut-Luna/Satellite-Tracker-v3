@@ -1,4 +1,7 @@
 import socket
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import angular_separation
 from PySide6.QtCore import QObject, Signal, Slot
 
 class MotorWorker(QObject):
@@ -15,8 +18,8 @@ class MotorWorker(QObject):
         self.tracking = False
 
         # Antenna Status
-        self.current_az = 0.0
-        self.current_el = 0.0
+        self.antenna_az = 0.0
+        self.antenna_el = 0.0
 
     def log_message(self, message):
         self.log.emit(message) # -> ui
@@ -34,12 +37,36 @@ class MotorWorker(QObject):
         if not self.tracking:
             return
 
-        az = data.get('az')
-        el = data.get('el')
-        if az is None or el is None:
+        target_az = data.get('az')
+        target_el = data.get('el')
+
+        target_az_rate = data.get('az_rate')
+        target_el_rate = data.get('el_rate')
+
+        now = data.get('t')
+
+        if target_az is None or target_el is None:
             return
 
-        self.talk_to_motor_controller('set', az, el)
+        if target_az_rate is None or target_el_rate is None:
+            return
+                       
+        if self.socket is not None:
+            # get current position from antenna
+            antenna_az, antenna_el = self.talk_to_motor_controller('status')
+            self.antenna_status_changed.emit(antenna_az, antenna_el) # -> ui
+                    
+            if self.should_update_motors(antenna_az, antenna_el, target_az, target_el):
+                # calculate target position based on angular rate
+                if self.last_time_motor_got_updated is not None:
+                    delta_t = (now - self.last_time_motor_got_updated).total_seconds()
+                    target_az += target_az_rate*delta_t
+                    target_el += target_el_rate*delta_t
+                self.last_time_motor_got_updated = now
+
+                target_az = np.clip(target_az, 0, 360)
+                target_el = np.clip(target_el, 0, 90)
+                self.talk_to_motor_controller('set', target_az, target_el)
 
     @Slot()
     def update_antenna_status(self):
@@ -53,15 +80,15 @@ class MotorWorker(QObject):
             and res[0] is not None
             and res[1] is not None
         ):
-            current_az, current_el = res
+            antenna_az, antenna_el = res
         else: # no connection or invalid response
-            current_az, current_el = 9999, 9999
+            antenna_az, antenna_el = 9999, 9999
 
         # only emit when the values actually changed
-        if (self.current_az != current_az) or (self.current_el != current_el):
-            self.current_az = current_az
-            self.current_el = current_el
-            self.antenna_status_changed.emit(current_az, current_el) # -> ui
+        if (self.antenna_az != antenna_az) or (self.antenna_el != antenna_el):
+            self.antenna_az = antenna_az
+            self.antenna_el = antenna_el
+            self.antenna_status_changed.emit(antenna_az, antenna_el) # -> ui
     # ---------------------------------------------------------------------------------------------
 
     def establish_connection(self):
@@ -242,3 +269,25 @@ class MotorWorker(QObject):
         packet[12] = 0x20  # space
         
         return packet
+
+    def should_update_motors(self, antenna_az, antenna_el, target_az, target_el):
+        '''
+        Determines if the newly calculated target azimuth and elevation differ sufficiently from the current position
+        such that we need to send the motors new instructions
+        Parameters:
+            antenna_az: current azimuth of the antenna. 
+            antenna_el: current elevation of the antenna. 
+            target_az: latest value that was calculated for azimuth
+            target_el: latest value that was calculated for elevation
+        
+        Returns:
+            (bool): Bool that says if antenna should be moved
+        '''
+
+        antenna_az *= u.deg
+        antenna_el *= u.deg
+        target_az *= u.deg
+        target_el *= u.deg
+        angle_change = angular_separation(antenna_az, antenna_el, target_az, target_el)
+        return angle_change.value >= self.config.min_angle_change_before_update
+
