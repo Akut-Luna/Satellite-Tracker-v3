@@ -46,7 +46,7 @@ def update_data_if_needed(self, current_target):
         if need_to_update:
             self.log_message('Downloading new OMM data...')
             self.query_celestrak_api()
-            self.load_target_list(OMM_only=True) # update list in memory
+            self.load_target_list_data(OMM_only=True) # update list in memory
 
     elif current_target['type'] == 'DS':
         spacecraft_id = current_target['Horizons']
@@ -69,7 +69,7 @@ def update_data_if_needed(self, current_target):
         if need_to_update:
             self.log_message(f'Downloading new data for Spacecraft {spacecraft_id} ...')
             self.query_horizons_api(spacecraft_id)
-            self.self.load_target_list(Horizons_id=spacecraft_id) # update list in memory
+            self.load_target_list_delta(Horizons_id=spacecraft_id) # update list in memory
 
     elif current_target['type'] == 'ASTRO':
         pass # for ASTRO there is no data to update
@@ -299,7 +299,7 @@ def query_horizons_api(self, spacecraft_id):
             'subpoint_alt_km': subpoint.height.to(u.km).value
         })
 
-    self.log_message(f'Downloading vector table for spacecraft: {spacecraft_id}...') 
+    self.log_message(f'Downloading vector table for spacecraft: {spacecraft_id}...')
 
     # get data
     df, st, et = query_vectors_data(spacecraft_id, start_time, end_time)
@@ -319,7 +319,7 @@ def query_horizons_api(self, spacecraft_id):
     os.makedirs(file_folder, exist_ok=True)
     file_path = os.path.join(file_folder, file_name)
     df.to_csv(file_path, index=False)
-    self.log_message(f'Data saved to {file_path}') 
+    self.log_message(f'Data saved to {file_path}')
 
     # -------------- observer table -------------
     def fetch_data_observer(spacecraft_id, start, stop):
@@ -411,7 +411,7 @@ def query_horizons_api(self, spacecraft_id):
     df.to_csv(file_path, index=False)
     self.log_message(f'Data saved to {file_path}') 
 
-    # update metadata
+    # -------------- update metadata ------------
     formats = ['%Y-%m-%dT%H:%M:%S', '%Y-%b-%d %H:%M:%S.%f']
     final_end_time = None
 
@@ -425,8 +425,13 @@ def query_horizons_api(self, spacecraft_id):
     if not final_end_time:
         raise ValueError(f'Time data {et} does not match any recognized format')    
     
-    self.metadata['DS'][f'{spacecraft_id}']['last download'] = utc_now().isoformat()
-    self.metadata['DS'][f'{spacecraft_id}']['valid until'] = final_end_time.isoformat()
+    if spacecraft_id not in self.metadata['DS']:
+        self.metadata['DS'][spacecraft_id] = {
+            'last download' : '',
+            'valid until' : ''
+        }
+    self.metadata['DS'][spacecraft_id]['last download'] = utc_now().isoformat()
+    self.metadata['DS'][spacecraft_id]['valid until'] = final_end_time.isoformat()
     self.save_metadata()
 
 # TODO: mulitprocessing?

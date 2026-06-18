@@ -9,7 +9,10 @@ from utils.tracking_modes import (
     tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 
-from utils.helper import ra_dec_parser, load_planet_ephemeris, load_target_list, should_flight_path_get_calculated
+from utils.helper import (
+    ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
+    should_flight_path_get_calculated
+)
 from utils.calculations import correction_matrix
 from utils.get_data import save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
 
@@ -25,7 +28,8 @@ class MainLoop(QObject):
 
     # helper
     load_planet_ephemeris = load_planet_ephemeris
-    load_target_list = load_target_list
+    load_target_list_json = load_target_list_json
+    load_target_list_data = load_target_list_data
     save_metadata = save_metadata
     load_metadata = load_metadata
     query_horizons_api = query_horizons_api
@@ -70,12 +74,18 @@ class MainLoop(QObject):
         # local
         self.last_time_flight_path_got_calculated = None
         self.flight_path = None
-        self.target_list = self.load_target_list()
-        self.metadata = self.load_metadata()
+        self.finished_start_up = False       # needs to be before load_target_list()
+        self.metadata = self.load_metadata() # needs to be before load_target_list()
+        self.target_list = self.load_target_list_json() # first load the list from JSON
+        self.load_target_list_data()                    # then fill it with data
         # self.spice_kernels_loaded = False # gets set by browse_spice_file() # TODO
 
     def log_message(self, message):
         self.log.emit(message) # -> ui
+
+        # before start up finished we print to terminal because UI is not visible yet
+        if not self.finished_start_up:
+            print(message)
 
     # ------------------------------------ Slots (receive data) -----------------------------------
     def update_ra_hours(self, ra_value:str):
@@ -160,7 +170,8 @@ class MainLoop(QObject):
 
     def update_target_list_path(self, path):
         self.target_list_path = path
-        self.target_list = self.load_target_list() # update list in memory
+        self.target_list = self.load_target_list_json() # update list in memory
+        self.load_target_list_data()                    # update list in memory
     
     def update_azimuth_offset(self, offset):
         self.azimuth_offset = offset

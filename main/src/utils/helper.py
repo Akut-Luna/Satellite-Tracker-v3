@@ -131,12 +131,36 @@ def make_interpolators(df):
 
     return interpolators, start_time
 
-def load_target_list(self, OMM_only=False, Horizons_id=None):
+def load_target_list_json(self):
     '''
     This function first loads the currently selected list from JSON.
-    Then it will load the needed data for each target and add it to the list.
     '''
-    try:
+    try: # load list
+        with open(self.target_list_path, 'r') as file:
+            target_list = json.load(file)
+            return target_list
+    except Exception as e:
+        print(traceback.format_exc())
+        print(                                                  )
+        print('>>>>>>>> IF PROGRAM CRASHED AT START UP <<<<<<<<')
+        print(                                                  )
+        print('  Check that main/data/Lists/default_list.json  ')
+        print('  exists and contains a vaild list.             ')
+        print(                                                  )
+        print('>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<')
+        print(                                                  )
+        self.log_message(f'Error reading target list file: {e}')
+        return []
+    
+def load_target_list_data(self, OMM_only=False, Horizons_id=None):
+    '''
+    Then it will load the needed data for each target and add it to the list.
+            Parameters:
+            celestrak_only (bool): Flag if we want to only (re)load the CelesTrak data
+            ID (int): Id of spacecraft. When we want to only (re)load the Horizon data for a specific spacecraft
+
+    '''    
+    try: # load OMM data
         default_OMM_path = os.path.join('main', 'data', 'OMM', 'all_active_satellites.csv')
         OMM_df = pd.read_csv(default_OMM_path)
     except Exception as e:
@@ -152,33 +176,26 @@ def load_target_list(self, OMM_only=False, Horizons_id=None):
         self.log_message(f'Error reading OMM data: {e}')
 
     try:
-        with open(self.target_list_path, 'r') as file:
-            target_list = json.load(file)
-    except Exception as e:
-        print(traceback.format_exc())
-        print(                                                  )
-        print('>>>>>>>> IF PROGRAM CRASHED AT START UP <<<<<<<<')
-        print(                                                  )
-        print('  Check that main/data/Lists/default_list.json  ')
-        print('  exists and contains a vaild list.             ')
-        print(                                                  )
-        print('>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<')
-        print(                                                  )
-        self.log_message(f'Error reading target list file: {e}')
-        return []
-    
-    try:
-        for target in target_list:
-            target['type'] = target['type'].upper()
-            
-            if target['type'] == 'DS': # ----------------------------------------------------------
+        for target in self.target_list:
+            target['type'] = target['type'].upper() # just to be safe
+
+            if target['type'] == 'LEO': # ---------------------------------------------------------
+                fields = OMM_df[OMM_df['NORAD_CAT_ID'] == target['NORAD']]
+                if not fields.empty:
+                    fields = fields.iloc[0].to_dict()
+                    satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
+                    target['EarthSatellite'] = satellite
+                else:
+                    self.log_message(f'Data for {target} is empty.')
+
+            elif target['type'] == 'DS': # --------------------------------------------------------
+                spacecraft_id = target['Horizons'] 
                 
                 if OMM_only: # When only OMM data was updated there
                     continue # is no need to reload Horizon data.
 
-                spacecraft_id = target['Horizons'] # When the Horizons data for one target got updated
-                if Horizons_id is not None:        # there is no need to update the other targets too.
-                    if Horizons_id != spacecraft_id: 
+                if Horizons_id is not None:          # When the Horizons data for one target got updated
+                    if Horizons_id != spacecraft_id: # there is no need to update the other targets too.
                         continue
 
                 '''
@@ -233,15 +250,6 @@ def load_target_list(self, OMM_only=False, Horizons_id=None):
                     interpolators, start_time = make_interpolators(df)
                     target['interpolators_from_vector'] = interpolators
                     target['start_time_from_vector'] = start_time
-
-            elif target['type'] == 'LEO': # -------------------------------------------------------
-                fields = OMM_df[OMM_df['NORAD_CAT_ID'] == target['NORAD']]
-                if not fields.empty:
-                    fields = fields.iloc[0].to_dict()
-                    satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
-                    target['EarthSatellite'] = satellite
-                else:
-                    self.log_message(f'Data for {target} is empty.')
     
             elif target['type'] == 'ASTRO': # -----------------------------------------------------
                 pass # for ASTRO there is nothing to do
@@ -249,7 +257,6 @@ def load_target_list(self, OMM_only=False, Horizons_id=None):
             else: # -------------------------------------------------------------------------------
                 self.log_message(f'Unknowen target type: {target['type']}')
 
-        return target_list
     except Exception as e:
         print(traceback.format_exc())
         self.log_message(f'Error while adding data to target list: {e}')

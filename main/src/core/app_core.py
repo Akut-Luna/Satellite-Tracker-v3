@@ -148,6 +148,9 @@ class AppCore(QObject):
         # show window
         self.main_window.show()
 
+        # before start up finished we use print() instead of log_message()
+        self.main_loop_worker.finished_start_up = True
+
     def shutdown(self):
         # stop threads
         self.main_loop_thread.quit()
