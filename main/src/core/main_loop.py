@@ -232,7 +232,7 @@ class MainLoop(QObject):
 
                 # ------------------------------ start tacking at AOS -----------------------------
                 if self.start_tracking_at_AOS:
-                    if not self.tracking and el > 0 and self.tracking_mode != 4:
+                    if not self.tracking and el > 0:
                         self.toggle_tracking(True)
                         if self.config.auto_uncheck_start_tracking_at_AOS_btn:
                             self.uncheck_start_tracking_at_AOS_btn.emit()  # -> ui

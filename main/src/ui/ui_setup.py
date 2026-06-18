@@ -434,29 +434,9 @@ def setup_tracking_widget(self):
 
     # ----------------------------------- Start Tracking at AOS -----------------------------------
     self.start_tracking_at_AOS_btn = QCheckBox('Start Tracking at AOS')
+    self.start_tracking_at_AOS_btn.toggled.connect(self.start_tracking_at_AOS_changed)
     self.tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
 
-    # ------------------------------- Light Time Correction button --------------------------------
-    # # Since the Horizon data is already ligth corrected, my light correction is not needed.
-    # # I'm still leaving this feature in because it might be usefull in the future with data
-    # # from a different source. In the config file you can set DISPLAY_LIGHT_TIME_CORRECTION_OPTION 
-    # # to True in order to display this button, that allows the activation of this feature. 
-    # if self.display_light_time_correction_option:
-    #     self.light_time_correction_btn = QCheckBox('Light Time Correction')
-    #     self.tracking_layout.addWidget(self.light_time_correction_btn)
-
-    # ----------------------------------- Horizons direct button ----------------------------------
-    # # During the Artemis II mission a mismatch between the calculations for AZ/EL of this program 
-    # # based on Horizons data, and the AZ/EL data from Horizons itself was noticed. So an option 
-    # # the use the AZ/EL data from Horizons direcly was added. In the config file you can set 
-    # # DISPLAY_HORIZONS_DIRECTLY_OPTION to True in order to display this button, that allows 
-    # # the activation of this feature. 
-    # if self.display_horizons_directly_option:
-    #     self.horizons_directly_btn = QCheckBox('Horizons Directly')
-    #     self.tracking_layout.addWidget(self.horizons_directly_btn)
-    #     self.horizons_directly_btn.setToolTip(
-    #         'Use data (AZ, EL, Range, Range Rate) directly from Horizons,\ninstead of calculating it from the state vector.\nWorks only in List mode.'
-    #     )
     self.middle_layout.addWidget(self.tracking_group)
 
 def setup_ui(self):
