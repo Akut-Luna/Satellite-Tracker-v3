@@ -1,0 +1,21 @@
+[
+    {
+        "type": "LEO",
+        "name": "LMRST-SAT",
+        "frequency": 23575.324,
+        "NORAD": 40971
+    },
+    {
+        "type": "DS",
+        "name": "Mars",
+        "frequency": 9765.0,
+        "Horizons": 499
+    },
+    {
+        "type": "ASTRO",
+        "name": "Messier 63 (Sunflower Galaxy)",
+        "frequency": 1234.0,
+        "RA": 13.263694,
+        "DEC": 42.029167
+    }
+]
