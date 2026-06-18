@@ -105,7 +105,7 @@ def query_celestrak_api(self):
         response.raise_for_status()  # Raise an exception for HTTP errors
         with open(file_path, 'wb') as file:
             file.write(response.content)
-        self.log_message(f'Data downloaded and saved to {file_path}')
+        self.log_message(f' Data downloaded and saved to {file_path}')
     
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 403:
@@ -299,7 +299,7 @@ def query_horizons_api(self, spacecraft_id):
             'subpoint_alt_km': subpoint.height.to(u.km).value
         })
 
-    self.log_message(f'Downloading vector table for spacecraft: {spacecraft_id}...')
+    self.log_message(f' Downloading vector table for spacecraft: {spacecraft_id}...')
 
     # get data
     df, st, et = query_vectors_data(spacecraft_id, start_time, end_time)
@@ -312,14 +312,15 @@ def query_horizons_api(self, spacecraft_id):
         self.config.antenna_longitude, 
         self.config.antenna_altitude, 
     )
-    
+    last_time_vec = datetime.fromisoformat(df['time_UTC'].iloc[-1])
+
     # save data
     file_name = f'{spacecraft_id}_from_state_vectors.csv'
     file_folder = os.path.join('main', 'data', 'Horizons')
     os.makedirs(file_folder, exist_ok=True)
     file_path = os.path.join(file_folder, file_name)
     df.to_csv(file_path, index=False)
-    self.log_message(f'Data saved to {file_path}')
+    self.log_message(f'  Data saved to {file_path}')
 
     # -------------- observer table -------------
     def fetch_data_observer(spacecraft_id, start, stop):
@@ -364,7 +365,7 @@ def query_horizons_api(self, spacecraft_id):
         else:
             self.log_message('Error: No Data in the requested time frame available.') 
 
-    self.log_message(f'Downloading observer table for spacecraft: {spacecraft_id}...') 
+    self.log_message(f' Downloading observer table for spacecraft: {spacecraft_id}...') 
 
     '''
     For the vector table Horizons gives errors in TD time.
@@ -402,36 +403,29 @@ def query_horizons_api(self, spacecraft_id):
             self.log_message(f'While looking for observer data for spacecraft {spacecraft_id}, we could not find valid start and end times.')
             self.log_message(f'last attempt: st = {st} and et = {et}')
         return # did not manage to get data
-    
+    last_time_obs = datetime.fromisoformat(df['time_UTC'].iloc[-1])
+
     # save data
     file_name = f'{spacecraft_id}_from_observer_ephemerides.csv'
     file_folder = os.path.join('main', 'data', 'Horizons')
     os.makedirs(file_folder, exist_ok=True)
     file_path = os.path.join(file_folder, file_name)
     df.to_csv(file_path, index=False)
-    self.log_message(f'Data saved to {file_path}') 
+    self.log_message(f'  Data saved to {file_path}')
 
-    # -------------- update metadata ------------
-    formats = ['%Y-%m-%dT%H:%M:%S', '%Y-%b-%d %H:%M:%S.%f']
-    final_end_time = None
+    # -------------- update metadata ------------    
+    if last_time_obs < last_time_vec:
+        final_end_time = last_time_obs
+    else:
+        final_end_time = last_time_vec
 
-    for fmt in formats:
-        try:
-            final_end_time = datetime.strptime(et, fmt)
-            break
-        except ValueError:
-            continue
-
-    if not final_end_time:
-        raise ValueError(f'Time data {et} does not match any recognized format')    
-    
-    if spacecraft_id not in self.metadata['DS']:
-        self.metadata['DS'][spacecraft_id] = {
+    if f'{spacecraft_id}' not in self.metadata['DS'].keys():
+        self.metadata['DS'][f'{spacecraft_id}'] = {
             'last download' : '',
             'valid until' : ''
         }
-    self.metadata['DS'][spacecraft_id]['last download'] = utc_now().isoformat()
-    self.metadata['DS'][spacecraft_id]['valid until'] = final_end_time.isoformat()
+    self.metadata['DS'][f'{spacecraft_id}']['last download'] = utc_now().isoformat()
+    self.metadata['DS'][f'{spacecraft_id}']['valid until'] = final_end_time.isoformat()
     self.save_metadata()
 
 # TODO: mulitprocessing?
