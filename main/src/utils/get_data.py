@@ -299,7 +299,7 @@ def query_horizons_api(self, spacecraft_id):
             'subpoint_alt_km': subpoint.height.to(u.km).value
         })
 
-    self.log_message(f'└Downloading vector table for spacecraft: {spacecraft_id}...')
+    self.log_message(f'├Downloading vector table for spacecraft: {spacecraft_id}...')
 
     # get data
     df, st, et = query_vectors_data(spacecraft_id, start_time, end_time)
@@ -320,7 +320,7 @@ def query_horizons_api(self, spacecraft_id):
     os.makedirs(file_folder, exist_ok=True)
     file_path = os.path.join(file_folder, file_name)
     df.to_csv(file_path, index=False)
-    self.log_message(f' └Data saved to {file_path}')
+    self.log_message(f'├─Data saved to {file_path}')
 
     # -------------- observer table -------------
     def fetch_data_observer(spacecraft_id, start, stop):
@@ -365,7 +365,7 @@ def query_horizons_api(self, spacecraft_id):
         else:
             self.log_message('Error: No Data in the requested time frame available.') 
 
-    self.log_message(f'└Downloading observer table for spacecraft: {spacecraft_id}...') 
+    self.log_message(f'├Downloading observer table for spacecraft: {spacecraft_id}...') 
 
     '''
     For the vector table Horizons gives errors in TD time.
@@ -411,7 +411,7 @@ def query_horizons_api(self, spacecraft_id):
     os.makedirs(file_folder, exist_ok=True)
     file_path = os.path.join(file_folder, file_name)
     df.to_csv(file_path, index=False)
-    self.log_message(f' └Data saved to {file_path}')
+    self.log_message(f'└─Data saved to {file_path}')
 
     # -------------- update metadata ------------    
     if last_time_obs < last_time_vec:
