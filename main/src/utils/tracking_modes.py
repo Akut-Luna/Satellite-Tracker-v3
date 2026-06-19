@@ -142,8 +142,8 @@ def tracking_mode_List(self, now_datetime):
                 if self.config.flight_path_steps > 0:
                     base_offset = (now_datetime - start_time).total_seconds()
                     future_x = [base_offset + (i * 60) for i in range(self.config.flight_path_steps)]
-                    latitudes = float(interpolators['subpoint_lat'](future_x))
-                    longitudes = float(interpolators['subpoint_lon'](future_x))
+                    latitudes = [float(lat) for lat in interpolators['subpoint_lat'](future_x)]
+                    longitudes = [float(lon) for lon in interpolators['subpoint_lon'](future_x)]
                     flight_path = np.column_stack((
                         latitudes,
                         longitudes

@@ -69,7 +69,7 @@ def update_data_if_needed(self, current_target):
         if need_to_update:
             self.log_message(f'Downloading new data for Spacecraft {spacecraft_id} ...')
             self.query_horizons_api(spacecraft_id)
-            self.load_target_list_delta(Horizons_id=spacecraft_id) # update list in memory
+            self.load_target_list_data(Horizons_id=spacecraft_id) # update list in memory
 
     elif current_target['type'] == 'ASTRO':
         pass # for ASTRO there is no data to update
