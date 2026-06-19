@@ -374,7 +374,7 @@ def tracking_mode_OMM(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
 
 def tracking_mode_SPICE(self, now_datetime):
-    pass
+    return None, None, None, None, None, None, None, None, None, None
 
 def tracking_mode_AZ_EL(self):
     '''            
@@ -395,15 +395,23 @@ def tracking_mode_AZ_EL(self):
 
     if az < 0 or 360 < az:
         self.log_message('Azimuth need to be between 0° and 360°')
-        return
+        return None, None
     if el < 0 or 90 < el:
         self.log_message('Elevation need to be between 0° and 90°')
-        return
+        return None, None
     
-    # flight path -----------------------------------------------------------------------------
+    # ---------------------------------------- flight path ----------------------------------------
     self.flight_path_changed.emit(np.zeros((0, 2))) # -> ui
 
     return az, el
 
 def tracking_mode_Schedule(self, now_datetime):
-    pass
+    return None, None, None, None, None, None, None, None, None, None
+
+# TODO LIST:
+# add to list OMM
+# add to list List
+# tracking mode Spice
+# find passes
+# tracking mode schedule
+
