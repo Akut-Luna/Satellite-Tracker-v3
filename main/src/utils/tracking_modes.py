@@ -404,3 +404,6 @@ def tracking_mode_AZ_EL(self):
     self.flight_path_changed.emit(np.zeros((0, 2))) # -> ui
 
     return az, el
+
+def tracking_mode_Schedule(self, now_datetime):
+    pass
