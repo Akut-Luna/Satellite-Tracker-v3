@@ -9,10 +9,10 @@ from astropy.coordinates import AltAz, SkyCoord, ITRS, EarthLocation
 from utils.time_convertions import datetime_to_astropy_time, datetime_to_skyfield_time
 from utils.calculations import doppler_shift
 
-def tracking_mode_List(self, t):
+def tracking_mode_List(self, now_datetime):
     '''
     Parameters:
-        t (datetime): time of observation
+        now_datetime (datetime): time of observation
     
     Returns:
         az (float): Azimuth in degrees 
@@ -27,13 +27,12 @@ def tracking_mode_List(self, t):
         f1 (float): Doppler shifted frequency in MHz  
     '''
     current_target = self.target_list[self.target_list_idx]
-    # TODO: put the following in its own function: func(current_target, t)
+    # TODO: put the following in its own function: func(current_target, now_datetime)
     # this function could then be reused in a future planer feature
     self.update_data_if_needed(current_target)                 
 
     if current_target['type'] == 'LEO': # ---------------------------------------------------------
-        now_datetime = t
-        t = datetime_to_skyfield_time(self.skyfield_ts, t)
+        t = datetime_to_skyfield_time(self.skyfield_ts, now_datetime)
         try:
             antenna_pos = wgs84.latlon(
                 self.config.antenna_latitude, 
@@ -107,7 +106,8 @@ def tracking_mode_List(self, t):
         # ------------------------------ data from Horizons directly ------------------------------
         interpolators = current_target['interpolators_directly']
         start_time = current_target['start_time_directly']
-        target_x = (t - start_time).total_seconds() # BUG: TypeError: can't subtract offset-naive and offset-aware datetimes
+        start_time = start_time.replace(tzinfo=now_datetime.tzinfo)
+        target_x = (now_datetime - start_time).total_seconds()
 
         az = float(interpolators['az_deg'](target_x))
         el = float(interpolators['el_deg'](target_x))
@@ -120,8 +120,9 @@ def tracking_mode_List(self, t):
 
         # --------------------------- data calculated from state vector ---------------------------
         interpolators = current_target['interpolators_from_vector'] # NOTE: start_time_form_vector 
-        start_time = current_target['start_time_from_vector']       # could differ from start_time_directly
-        target_x = (t - start_time).total_seconds()                 # so, we recalculate target_x
+        start_time = current_target['start_time_from_vector']       # could differ from 
+        start_time = start_time.replace(tzinfo=now_datetime.tzinfo) # start_time_directly so, we 
+        target_x = (now_datetime - start_time).total_seconds()      # recalculate target_x
 
         latitude = float(interpolators['subpoint_lat'](target_x))
         longitude = float(interpolators['subpoint_lon'](target_x))
@@ -161,7 +162,7 @@ def tracking_mode_List(self, t):
     elif current_target['type'] == 'ASTRO': # -----------------------------------------------------
         ra = current_target['RA']
         dec = current_target['DEC']
-        az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(t, ra, dec)
+        az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(now_datetime, ra, dec)
         return az, None, el, None, None, None, latitude, longitude, altitude, None
 
     else: # ---------------------------------------------------------------------------------------
@@ -169,10 +170,10 @@ def tracking_mode_List(self, t):
     
     return None, None, None, None, None, None, None, None, None, None
 
-def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
+def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None):
     '''
     Parameters:
-        t (datetime): time of observation
+        now_datetime (datetime): time of observation
         ra_hours (float): RA if called by tracking_mode_list()
         dec_degrees (float): DEC if called by tracking_mode_list()
 
@@ -184,7 +185,7 @@ def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
         altitude (float): Altitude of satellite above the ground in km
     '''
     
-    obstime = datetime_to_astropy_time(t)
+    obstime = datetime_to_astropy_time(now_datetime)
     obsloc = EarthLocation(
         lat=self.config.antenna_latitude*u.deg, 
         lon=self.config.antenna_longitude*u.deg
@@ -226,12 +227,12 @@ def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
     Note: Skyfield is less precise than astropy, but faster by a factor of 10. 
     Therefore we are using Skyfield for the calculation of the flight_path.
     '''
-    if self.should_flight_path_get_calculated(t):
+    if self.should_flight_path_get_calculated(now_datetime):
         try:
             # Vectorized calculation
             target_dir = Star(ra_hours=ra_hours, dec_degrees=dec_degrees)
             if self.config.flight_path_steps > 0:
-                future_times = [t + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
+                future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
                 future_times = self.skyfield_ts.from_datetimes(future_times)
                 
                 # Note: Since RA/Dec is fixed in GCRS, we observe from Earth center
@@ -246,17 +247,17 @@ def tracking_mode_RA_DEC(self, t, ra_hours=None, dec_degrees=None):
                 flight_path = np.zeros((0, 2))
 
             self.flight_path_changed.emit(flight_path) # -> ui
-            self.last_time_flight_path_got_calculated = t
+            self.last_time_flight_path_got_calculated = now_datetime
 
         except Exception as e:
             self.log_message(f'Error calculating flight path: {str(e)}')
             print(traceback.format_exc())
     return az, el, latitude, longitude, altitude
 
-def tracking_mode_OMM(self, t):
+def tracking_mode_OMM(self, now_datetime):
     '''
     Parameters:
-        t (datetime): time of observation
+        now_datetime (datetime): time of observation
 
     Returns:
         az (float): Azimuth in degrees 
@@ -307,8 +308,7 @@ def tracking_mode_OMM(self, t):
             '''
             Skyfield is optimized for this case, so we are using Skyfield instead of astropy here.
             '''
-            now_datetime = t
-            t = datetime_to_skyfield_time(self.skyfield_ts, t)
+            t = datetime_to_skyfield_time(self.skyfield_ts, now_datetime)
             self.OMM_satellite = satellite
             antenna_pos = wgs84.latlon(
                 self.config.antenna_latitude, 
@@ -373,7 +373,7 @@ def tracking_mode_OMM(self, t):
             return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     return None, None, None, None, None, None, None, None, None, None
 
-def tracking_mode_SPICE(self, t):
+def tracking_mode_SPICE(self, now_datetime):
     pass
 
 def tracking_mode_AZ_EL(self):
