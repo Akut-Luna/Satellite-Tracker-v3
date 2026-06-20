@@ -1,17 +1,15 @@
 import os
 import json
+import traceback
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-    QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
-    QDateTimeEdit, QRadioButton, QCheckBox, QButtonGroup, QFileDialog,
-    QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,
-    QStackedWidget, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, 
+    QLabel, QLineEdit, QPushButton, QComboBox, 
+    QGridLayout, QStackedWidget
 )
-from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
 
 from utils.helper import ra_dec_parser
-import traceback
 
 class ListAddToListWindow(QWidget):
     # ------------------------------------ Signals (send data) ------------------------------------

@@ -409,7 +409,6 @@ def tracking_mode_Schedule(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
 
 # TODO LIST:
-# add to list List
 # tracking mode Spice
 # find passes
 # tracking mode schedule
