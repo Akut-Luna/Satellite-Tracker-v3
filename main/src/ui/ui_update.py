@@ -39,7 +39,7 @@ def update_map(self, latitude, longitude, altitude):
     if self.flight_path is not None:
 
         # Split flight path in multiple paths when we go off the map
-        diffs = np.abs(np.diff(self.flight_path[:, 1]))
+        diffs = np.abs(np.diff(self.flight_path[:, 1])) # differnce in lon between steps
         jump_indices = np.where(diffs > 180)[0]
         
         # Split the array at these indices
@@ -54,15 +54,45 @@ def update_map(self, latitude, longitude, altitude):
         if start_idx < len(self.flight_path):
             flight_paths.append(self.flight_path[start_idx:])
 
-        for path in flight_paths:
+        # make sure the path touches the edge of the map
+        for i, path in enumerate(flight_paths):
+            # work on a copy so we don't modify the original segments
+            path_mod = path.copy()
+
+            # prepend the last point of the previous segment adjusted by +/-360
+            if i > 0:
+                prev_last = flight_paths[i-1][-1]
+                prev_lon = prev_last[1]
+                curr_first_lon = path[0, 1]
+                if abs(prev_lon - curr_first_lon) > 180:
+                    if prev_lon > curr_first_lon:
+                        adj_prev_lon = prev_lon - 360
+                    else:
+                        adj_prev_lon = prev_lon + 360
+                    prev_point = np.array([[prev_last[0], adj_prev_lon]])
+                    path_mod = np.vstack([prev_point, path_mod])
+
+            # append the first point of the next segment adjusted by +/-360
+            if i < len(flight_paths) - 1:
+                next_first = flight_paths[i+1][0]
+                next_lon = next_first[1]
+                curr_last_lon = path[-1, 1]
+                if abs(curr_last_lon - next_lon) > 180:
+                    if next_lon > curr_last_lon:
+                        adj_next_lon = next_lon - 360
+                    else:
+                        adj_next_lon = next_lon + 360
+                    next_point = np.array([[next_first[0], adj_next_lon]])
+                    path_mod = np.vstack([path_mod, next_point])
+
             self.map_ax.plot(
-                path[:,1],
-                path[:,0],
+                path_mod[:, 1],
+                path_mod[:, 0],
                 transform=self.map_projection,
-                color= 'orange'
+                color='orange'
             )
             
-    # plot satellite 
+    # plot subpoint 
     if latitude is not None and longitude is not None:
         self.map_ax.plot(
             longitude, 
@@ -87,8 +117,8 @@ def update_map(self, latitude, longitude, altitude):
     gl.top_labels = False
     gl.right_labels = False
             
-    # Remove margins to maximize map area
-    self.map_figure.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)  # minimize margins
+    # minimize margins to maximize map area
+    self.map_figure.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)
 
     self.map_figure.tight_layout()
     self.map_canvas.draw()
