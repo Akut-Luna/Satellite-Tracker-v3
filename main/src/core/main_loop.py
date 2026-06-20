@@ -103,7 +103,6 @@ class MainLoop(QObject):
         except Exception as e:
             self.log_message(f'Error: {e}')
             print(traceback.format_exc())
-        print(self.ra_hours)
 
     def update_dec_degrees(self, dec_value:str):
         '''
@@ -118,7 +117,6 @@ class MainLoop(QObject):
         except Exception as e:
             self.log_message(f'Error: {e}')
             print(traceback.format_exc())
-        print(self.dec_degrees)
 
     def update_tracking_mode(self, index):
         self.last_time_flight_path_got_calculated = None
@@ -174,7 +172,11 @@ class MainLoop(QObject):
         self.target_list_path = path
         self.target_list = self.load_target_list_json() # update list in memory
         self.load_target_list_data()                    # update list in memory
-    
+
+    def update_target_list(self):
+        self.target_list = self.load_target_list_json() # first load the list from JSON
+        self.load_target_list_data()                    # then fill it with data
+
     def update_azimuth_offset(self, offset):
         self.azimuth_offset = offset
 

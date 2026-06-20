@@ -6,6 +6,8 @@ from core.main_loop import MainLoop
 from core.config import AppConfig
 from ui.ui_main import SatelliteTrackerApp
 from utils.motor_controller import MotorWorker
+from utils.sub_windows.List_add_to_list import ListAddToListWindow
+
 
 class AppCore(QObject):
     tracking_changed = Signal(bool)
@@ -102,6 +104,9 @@ class AppCore(QObject):
         self.main_window.start_tracking_at_AOS_changed.connect(self.main_loop_worker.update_start_tracking_at_AOS)
         self.main_window.OMM_add_to_list.connect(self.main_loop_worker.OMM_add_to_list)
         
+        # ------------- UI -> Core  -------------
+        self.main_window.List_add_to_list.connect(self.open_List_add_to_list_window)
+
         # ------- UI -> Motor Controller  -------
 
         # ----------- Main Loop -> UI -----------
@@ -139,6 +144,24 @@ class AppCore(QObject):
 
         self.tracking = tracking
         self.tracking_changed.emit(tracking) # -> ui, main_loop, motor_controller
+
+    @Slot(bool)
+    def open_List_add_to_list_window(self):
+        '''
+        This is for the 'add to list' button in List mode, not for the 'add to list' in OMM file mode.
+        Parameters:
+        '''
+        self.List_add_to_list_window = ListAddToListWindow(self.main_loop_worker.target_list_path)
+        self.List_add_to_list_window.show()
+        
+        # ------------------------------- connect Signals with Slots ------------------------------
+        # add to list window -> ui
+        self.List_add_to_list_window.update_ui.connect(self.main_window.add_to_list_dropdown)
+        self.List_add_to_list_window.log.connect(self.main_window.log_message)
+
+        # add to list window -> main_loop
+        self.List_add_to_list_window.new_target_added.connect(self.main_loop_worker.update_target_list)
+
     # ---------------------------------------------------------------------------------------------
 
     def start(self):

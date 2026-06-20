@@ -20,7 +20,7 @@ from ui.ui_setup import (
 )
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from ui.ui_buttons import (
-    browse_list, browse_OMM, browse_spice, add_new_target_to_list
+    browse_list, browse_OMM, browse_spice
 )
 from utils.helper import get_target_names_from_file
 from core.config import AppConfig
@@ -41,7 +41,6 @@ class SatelliteTrackerApp(QMainWindow):
     browse_list = browse_list
     browse_OMM = browse_OMM
     browse_spice = browse_spice
-    add_new_target_to_list = add_new_target_to_list # for List mode
 
     # helper
     get_target_names_from_file = get_target_names_from_file
@@ -66,6 +65,7 @@ class SatelliteTrackerApp(QMainWindow):
     elevation_offset_changed = Signal(float)
     start_tracking_at_AOS_changed = Signal(bool)
     OMM_add_to_list = Signal()
+    List_add_to_list = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -130,8 +130,10 @@ class SatelliteTrackerApp(QMainWindow):
     def uncheck_start_tracking_at_AOS_btn(self):
         self.start_tracking_at_AOS_btn.setChecked(False)
 
-    def add_to_list_dropdown(self, sat_name):
-        self.tracking_mode_list_dropdown.addItems([sat_name])
+    def add_to_list_dropdown(self, target_name):
+        all_items = [self.tracking_mode_list_dropdown.itemText(i) for i in range(self.tracking_mode_list_dropdown.count())]
+        if target_name not in all_items:
+            self.tracking_mode_list_dropdown.addItems([target_name])
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):

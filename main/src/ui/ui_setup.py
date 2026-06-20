@@ -30,7 +30,6 @@ def set_style(self):
     # ------------------------------------------ RA/DEC -------------------------------------------
 
     # ----------------------------------------- OMM File ------------------------------------------
-    # self.OMM_add_to_list_btn.setMaximumWidth(100)
 
     # ------------------------------------------- SPICE -------------------------------------------
 
@@ -175,9 +174,9 @@ def setup_tracking_modes_widget(self):
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     
     # ----------------- bottom ------------------
-    self.list_add_new_target_btn = QPushButton('Add new target to list')
-    self.list_add_new_target_btn.clicked.connect(self.add_new_target_to_list)
-    list_layout.addWidget(self.list_add_new_target_btn)
+    self.List_add_to_list_btn = QPushButton('Add new target to list')
+    self.List_add_to_list_btn.clicked.connect(self.List_add_to_list.emit) # -> core
+    list_layout.addWidget(self.List_add_to_list_btn)
 
     self.tracking_mode_stack.addWidget(self.list_widget)
 
@@ -227,7 +226,7 @@ def setup_tracking_modes_widget(self):
     OMM_middle_layout.addWidget(self.OMM_satellite_name_input)
 
     # NORAD id
-    OMM_middle_layout.addWidget(QLabel('NORAD ID:'))
+    OMM_middle_layout.addWidget(QLabel('NORAD id:'))
     self.OMM_satellite_id_input = QLineEdit()
     self.OMM_satellite_id_input.textChanged.connect(self.OMM_satellite_id_changed)
     OMM_middle_layout.addWidget(self.OMM_satellite_id_input)
@@ -238,7 +237,7 @@ def setup_tracking_modes_widget(self):
     OMM_bottom_layout = QHBoxLayout()
 
     # info text
-    info_text = QLabel('Provide Satellite Name or ID. If both are provided, ID will be ignored.')
+    info_text = QLabel('Provide Satellite Name or id. If both are provided, id will be ignored.')
     OMM_bottom_layout.addWidget(info_text)
 
     # add to list button

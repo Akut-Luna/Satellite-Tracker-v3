@@ -46,7 +46,7 @@ def get_target_names_from_file(self, list_path:str):
         return []
 
 def ra_dec_parser(value: str) -> float:
-    s = value.strip().replace(",", ".")
+    s = value.strip().replace(',', '.')
 
     try:
         res = float(value) # if it can be turned into a float
@@ -55,10 +55,10 @@ def ra_dec_parser(value: str) -> float:
         pass
 
     s = (
-        s.replace("º", "°")
-        .replace("′", "'")
-        .replace("’", "'")
-        .replace("″", '"')
+        s.replace('º', '°')
+        .replace('′', "'")
+        .replace('’', "'")
+        .replace('″', '"')
         .replace("''", '"')
     )
 
@@ -67,17 +67,17 @@ def ra_dec_parser(value: str) -> float:
     )
 
     if not matches:
-        raise ValueError(f"Could not parse coordinate string: {value}")
+        raise ValueError(f'Could not parse coordinate string: {value}')
         
-    sign = -1 if "-" in s else 1
-    units = {u: 0.0 for u in ["h", "m", "s", "°", "'", '"']}
+    sign = -1 if '-' in s else 1
+    units = {u: 0.0 for u in ['h', 'm', 's', '°', "'", '"']}
 
     for num, unit in matches:
         units[unit.lower()] = abs(float(num))
 
-    if any(u in s.lower() for u in ("h", "m", "s")):
-        return sign * (units["h"] + units["m"] / 60 + units["s"] / 3600) # RA
-    return sign * (units["°"] + units["'"] / 60 + units['"'] / 3600)     # DEC
+    if any(u in s.lower() for u in ('h', 'm', 's')):
+        return sign * (units['h'] + units['m'] / 60 + units['s'] / 3600) # RA
+    return sign * (units['°'] + units["'"] / 60 + units['"'] / 3600)     # DEC
 
 def OMM_add_to_list(self):
     if self.OMM_satellite is not None:
@@ -126,9 +126,9 @@ def make_interpolators(df):
     x = (times - start_time).dt.total_seconds().to_numpy()
 
     # create a dictionary of interpolators for all numeric columns
-    cols = df.columns.drop("time_UTC")
+    cols = df.columns.drop('time_UTC')
     interpolators = {
-        col: interp1d(x, df[col].values, kind="cubic") for col in cols
+        col: interp1d(x, df[col].values, kind='cubic') for col in cols
     }
 
     return interpolators, start_time
@@ -192,7 +192,8 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
 
             elif target['type'] == 'DS': # --------------------------------------------------------
                 spacecraft_id = target['Horizons'] 
-                
+                spacecraft_name = target['name']
+
                 if OMM_only: # When only OMM data was updated there
                     continue # is no need to reload Horizon data.
 
@@ -216,7 +217,7 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     try:
                         # download data
                         self.log_message(f'Downloading new data for Spacecraft {spacecraft_id}...')
-                        self.query_horizons_api(spacecraft_id)
+                        self.query_horizons_api(spacecraft_id, spacecraft_name)
                         
                         # and try again
                         df = pd.read_csv(file_path)
@@ -240,7 +241,7 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     try:
                         # download data
                         self.log_message(f'Downloading new data for Spacecraft {spacecraft_id}...')
-                        self.query_horizons_api(spacecraft_id)
+                        self.query_horizons_api(spacecraft_id, spacecraft_name)
                         
                         # and try again
                         df = pd.read_csv(file_path)
