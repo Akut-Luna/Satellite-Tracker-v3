@@ -11,7 +11,6 @@ from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
-# ------------------------------------------ main window ------------------------------------------
 def set_style(self):
     '''
     Set font size and maximum size of UI elements
@@ -498,6 +497,4 @@ def setup_ui(self):
 
     # Set focus to the main window to prevent input widgets from capturing arrow keys
     self.setFocus()
-
-# -------------------------------------- add to list window ---------------------------------------
 
