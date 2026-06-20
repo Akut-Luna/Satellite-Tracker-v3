@@ -72,7 +72,3 @@ def browse_spice(self):
         except Exception as e:
             self.log_message(f'Could not load SPICE Kernels: {e}')
             print(traceback.format_exc())
-
-def add_to_list(self):
-    pass # TODO
-
