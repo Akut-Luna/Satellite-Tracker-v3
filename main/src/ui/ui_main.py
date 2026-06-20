@@ -20,7 +20,7 @@ from ui.ui_setup import (
 )
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from ui.ui_buttons import (
-    browse_list, add_to_list, browse_OMM, browse_spice
+    browse_list, browse_OMM, browse_spice, add_new_target_to_list
 )
 from utils.helper import get_target_names_from_file
 from core.config import AppConfig
@@ -39,12 +39,12 @@ class SatelliteTrackerApp(QMainWindow):
 
     # buttons
     browse_list = browse_list
-    add_to_list = add_to_list
+    browse_OMM = browse_OMM
+    browse_spice = browse_spice
+    add_new_target_to_list = add_new_target_to_list # for List mode
 
     # helper
     get_target_names_from_file = get_target_names_from_file
-    browse_OMM = browse_OMM
-    browse_spice = browse_spice
 
     # update
     update_ui = update_ui
@@ -130,9 +130,8 @@ class SatelliteTrackerApp(QMainWindow):
     def uncheck_start_tracking_at_AOS_btn(self):
         self.start_tracking_at_AOS_btn.setChecked(False)
 
-    def add_to_list(self, sat_name):
+    def add_to_list_dropdown(self, sat_name):
         self.tracking_mode_list_dropdown.addItems([sat_name])
-
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):
@@ -146,6 +145,3 @@ class SatelliteTrackerApp(QMainWindow):
         self.tracking_mode_stack.setCurrentIndex(index)
         self.doppler_initial_freq.setText('0.0')
         self.tracking_mode_changed.emit(index) # -> main_loop
-
-
-

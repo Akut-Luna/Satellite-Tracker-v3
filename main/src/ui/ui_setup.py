@@ -11,6 +11,7 @@ from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
+# ------------------------------------------ main window ------------------------------------------
 def set_style(self):
     '''
     Set font size and maximum size of UI elements
@@ -175,9 +176,9 @@ def setup_tracking_modes_widget(self):
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     
     # ----------------- bottom ------------------
-    self.list_add_btn = QPushButton('Add to List')
-    self.list_add_btn.clicked.connect(self.add_to_list)
-    list_layout.addWidget(self.list_add_btn)
+    self.list_add_new_target_btn = QPushButton('Add new target to list')
+    self.list_add_new_target_btn.clicked.connect(self.add_new_target_to_list)
+    list_layout.addWidget(self.list_add_new_target_btn)
 
     self.tracking_mode_stack.addWidget(self.list_widget)
 
@@ -497,3 +498,6 @@ def setup_ui(self):
 
     # Set focus to the main window to prevent input widgets from capturing arrow keys
     self.setFocus()
+
+# -------------------------------------- add to list window ---------------------------------------
+

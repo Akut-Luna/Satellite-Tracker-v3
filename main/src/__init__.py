@@ -1,1 +1,1 @@
-# __init__.py makes src a package
+# __init__.py makes this folder a package

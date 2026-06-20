@@ -112,7 +112,7 @@ def OMM_add_to_list(self):
             # add to list in memory
             new_entry['EarthSatellite'] = self.OMM_satellite
             self.target_list.append(new_entry)
-            self.add_to_list.emit(sat_name) # -> ui
+            self.add_to_list_dropdown.emit(sat_name) # -> ui
         else:
             self.log_message(f'{sat_name} is already in {self.target_list_path}.')
 

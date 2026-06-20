@@ -109,7 +109,7 @@ class AppCore(QObject):
         self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
         self.main_loop_worker.go_update_f0.connect(self.main_window.update_ui_f0)
         self.main_loop_worker.uncheck_start_tracking_at_AOS_btn.connect(self.main_window.uncheck_start_tracking_at_AOS_btn)
-        self.main_loop_worker.add_to_list.connect(self.main_window.add_to_list)
+        self.main_loop_worker.add_to_list_dropdown.connect(self.main_window.add_to_list_dropdown)
 
         # ---- Main Loop -> Motor Controller ----
         self.main_loop_worker.go_update_motors.connect(self.motor_worker.move_motors)

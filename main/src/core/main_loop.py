@@ -47,7 +47,7 @@ class MainLoop(QObject):
     tracking_changed = Signal(bool)
     update_antenna_status = Signal()
     uncheck_start_tracking_at_AOS_btn = Signal()
-    add_to_list = Signal(str)
+    add_to_list_dropdown = Signal(str)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):

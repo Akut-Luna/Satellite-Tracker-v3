@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QFileDialog
 import os
 import spiceypy
 import pandas as pd
+from utils.sub_windows.add_new_target_to_list import AddNewTargetToListWindow
 
 def browse_list(self):
     base_path = os.getcwd()
@@ -72,3 +73,10 @@ def browse_spice(self):
         except Exception as e:
             self.log_message(f'Could not load SPICE Kernels: {e}')
             print(traceback.format_exc())
+
+def add_new_target_to_list(self, _):
+    '''
+    This is for the 'add to list' button in List mode, not for the 'add to list' in OMM file mode.
+    '''
+    self.add_new_target_to_list_window = AddNewTargetToListWindow()
+    self.add_new_target_to_list_window.show()
