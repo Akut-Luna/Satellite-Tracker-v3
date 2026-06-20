@@ -50,6 +50,7 @@ def update_data_if_needed(self, current_target):
 
     elif current_target['type'] == 'DS':
         spacecraft_id = current_target['Horizons']
+        spacecraft_name = current_target['name']
         need_to_update = False
         
         # if data does not exist we need to update even during tracking
@@ -67,8 +68,8 @@ def update_data_if_needed(self, current_target):
                 need_to_update = True
 
         if need_to_update:
-            self.log_message(f'Downloading new data for Spacecraft {spacecraft_id} ...')
-            self.query_horizons_api(spacecraft_id)
+            self.log_message(f'Downloading new data for {spacecraft_name} ...')
+            self.query_horizons_api(spacecraft_id, spacecraft_name)
             self.load_target_list_data(Horizons_id=spacecraft_id) # update list in memory
 
     elif current_target['type'] == 'ASTRO':
@@ -132,7 +133,7 @@ def query_celestrak_api(self):
     self.metadata['OMM']['last download'] = utc_now().isoformat()
     self.save_metadata()
 
-def query_horizons_api(self, spacecraft_id):
+def query_horizons_api(self, spacecraft_id, spacecraft_name):
     '''
     Parameters:
         spacecraft_id (int): id of spacecraft of celestial body in Horizons (JPL) catalog
@@ -299,7 +300,7 @@ def query_horizons_api(self, spacecraft_id):
             'subpoint_alt_km': subpoint.height.to(u.km).value
         })
 
-    self.log_message(f'├Downloading vector table for spacecraft: {spacecraft_id}...')
+    self.log_message(f'├Downloading vector table for {spacecraft_name}...')
 
     # get data
     df, st, et = query_vectors_data(spacecraft_id, start_time, end_time)
@@ -365,7 +366,7 @@ def query_horizons_api(self, spacecraft_id):
         else:
             self.log_message('Error: No Data in the requested time frame available.') 
 
-    self.log_message(f'├Downloading observer table for spacecraft: {spacecraft_id}...') 
+    self.log_message(f'├Downloading observer table for {spacecraft_name}...') 
 
     '''
     For the vector table Horizons gives errors in TD time.
@@ -400,7 +401,7 @@ def query_horizons_api(self, spacecraft_id):
 
     if df is None:
         if attempt == 9:
-            self.log_message(f'While looking for observer data for spacecraft {spacecraft_id}, we could not find valid start and end times.')
+            self.log_message(f'While looking for observer data for {spacecraft_name}, we could not find valid start and end times.')
             self.log_message(f'last attempt: st = {st} and et = {et}')
         return # did not manage to get data
     last_time_obs = datetime.fromisoformat(df['time_UTC'].iloc[-1])

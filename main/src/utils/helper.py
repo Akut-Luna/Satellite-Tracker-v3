@@ -107,14 +107,14 @@ def OMM_add_to_list(self):
             data.append(new_entry)
             with open(json_file, 'w') as file:
                 json.dump(data, file, indent=4)
-            self.log_message(f'{sat_name} was added to the list.')
+            self.log_message(f'{sat_name} was added to {self.target_list_path}.')
 
             # add to list in memory
             new_entry['EarthSatellite'] = self.OMM_satellite
             self.target_list.append(new_entry)
             self.add_to_list.emit(sat_name) # -> ui
         else:
-            self.log_message(f'{sat_name} is already in the list.')
+            self.log_message(f'{sat_name} is already in {self.target_list_path}.')
 
     else:
         self.log_message('No satellite selected!')
