@@ -65,6 +65,7 @@ class SatelliteTrackerApp(QMainWindow):
     azimuth_offset_changed = Signal(float)
     elevation_offset_changed = Signal(float)
     start_tracking_at_AOS_changed = Signal(bool)
+    OMM_add_to_list = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -128,6 +129,10 @@ class SatelliteTrackerApp(QMainWindow):
     
     def uncheck_start_tracking_at_AOS_btn(self):
         self.start_tracking_at_AOS_btn.setChecked(False)
+
+    def add_to_list(self, sat_name):
+        self.tracking_mode_list_dropdown.addItems([sat_name])
+
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):

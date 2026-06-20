@@ -71,7 +71,6 @@ def set_style(self):
     # ============================================ Map ============================================
 
     # ========================================== Console ==========================================
-    # TODO: such that map is maximised
 
 def setup_find_passes_widget(self):
     '''
@@ -188,13 +187,13 @@ def setup_tracking_modes_widget(self):
     
     ra_dec_layout.addWidget(QLabel('RA [h]:'), 0, 0)
     self.ra_input = QLineEdit()
-    self.ra_input.textChanged.connect(self.RA_changed.emit) # if text changed emit a signal
+    self.ra_input.textChanged.connect(self.RA_changed.emit) # -> main_loop
     ra_dec_layout.addWidget(self.ra_input, 0, 1)
     ra_dec_layout.addWidget(QLabel('Accepted format: xx.xxxx or xxh xxm xxs'), 0, 2)
 
     ra_dec_layout.addWidget(QLabel('DEC [°]:'), 1, 0)
     self.dec_input = QLineEdit()
-    self.dec_input.textChanged.connect(self.DEC_changed.emit)
+    self.dec_input.textChanged.connect(self.DEC_changed.emit) # -> main_loop
     ra_dec_layout.addWidget(self.dec_input, 1, 1)
     ra_dec_layout.addWidget(QLabel('Accepted format: xx.xxxx or +xx°' + " xx'" +' xx"'), 1, 2)
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
@@ -244,7 +243,7 @@ def setup_tracking_modes_widget(self):
 
     # add to list button
     self.OMM_add_to_list_btn = QPushButton('Add to List')
-    # self.OMM_add_to_list_btn.clicked.connect(self.add_satellite_to_list) # TODO
+    self.OMM_add_to_list_btn.clicked.connect(self.OMM_add_to_list.emit) # -> main_loop
     OMM_bottom_layout.addWidget(self.OMM_add_to_list_btn)
     
     OMM_layout.addLayout(OMM_bottom_layout)

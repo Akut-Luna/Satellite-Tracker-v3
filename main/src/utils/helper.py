@@ -92,27 +92,29 @@ def OMM_add_to_list(self):
             'NORAD': sat_id
         }
 
-        # TODO
-        # json_file = os.path.join('Main', 'config', 'satellite_list.json')
+        json_file = self.target_list_path
 
-        # # Load existing data or start with an empty list
-        # try:
-        #     with open(json_file, 'r') as file:
-        #         data = json.load(file)
-        # except (FileNotFoundError, json.JSONDecodeError):
-        #     data = []
+        # Load existing data or start with an empty list
+        try:                                    # we can't use self.target_list becasue
+            with open(json_file, 'r') as file:  # it also contains the data which we
+                data = json.load(file)          # don't want to save in the JSON
+        except (FileNotFoundError, json.JSONDecodeError):
+            data = []
 
-        # # Check if the satellie is already in json
-        # if not any(entry.get('name') == new_entry['name'] for entry in data):
-        #     data.append(new_entry)
-        #     with open(json_file, 'w') as file:
-        #         json.dump(data, file, indent=4)
-        #     self.log_message(f'{name} was added to the list.')
-        #     new_entry['EarthSatellite'] = self.OMM_satellite
-        #     self.satellite_list.append(new_entry)
-        #     self.tracking_mode_list_dropdown.addItems([name])
-        # else:
-        #     self.log_message(f'{name} is already in the list.')
+        # Check if the satellie is already in JSON
+        if not any(entry.get('NORAD') == sat_id for entry in data):
+            # save to JSON
+            data.append(new_entry)
+            with open(json_file, 'w') as file:
+                json.dump(data, file, indent=4)
+            self.log_message(f'{sat_name} was added to the list.')
+
+            # add to list in memory
+            new_entry['EarthSatellite'] = self.OMM_satellite
+            self.target_list.append(new_entry)
+            self.add_to_list.emit(sat_name) # -> ui
+        else:
+            self.log_message(f'{sat_name} is already in the list.')
 
     else:
         self.log_message('No satellite selected!')

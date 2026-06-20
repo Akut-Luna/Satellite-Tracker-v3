@@ -11,7 +11,7 @@ from utils.tracking_modes import (
 
 from utils.helper import (
     ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
-    should_flight_path_get_calculated
+    should_flight_path_get_calculated, OMM_add_to_list
 )
 from utils.calculations import correction_matrix
 from utils.get_data import save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
@@ -36,6 +36,7 @@ class MainLoop(QObject):
     query_celestrak_api = query_celestrak_api
     update_data_if_needed = update_data_if_needed
     should_flight_path_get_calculated = should_flight_path_get_calculated
+    OMM_add_to_list = OMM_add_to_list
 
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
@@ -46,6 +47,7 @@ class MainLoop(QObject):
     tracking_changed = Signal(bool)
     update_antenna_status = Signal()
     uncheck_start_tracking_at_AOS_btn = Signal()
+    add_to_list = Signal(str)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
