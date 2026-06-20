@@ -394,10 +394,10 @@ def tracking_mode_AZ_EL(self):
         el = float(self.el_input.text())
 
     if az < 0 or 360 < az:
-        self.log_message('Azimuth need to be between 0° and 360°')
+        self.log_message('Azimuth needs to be between 0° and 360°')
         return None, None
     if el < 0 or 90 < el:
-        self.log_message('Elevation need to be between 0° and 90°')
+        self.log_message('Elevation needs to be between 0° and 90°')
         return None, None
     
     # ---------------------------------------- flight path ----------------------------------------
@@ -409,6 +409,7 @@ def tracking_mode_Schedule(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
 
 # TODO LIST:
+# rename flight path -> ground track
 # tracking mode Spice
 # find passes
 # tracking mode schedule
