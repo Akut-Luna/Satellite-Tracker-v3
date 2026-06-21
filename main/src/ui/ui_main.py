@@ -59,7 +59,7 @@ class SatelliteTrackerApp(QMainWindow):
     OMM_df_changed = Signal(pd.DataFrame)
     OMM_satellite_name_changed = Signal(str)
     OMM_satellite_id_changed = Signal(str)
-    doppler_init_freq_changed = Signal(str)
+    doppler_emited_freq_changed = Signal(str)
     target_list_path_changed = Signal(str)
     azimuth_offset_changed = Signal(float)
     elevation_offset_changed = Signal(float)

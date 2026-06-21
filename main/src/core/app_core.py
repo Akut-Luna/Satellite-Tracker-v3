@@ -103,7 +103,7 @@ class AppCore(QObject):
         self.main_window.OMM_df_changed.connect(self.main_loop_worker.update_OMM_df)
         self.main_window.OMM_satellite_name_changed.connect(self.main_loop_worker.update_OMM_satellite_name)
         self.main_window.OMM_satellite_id_changed.connect(self.main_loop_worker.update_OMM_satellite_id)
-        self.main_window.doppler_init_freq_changed.connect(self.main_loop_worker.update_doppler_init_freq)
+        self.main_window.doppler_emited_freq_changed.connect(self.main_loop_worker.update_doppler_emited_freq)
         self.main_window.target_list_path_changed.connect(self.main_loop_worker.update_target_list_path)
         self.main_window.azimuth_offset_changed.connect(self.main_loop_worker.update_azimuth_offset)
         self.main_window.elevation_offset_changed.connect(self.main_loop_worker.update_elevation_offset)

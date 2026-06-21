@@ -66,7 +66,7 @@ class MainLoop(QObject):
         self.OMM_satellite_name = ''    # gets loaded by browse_OMM()
         self.OMM_satellite_id = -1      # gets loaded by browse_OMM()
         self.OMM_satellite = None       # gets set by tracking_mode_OMM()
-        self.doppler_init_freq = 0.0
+        self.doppler_emited_freq = 0.0
         self.target_list_idx = 0
         self.target_list_path = os.path.join('main', 'data', 'Lists', 'default_list.json')
         self.azimuth_offset = 0.0
@@ -159,14 +159,14 @@ class MainLoop(QObject):
         else:
             self.OMM_satellite_id = -1
 
-    def update_doppler_init_freq(self, freq):
+    def update_doppler_emited_freq(self, freq):
         if freq != '':
             try:
-                self.doppler_init_freq = float(freq)
+                self.doppler_emited_freq = float(freq)
             except:
                 self.log_message(f'Invalid frequency: {freq}')
         else:
-            self.doppler_init_freq = 0.0
+            self.doppler_emited_freq = 0.0
 
     def update_target_list_path(self, path):
         self.target_list_path = path

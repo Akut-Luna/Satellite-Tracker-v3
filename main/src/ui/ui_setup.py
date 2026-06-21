@@ -372,7 +372,7 @@ def setup_antenna_widget(self):
     doppler_shift_layout.addWidget(QLabel('Emitted freq. [MHz]'), 1, 1)
     self.doppler_initial_freq = QLineEdit()
     self.doppler_initial_freq.setText('0.0')
-    self.doppler_initial_freq.textChanged.connect(self.doppler_init_freq_changed)
+    self.doppler_initial_freq.textChanged.connect(self.doppler_emited_freq_changed)
     doppler_shift_layout.addWidget(self.doppler_initial_freq, 2, 1)
 
     doppler_shift_layout.addWidget(QLabel('Observed freq. [MHz]'), 1, 2)

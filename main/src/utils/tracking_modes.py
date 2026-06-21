@@ -72,7 +72,7 @@ def tracking_mode_List(self, now_datetime):
         altitude = altitude.km
 
         # ------------------------------------- doppler shift -------------------------------------
-        f0 = self.doppler_init_freq
+        f0 = self.doppler_emited_freq
         try:
             f1 = doppler_shift(f0, range_rate)
         except Exception as e:
@@ -129,7 +129,7 @@ def tracking_mode_List(self, now_datetime):
         altitude = float(interpolators['subpoint_alt_km'](target_x))
 
         # ------------------------------------- doppler shift -------------------------------------
-        f0 = self.doppler_init_freq
+        f0 = self.doppler_emited_freq
         try:
             f1 = doppler_shift(f0, range_rate)
         except Exception as e:
@@ -342,7 +342,7 @@ def tracking_mode_OMM(self, now_datetime):
             altitude = altitude.km
 
             # ----------------------------------- doppler shift -----------------------------------
-            f0 = self.doppler_init_freq
+            f0 = self.doppler_emited_freq
             try:
                 f1 = doppler_shift(f0, range_rate)
             except Exception as e:

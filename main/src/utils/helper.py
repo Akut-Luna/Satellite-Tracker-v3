@@ -83,7 +83,7 @@ def OMM_add_to_list(self):
     if self.OMM_satellite is not None:
         sat_name = self.OMM_satellite.name
         sat_id = self.OMM_satellite.model.satnum
-        f0 = self.doppler_init_freq
+        f0 = self.doppler_emited_freq
 
         new_entry = {
             'type': 'LEO',
