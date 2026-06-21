@@ -215,7 +215,7 @@ class MainLoop(QObject):
         else:
             self.az_deg = az
     
-    def update_az_deg(self, el):
+    def update_el_deg(self, el):
         if el == '':
             el = 0
         else:

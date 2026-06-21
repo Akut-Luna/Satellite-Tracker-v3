@@ -542,3 +542,9 @@ def tracking_mode_Schedule(self, now_datetime):
 # TODO LIST:
 # find passes
 # tracking mode schedule
+#  schedule input
+#  add to schedule btn
+# next to tracking 
+#  Status: Antenna connected (green) / not connected (red)
+#  next scheduled target: NAME from DATE to DATE
+#  if target scheduled and not in schedul mode -> info text  

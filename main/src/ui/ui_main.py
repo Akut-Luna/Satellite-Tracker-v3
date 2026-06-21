@@ -51,8 +51,10 @@ class SatelliteTrackerApp(QMainWindow):
     update_ui_tracking = update_ui_tracking
 
     # ------------------------------------ Signals (send data) ------------------------------------
-    RA_changed  = Signal(str)
-    DEC_changed = Signal(str)
+    RA_changed  = Signal(str) # for tracking mode OMM file only
+    DEC_changed = Signal(str) # for tracking mode OMM file only
+    az_deg_changed = Signal(str) # for tracking mode AZ/EL only
+    el_deg_changed = Signal(str) # for tracking mode AZ/EL only
     tracking_mode_changed = Signal(int)
     tracking_changed = Signal(bool)
     target_list_idx_changed = Signal(int)

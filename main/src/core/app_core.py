@@ -98,6 +98,8 @@ class AppCore(QObject):
         # ----------- UI -> Main Loop -----------
         self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
         self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
+        self.main_window.az_deg_changed.connect(self.main_loop_worker.update_az_deg)
+        self.main_window.el_deg_changed.connect(self.main_loop_worker.update_el_deg)
         self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
         self.main_window.target_list_idx_changed.connect(self.main_loop_worker.update_target_list_idx)
         self.main_window.OMM_df_changed.connect(self.main_loop_worker.update_OMM_df)

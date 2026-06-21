@@ -277,10 +277,12 @@ def setup_tracking_modes_widget(self):
 
     az_el_layout.addWidget(QLabel('Azimuth [°]:'), 0, 0)
     self.az_input = QLineEdit()
+    self.az_input.textChanged.connect(self.az_deg_changed.emit) # -> main_loop
     az_el_layout.addWidget(self.az_input, 0, 1)
 
     az_el_layout.addWidget(QLabel('Elevation [°]:'), 1, 0)
     self.el_input = QLineEdit()
+    self.el_input.textChanged.connect(self.el_deg_changed.emit) # -> main_loop
     az_el_layout.addWidget(self.el_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.az_el_widget)
 
