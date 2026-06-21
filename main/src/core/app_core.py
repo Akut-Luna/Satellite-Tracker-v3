@@ -24,11 +24,14 @@ class AppCore(QObject):
         load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
         
         # Antenna
-        antenna_latitude = float(os.getenv('LATITUDE'))
+        antenna_latitude  = float(os.getenv('LATITUDE'))
         antenna_longitude = float(os.getenv('LONGITUDE'))
-        antenna_altitude = float(os.getenv('ALTITUDE'))
+        antenna_altitude  = float(os.getenv('ALTITUDE'))
         local_tz = os.getenv('LOCAL_TZ') # local time zone
         min_angle_change_before_update = float(os.getenv('MIN_ANGLE_CHANGE_BEFORE_UPDATE'))
+        correction_roll  = float(os.getenv('CORRECTION_ROLL'))
+        correction_pitch = float(os.getenv('CORRECTION_PITCH'))
+        correction_yaw   = float(os.getenv('CORRECTION_YAW'))
 
         # Data
         time_resolution_horizons_state_vector = int(os.getenv('TIME_RESOLUTION_HORIZONS_STATE_VECTOR'))
@@ -58,7 +61,10 @@ class AppCore(QObject):
             min_before_recalculate_ground_track=min_before_recalculate_ground_track,
             auto_uncheck_start_tracking_at_AOS_btn=auto_uncheck_start_tracking_at_AOS_btn,
             time_resolution_horizons_state_vector=time_resolution_horizons_state_vector,
-            time_resolution_horizons_directly=time_resolution_horizons_directly
+            time_resolution_horizons_directly=time_resolution_horizons_directly,
+            correction_roll=correction_roll,
+            correction_pitch=correction_pitch,
+            correction_yaw=correction_yaw  
         )
 
         # ----------------------------------- initialize workers ----------------------------------
@@ -166,7 +172,7 @@ class AppCore(QObject):
 
     def start(self):
         print('Loading...')
-        
+
         # start threads
         self.main_loop_thread.start()
         self.motor_thread.start()

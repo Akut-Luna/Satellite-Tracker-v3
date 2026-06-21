@@ -236,7 +236,12 @@ class MainLoop(QObject):
             if az is not None and el is not None:
                 # ----------------------- Correction for not ideal Antenna ------------------------
                 try:
-                    az, el = correction_matrix(az, el, roll=0, pitch=0, yaw=0) # TODO: load angle from settings
+                    az, el = correction_matrix(
+                        az, el, 
+                        self.config.correction_roll, 
+                        self.config.correction_pitch, 
+                        self.config.correction_yaw
+                    )
                 except Exception as e:
                     self.log_message(f'Error calculating correction matrix: {e}')
                     print(traceback.format_exc())
