@@ -69,7 +69,7 @@ def rotate_by_euler(vector, euler_angles):
     
     return rotated_vector
 
-def az_el_to_cartesian(az, el): # TODO: DO we still need this?
+def az_el_to_cartesian(az, el):
     '''
     Convert azimuth and elevation angles to Cartesian coordinates.
     
@@ -91,7 +91,7 @@ def az_el_to_cartesian(az, el): # TODO: DO we still need this?
     
     return np.array([x, y, z])
 
-def cartesian_to_az_el(vector):# TODO: DO we still need this?
+def cartesian_to_az_el(vector):
     '''
     Convert Cartesian coordinates to azimuth and elevation angles.
     

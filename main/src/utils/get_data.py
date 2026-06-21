@@ -428,6 +428,3 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     self.metadata['DS'][f'{spacecraft_id}']['last download'] = utc_now().isoformat()
     self.metadata['DS'][f'{spacecraft_id}']['valid until'] = final_end_time.isoformat()
     self.save_metadata()
-
-# TODO: mulitprocessing?
-

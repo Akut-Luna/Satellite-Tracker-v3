@@ -7,7 +7,7 @@ import spiceypy
 from skyfield.api import load
 import numpy as np
 from utils.tracking_modes import (
-    tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
+    tracking_mode_List, tracking_mode_List_core, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 
 from utils.helper import (
@@ -21,11 +21,12 @@ from pprint import pprint
 
 class MainLoop(QObject):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
-    tracking_mode_List   = tracking_mode_List
-    tracking_mode_RA_DEC = tracking_mode_RA_DEC
-    tracking_mode_OMM    = tracking_mode_OMM
-    tracking_mode_SPICE  = tracking_mode_SPICE
-    tracking_mode_AZ_EL  = tracking_mode_AZ_EL
+    tracking_mode_List      = tracking_mode_List
+    tracking_mode_List_core = tracking_mode_List_core
+    tracking_mode_RA_DEC    = tracking_mode_RA_DEC
+    tracking_mode_OMM       = tracking_mode_OMM
+    tracking_mode_SPICE     = tracking_mode_SPICE
+    tracking_mode_AZ_EL     = tracking_mode_AZ_EL
 
     # helper
     load_planet_ephemeris = load_planet_ephemeris
@@ -63,6 +64,8 @@ class MainLoop(QObject):
         self.tracking = False
         self.ra_hours = 0.0
         self.dec_degrees = 0.0
+        self.az_deg = 0.0               # for tracking mode AZ/EL only
+        self.el_deg = 0.0               # for tracking mode AZ/EL only
         self.OMM_df = None              # gets loaded by browse_OMM()
         self.OMM_satellite_name = ''    # gets loaded by browse_OMM()
         self.OMM_satellite_id = -1      # gets loaded by browse_OMM()
@@ -83,7 +86,6 @@ class MainLoop(QObject):
         self.metadata = self.load_metadata() # needs to be before load_target_list()
         self.target_list = self.load_target_list_json() # first load the list from JSON
         self.load_target_list_data()                    # then fill it with data
-        # self.spice_kernels_loaded = False # gets set by browse_spice_file() # TODO
 
     def log_message(self, message):
         self.log.emit(message) # -> ui
@@ -192,7 +194,7 @@ class MainLoop(QObject):
     def update_spice_kernels(self, path):
         # Load all kernels from meta-kernel
         try:
-            spiceypy.furnsh(path) # TODO?
+            spiceypy.furnsh(path)
             self.spice_kernels_loaded = True
         except Exception as e:
             self.log_message(f'Could not load SPICE Kernels: {e}')
@@ -200,6 +202,31 @@ class MainLoop(QObject):
 
     def update_spice_target_name(self, name):
         self.spice_target_name = name
+    
+    def update_az_deg(self, az):
+        if az == '':
+            az = 0
+        else:
+            az = float(az)
+
+        if az < 0 or 360 < az:
+            self.log_message('Azimuth needs to be between 0° and 360°')
+            self.az_deg = None
+        else:
+            self.az_deg = az
+    
+    def update_az_deg(self, el):
+        if el == '':
+            el = 0
+        else:
+            el = float(el)
+
+        if el < 0 or 90 < el:
+            self.log_message('Elevation needs to be between 0° and 90°')
+            self.el_deg = None
+        else:
+            self.el_deg = el
+
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):

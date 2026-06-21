@@ -151,6 +151,47 @@ class SatelliteTrackerApp(QMainWindow):
         self.doppler_initial_freq.setText('0.0')
         self.tracking_mode_changed.emit(index) # -> main_loop
 
+    def keyPressEvent(self, event):
+        '''
+        Parameters:
+            event (PySide6.QtGui.QKeyEvent): event
+        '''
+        
+        # Handle arrow key presses for azimuth and elevation offset
+        if event.key() == Qt.Key_Left or event.key() == Qt.Key_A:
+            current = self.azimuth_offset.value()
+            new = current - 0.1
+            self.azimuth_offset.setValue(new)
+            self.azimuth_offset_changed.emit(new)
+            event.accept()  # Mark event as handled
+        elif event.key() == Qt.Key_Right or event.key() == Qt.Key_D:
+            current = self.azimuth_offset.value()
+            new = current + 0.1
+            self.azimuth_offset.setValue(new)
+            self.azimuth_offset_changed.emit(new)
+            event.accept()  # Mark event as handled
+        elif event.key() == Qt.Key_Up or event.key() == Qt.Key_W:
+            current = self.elevation_offset.value()
+            new = current + 0.1
+            self.elevation_offset.setValue(new)
+            self.elevation_offset_changed.emit(new)
+            event.accept()  # Mark event as handled
+        elif event.key() == Qt.Key_Down or event.key() == Qt.Key_S:
+            current = self.elevation_offset.value()
+            new = current - 0.1
+            self.elevation_offset.setValue(new)
+            self.elevation_offset_changed.emit(new)
+            event.accept()  # Mark event as handled
+        elif event.key() == Qt.Key_Space:
+            self.tracking_changed.emit(not self.tracking)
+            event.accept()  # Mark event as handled
+        elif event.key() == Qt.Key_Escape:
+            self.clearFocus() # reset focuse because being focused on input field can break hotkeys
+            self.setFocus()
+            event.accept()  # Mark event as handled
+        else:
+            super().keyPressEvent(event)
+
     def closeEvent(self, event):
         '''
         This function overwrites the default (empty) closeEvent from QMainWindow

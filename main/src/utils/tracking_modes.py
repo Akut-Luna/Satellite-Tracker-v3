@@ -1,4 +1,3 @@
-import os
 import spiceypy
 import traceback
 import numpy as np
@@ -28,10 +27,29 @@ def tracking_mode_List(self, now_datetime):
         f1 (float): Doppler shifted frequency in MHz  
     '''
     current_target = self.target_list[self.target_list_idx]
-    # TODO: put the following in its own function: func(current_target, now_datetime)
-    # this function could then be reused in a future planer feature
-    self.update_data_if_needed(current_target)                 
+    return self.tracking_mode_List_core(now_datetime, current_target)
 
+def tracking_mode_List_core(self, now_datetime, current_target):
+    '''
+    This function gets used by both tracking mode List and Schedule.
+
+    Parameters:
+        now_datetime (datetime): time of observation
+        current_target (dict): current target dict
+    
+    Returns:
+        az (float): Azimuth in degrees 
+        az_rate (float): Azimuth rate in degrees per second
+        el (float): Elevation in degrees
+        el_rate (float): Elevation rate in degrees per second
+        slant_range (float): Distance from antenna to satellite in km
+        range_rate (float): Range rate in km/s
+        latitude (float): Subpoint latitude in degrees
+        longitude (float): Subpoint longitude in degrees
+        altitude (float): Altitude of satellite above the ground in km
+        f1 (float): Doppler shifted frequency in MHz  
+    '''
+    self.update_data_if_needed(current_target)
     if current_target['type'] == 'LEO': # ---------------------------------------------------------
         t = datetime_to_skyfield_time(self.skyfield_ts, now_datetime)
         try:
@@ -175,8 +193,8 @@ def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None):
     '''
     Parameters:
         now_datetime (datetime): time of observation
-        ra_hours (float): RA if called by tracking_mode_list()
-        dec_degrees (float): DEC if called by tracking_mode_list()
+        ra_hours (float): RA if called by tracking_mode_list_core()
+        dec_degrees (float): DEC if called by tracking_mode_list_core()
 
     Returns:
         az (float): Azimuth in degrees 
@@ -513,28 +531,10 @@ def tracking_mode_AZ_EL(self):
         az (float): Azimuth in degrees 
         el (float): Elevation in degrees
     '''
-    
-    if self.az_input.text() == '':
-        az = 0
-    else:
-        az = float(self.az_input.text())
-
-    if self.el_input.text() == '':
-        el = 0
-    else:
-        el = float(self.el_input.text())
-
-    if az < 0 or 360 < az:
-        self.log_message('Azimuth needs to be between 0° and 360°')
-        return None, None
-    if el < 0 or 90 < el:
-        self.log_message('Elevation needs to be between 0° and 90°')
-        return None, None
-    
     # ---------------------------------------- ground track ----------------------------------------
     self.ground_track_changed.emit(np.zeros((0, 2))) # -> ui
 
-    return az, el
+    return self.az_deg, self.el_deg
 
 def tracking_mode_Schedule(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
@@ -542,5 +542,3 @@ def tracking_mode_Schedule(self, now_datetime):
 # TODO LIST:
 # find passes
 # tracking mode schedule
-# keyboard 
-
