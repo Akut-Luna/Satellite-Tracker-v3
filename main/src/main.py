@@ -13,6 +13,7 @@ def main():
 
     exit_code = app.exec() # <- Once the main window is closed the code will resume from here.
     core.shutdown()
+    print('Shutdown complete.')
     sys.exit(exit_code)
 
 if __name__ == "__main__":

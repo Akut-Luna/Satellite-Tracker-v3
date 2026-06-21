@@ -153,12 +153,12 @@ class SatelliteTrackerApp(QMainWindow):
 
     def closeEvent(self, event):
         '''
+        This function overwrites the default (empty) closeEvent from QMainWindow
         Parameters:
             event (PySide6.QtGui.QKeyEvent): event
         '''
+        print('Shutting down...')
 
         self.close_connection.emit() # -> motor controller
-                
-        print('Satellite Tracker was closed')
         event.accept()  # Ensures the window closes properly
 
