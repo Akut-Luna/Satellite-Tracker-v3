@@ -165,6 +165,8 @@ class AppCore(QObject):
     # ---------------------------------------------------------------------------------------------
 
     def start(self):
+        print('Loading...')
+        
         # start threads
         self.main_loop_thread.start()
         self.motor_thread.start()
