@@ -11,7 +11,7 @@ from utils.tracking_modes import (
 
 from utils.helper import (
     ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
-    should_flight_path_get_calculated, OMM_add_to_list
+    should_ground_track_get_calculated, OMM_add_to_list
 )
 from utils.calculations import correction_matrix
 from utils.get_data import save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
@@ -35,7 +35,7 @@ class MainLoop(QObject):
     query_horizons_api = query_horizons_api
     query_celestrak_api = query_celestrak_api
     update_data_if_needed = update_data_if_needed
-    should_flight_path_get_calculated = should_flight_path_get_calculated
+    should_ground_track_get_calculated = should_ground_track_get_calculated
     OMM_add_to_list = OMM_add_to_list
 
     # ------------------------------------ Signals (send data) ------------------------------------
@@ -43,7 +43,7 @@ class MainLoop(QObject):
     go_update_motors = Signal(dict) # Send az, el to motors
     go_update_f0 = Signal(float)
     log = Signal(str)
-    flight_path_changed = Signal(object)
+    ground_track_changed = Signal(object)
     tracking_changed = Signal(bool)
     update_antenna_status = Signal()
     uncheck_start_tracking_at_AOS_btn = Signal()
@@ -74,8 +74,8 @@ class MainLoop(QObject):
         self.start_tracking_at_AOS = False
 
         # local
-        self.last_time_flight_path_got_calculated = None
-        self.flight_path = None
+        self.last_time_ground_track_got_calculated = None
+        self.ground_track = None
         self.finished_start_up = False       # needs to be before load_target_list()
         self.metadata = self.load_metadata() # needs to be before load_target_list()
         self.target_list = self.load_target_list_json() # first load the list from JSON
@@ -119,7 +119,7 @@ class MainLoop(QObject):
             print(traceback.format_exc())
 
     def update_tracking_mode(self, index):
-        self.last_time_flight_path_got_calculated = None
+        self.last_time_ground_track_got_calculated = None
         self.tracking_mode = index
         if index == 0:
             current_target = self.target_list[self.target_list_idx]

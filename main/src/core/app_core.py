@@ -42,8 +42,8 @@ class AppCore(QObject):
         motor_port = int(os.getenv('PORT'))
 
         # Map
-        flight_path_steps = int(os.getenv('FLIGHT_PATH_STEPS'))
-        min_before_recalculate_flight_path = int(os.getenv('MIN_BEFORE_RECALCULATING_FLIGHT_PATH'))
+        ground_track_steps = int(os.getenv('GROUND_TRACK_STEPS'))
+        min_before_recalculate_ground_track = int(os.getenv('MIN_BEFORE_RECALCULATING_GROUND_TRACK'))
 
         # immutable config object (passed to workers / exposed to UI)
         self.config = AppConfig(
@@ -54,8 +54,8 @@ class AppCore(QObject):
             min_angle_change_before_update=min_angle_change_before_update,
             motor_IP=motor_IP,
             motor_port=motor_port,
-            flight_path_steps=flight_path_steps,
-            min_before_recalculate_flight_path=min_before_recalculate_flight_path,
+            ground_track_steps=ground_track_steps,
+            min_before_recalculate_ground_track=min_before_recalculate_ground_track,
             auto_uncheck_start_tracking_at_AOS_btn=auto_uncheck_start_tracking_at_AOS_btn,
             time_resolution_horizons_state_vector=time_resolution_horizons_state_vector,
             time_resolution_horizons_directly=time_resolution_horizons_directly
@@ -111,7 +111,7 @@ class AppCore(QObject):
 
         # ----------- Main Loop -> UI -----------
         self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
-        self.main_loop_worker.flight_path_changed.connect(self.main_window.update_flight_path)
+        self.main_loop_worker.ground_track_changed.connect(self.main_window.update_ground_track)
         self.main_loop_worker.go_update_f0.connect(self.main_window.update_ui_f0)
         self.main_loop_worker.uncheck_start_tracking_at_AOS_btn.connect(self.main_window.uncheck_start_tracking_at_AOS_btn)
         self.main_loop_worker.add_to_list_dropdown.connect(self.main_window.add_to_list_dropdown)

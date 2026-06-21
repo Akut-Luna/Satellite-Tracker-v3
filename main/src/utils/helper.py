@@ -265,12 +265,12 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
         self.log_message(f'Error while adding data to target list: {e}')
         return []
     
-def should_flight_path_get_calculated(self, now_datetime):
-    if self.last_time_flight_path_got_calculated is not None:
-        delta_t_min = (now_datetime - self.last_time_flight_path_got_calculated).total_seconds() // 60
+def should_ground_track_get_calculated(self, now_datetime):
+    if self.last_time_ground_track_got_calculated is not None:
+        delta_t_min = (now_datetime - self.last_time_ground_track_got_calculated).total_seconds() // 60
     else:
-        delta_t_min = self.config.min_before_recalculate_flight_path
-        self.last_time_flight_path_got_calculated = now_datetime
+        delta_t_min = self.config.min_before_recalculate_ground_track
+        self.last_time_ground_track_got_calculated = now_datetime
 
-    return delta_t_min >= self.config.min_before_recalculate_flight_path
+    return delta_t_min >= self.config.min_before_recalculate_ground_track
 

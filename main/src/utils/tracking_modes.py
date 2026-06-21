@@ -42,7 +42,7 @@ def tracking_mode_List(self, now_datetime):
 
             # relative position vector
             satellite = current_target['EarthSatellite']
-            list_satellite = satellite # save for use in flight path
+            list_satellite = satellite # save for use in ground track
             relative_pos = satellite - antenna_pos 
             
             # relative position object
@@ -79,26 +79,26 @@ def tracking_mode_List(self, now_datetime):
             self.log_message(f'Error calculating doppler shift: {str(e)}')
             print(traceback.format_exc())
 
-        # -------------------------------------- flight path --------------------------------------
-        if self.should_flight_path_get_calculated(now_datetime):
+        # -------------------------------------- ground track --------------------------------------
+        if self.should_ground_track_get_calculated(now_datetime):
             try:
-                if self.config.flight_path_steps > 0:
-                    future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
+                if self.config.ground_track_steps > 0:
+                    future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.ground_track_steps)]
                     future_times = self.skyfield_ts.from_datetimes(future_times)
                     satellites = list_satellite.at(future_times)
                     subpoints = wgs84.subpoint_of(satellites)
-                    flight_path = np.column_stack((
+                    ground_track = np.column_stack((
                         subpoints.latitude.degrees,
                         subpoints.longitude.degrees
                     ))
                 else:
-                    flight_path = np.zeros((0, 2))
+                    ground_track = np.zeros((0, 2))
                 
-                self.flight_path_changed.emit(flight_path) # -> ui
-                self.last_time_flight_path_got_calculated = now_datetime
+                self.ground_track_changed.emit(ground_track) # -> ui
+                self.last_time_ground_track_got_calculated = now_datetime
 
             except Exception as e:
-                self.log_message(f'Error calculating flight path: {str(e)}')
+                self.log_message(f'Error calculating ground track: {str(e)}')
                 print(traceback.format_exc())
         return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     
@@ -136,26 +136,26 @@ def tracking_mode_List(self, now_datetime):
             self.log_message(f'Error calculating doppler shift: {str(e)}')
             print(traceback.format_exc())
 
-        # -------------------------------------- flight path --------------------------------------
-        if self.should_flight_path_get_calculated(now_datetime):
+        # -------------------------------------- ground track --------------------------------------
+        if self.should_ground_track_get_calculated(now_datetime):
             try:
-                if self.config.flight_path_steps > 0:
+                if self.config.ground_track_steps > 0:
                     base_offset = (now_datetime - start_time).total_seconds()
-                    future_x = [base_offset + (i * 60) for i in range(self.config.flight_path_steps)]
+                    future_x = [base_offset + (i * 60) for i in range(self.config.ground_track_steps)]
                     latitudes = [float(lat) for lat in interpolators['subpoint_lat'](future_x)]
                     longitudes = [float(lon) for lon in interpolators['subpoint_lon'](future_x)]
-                    flight_path = np.column_stack((
+                    ground_track = np.column_stack((
                         latitudes,
                         longitudes
                     ))
                 else:
-                    flight_path = np.zeros((0, 2))
+                    ground_track = np.zeros((0, 2))
                 
-                self.flight_path_changed.emit(flight_path) # -> ui
-                self.last_time_flight_path_got_calculated = now_datetime
+                self.ground_track_changed.emit(ground_track) # -> ui
+                self.last_time_ground_track_got_calculated = now_datetime
 
             except Exception as e:
-                self.log_message(f'Error calculating flight path: {str(e)}')
+                self.log_message(f'Error calculating ground track: {str(e)}')
                 print(traceback.format_exc())
         return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
 
@@ -222,35 +222,35 @@ def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None):
     longitude = subpoint.lon.value   # deg
     altitude = subpoint.height.value # km
     
-    # ---------------------------------------- flight path ----------------------------------------
+    # ---------------------------------------- ground track ----------------------------------------
     '''
     Note: Skyfield is less precise than astropy, but faster by a factor of 10. 
-    Therefore we are using Skyfield for the calculation of the flight_path.
+    Therefore we are using Skyfield for the calculation of the ground_track.
     '''
-    if self.should_flight_path_get_calculated(now_datetime):
+    if self.should_ground_track_get_calculated(now_datetime):
         try:
             # Vectorized calculation
             target_dir = Star(ra_hours=ra_hours, dec_degrees=dec_degrees)
-            if self.config.flight_path_steps > 0:
-                future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
+            if self.config.ground_track_steps > 0:
+                future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.ground_track_steps)]
                 future_times = self.skyfield_ts.from_datetimes(future_times)
                 
                 # Note: Since RA/Dec is fixed in GCRS, we observe from Earth center
                 path_astrometric = self.planet_ephemeris['earth'].at(future_times).observe(target_dir)
                 path_subpoints = wgs84.subpoint(path_astrometric)
                 
-                flight_path = np.column_stack((
+                ground_track = np.column_stack((
                     path_subpoints.latitude.degrees, 
                     path_subpoints.longitude.degrees
                 ))
             else:
-                flight_path = np.zeros((0, 2))
+                ground_track = np.zeros((0, 2))
 
-            self.flight_path_changed.emit(flight_path) # -> ui
-            self.last_time_flight_path_got_calculated = now_datetime
+            self.ground_track_changed.emit(ground_track) # -> ui
+            self.last_time_ground_track_got_calculated = now_datetime
 
         except Exception as e:
-            self.log_message(f'Error calculating flight path: {str(e)}')
+            self.log_message(f'Error calculating ground track: {str(e)}')
             print(traceback.format_exc())
     return az, el, latitude, longitude, altitude
 
@@ -349,31 +349,42 @@ def tracking_mode_OMM(self, now_datetime):
                 self.log_message(f'Error calculating doppler shift: {str(e)}')
                 print(traceback.format_exc())
 
-            # ------------------------------------ flight path ------------------------------------
-            if self.should_flight_path_get_calculated(now_datetime):
+            # ------------------------------------ ground track ------------------------------------
+            if self.should_ground_track_get_calculated(now_datetime):
                 try:
-                    if self.config.flight_path_steps > 0:
-                        future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.flight_path_steps)]
+                    if self.config.ground_track_steps > 0:
+                        future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.ground_track_steps)]
                         future_times = self.skyfield_ts.from_datetimes(future_times)
                         satellites = self.OMM_satellite.at(future_times)
                         subpoints = wgs84.subpoint_of(satellites)
-                        flight_path = np.column_stack((
+                        ground_track = np.column_stack((
                             subpoints.latitude.degrees,
                             subpoints.longitude.degrees
                         ))
                     else:
-                        flight_path = np.zeros((0, 2))
+                        ground_track = np.zeros((0, 2))
                     
-                    self.flight_path_changed.emit(flight_path) # -> ui
-                    self.last_time_flight_path_got_calculated = now_datetime
+                    self.ground_track_changed.emit(ground_track) # -> ui
+                    self.last_time_ground_track_got_calculated = now_datetime
 
                 except Exception as e:
-                    self.log_message(f'Error calculating flight path: {str(e)}')
+                    self.log_message(f'Error calculating ground track: {str(e)}')
                     print(traceback.format_exc())
             return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     return None, None, None, None, None, None, None, None, None, None
 
 def tracking_mode_SPICE(self, now_datetime):
+    # find satellite in data
+    '''
+    NOTE: while tracking is turned off, we will not inform the user
+    about an error! If the user has not yet finished typing in all 
+    necessary information, the get spamed with error messages. 
+    If tracking is turned on we can assume that the user has finished
+    entering all necessary information and needs to be informed if
+    something is wrong.
+    '''
+
+
     return None, None, None, None, None, None, None, None, None, None
 
 def tracking_mode_AZ_EL(self):
@@ -400,8 +411,8 @@ def tracking_mode_AZ_EL(self):
         self.log_message('Elevation needs to be between 0° and 90°')
         return None, None
     
-    # ---------------------------------------- flight path ----------------------------------------
-    self.flight_path_changed.emit(np.zeros((0, 2))) # -> ui
+    # ---------------------------------------- ground track ----------------------------------------
+    self.ground_track_changed.emit(np.zeros((0, 2))) # -> ui
 
     return az, el
 
@@ -409,8 +420,8 @@ def tracking_mode_Schedule(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
 
 # TODO LIST:
-# rename flight path -> ground track
 # tracking mode Spice
 # find passes
 # tracking mode schedule
+# keyboard 
 

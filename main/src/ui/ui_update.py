@@ -20,7 +20,7 @@ def update_map(self, latitude, longitude, altitude):
 
     # if there is not satellie to plot, the flight plan must be old
     if latitude is None or longitude is None:
-        self.flight_path = None 
+        self.ground_track = None 
     
     img_extent = (-180, 180, -90, 90)
     self.map_ax.imshow(self.earth_img, origin='upper', extent=img_extent, transform=self.map_projection)
@@ -35,33 +35,33 @@ def update_map(self, latitude, longitude, altitude):
         transform=self.map_projection
     )
 
-    # plot flight path
-    if self.flight_path is not None:
+    # plot ground track
+    if self.ground_track is not None:
 
-        # Split flight path in multiple paths when we go off the map
-        diffs = np.abs(np.diff(self.flight_path[:, 1])) # differnce in lon between steps
+        # Split ground track in multiple paths when we go off the map
+        diffs = np.abs(np.diff(self.ground_track[:, 1])) # differnce in lon between steps
         jump_indices = np.where(diffs > 180)[0]
         
         # Split the array at these indices
-        flight_paths = []
+        ground_tracks = []
         start_idx = 0
         
         for idx in jump_indices:
-            flight_paths.append(self.flight_path[start_idx:idx+1])
+            ground_tracks.append(self.ground_track[start_idx:idx+1])
             start_idx = idx + 1
         
         # Add the last segment
-        if start_idx < len(self.flight_path):
-            flight_paths.append(self.flight_path[start_idx:])
+        if start_idx < len(self.ground_track):
+            ground_tracks.append(self.ground_track[start_idx:])
 
         # make sure the path touches the edge of the map
-        for i, path in enumerate(flight_paths):
+        for i, path in enumerate(ground_tracks):
             # work on a copy so we don't modify the original segments
             path_mod = path.copy()
 
             # prepend the last point of the previous segment adjusted by +/-360
             if i > 0:
-                prev_last = flight_paths[i-1][-1]
+                prev_last = ground_tracks[i-1][-1]
                 prev_lon = prev_last[1]
                 curr_first_lon = path[0, 1]
                 if abs(prev_lon - curr_first_lon) > 180:
@@ -73,8 +73,8 @@ def update_map(self, latitude, longitude, altitude):
                     path_mod = np.vstack([prev_point, path_mod])
 
             # append the first point of the next segment adjusted by +/-360
-            if i < len(flight_paths) - 1:
-                next_first = flight_paths[i+1][0]
+            if i < len(ground_tracks) - 1:
+                next_first = ground_tracks[i+1][0]
                 next_lon = next_first[1]
                 curr_last_lon = path[-1, 1]
                 if abs(curr_last_lon - next_lon) > 180:

@@ -86,7 +86,7 @@ class SatelliteTrackerApp(QMainWindow):
         # Map
         map_path = os.path.join('main', 'images', 'nasa-topo_1024.jpg')
         self.earth_img = mpimg.imread(map_path)
-        self.flight_path = None
+        self.ground_track = None
 
         # -----------------------------------------------------------------------------------------
 
@@ -97,8 +97,8 @@ class SatelliteTrackerApp(QMainWindow):
         self.console.append(msg)
 
     # ------------------------------------ Slots (receive data) -----------------------------------
-    def update_flight_path(self, flight_path):
-        self.flight_path = flight_path
+    def update_ground_track(self, ground_track):
+        self.ground_track = ground_track
 
     @Slot(bool)
     def update_tracking(self, tracking):
