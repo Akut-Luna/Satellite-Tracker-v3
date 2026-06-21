@@ -68,6 +68,7 @@ class SatelliteTrackerApp(QMainWindow):
     List_add_to_list = Signal()
     spice_kernels_changed = Signal(str)
     spice_target_name_changed = Signal(str)
+    close_connection = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -149,3 +150,15 @@ class SatelliteTrackerApp(QMainWindow):
         self.tracking_mode_stack.setCurrentIndex(index)
         self.doppler_initial_freq.setText('0.0')
         self.tracking_mode_changed.emit(index) # -> main_loop
+
+    def closeEvent(self, event):
+        '''
+        Parameters:
+            event (PySide6.QtGui.QKeyEvent): event
+        '''
+
+        self.close_connection.emit() # -> motor controller
+                
+        print('Satellite Tracker was closed')
+        event.accept()  # Ensures the window closes properly
+

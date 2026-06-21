@@ -116,6 +116,7 @@ class AppCore(QObject):
         self.main_window.List_add_to_list.connect(self.open_List_add_to_list_window)
 
         # ------- UI -> Motor Controller  -------
+        self.main_window.close_connection.connect(self.motor_worker.close_connection)
 
         # ----------- Main Loop -> UI -----------
         self.main_loop_worker.go_update_ui.connect(self.main_window.update_ui)
@@ -173,8 +174,6 @@ class AppCore(QObject):
     # ---------------------------------------------------------------------------------------------
 
     def start(self):
-        print('Loading...')
-
         # start threads
         self.main_loop_thread.start()
         self.motor_thread.start()

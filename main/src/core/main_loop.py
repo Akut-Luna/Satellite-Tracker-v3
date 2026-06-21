@@ -200,7 +200,6 @@ class MainLoop(QObject):
 
     def update_spice_target_name(self, name):
         self.spice_target_name = name
-
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):

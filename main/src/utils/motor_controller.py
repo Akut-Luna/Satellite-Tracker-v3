@@ -87,6 +87,10 @@ class MotorWorker(QObject):
             self.antenna_az = antenna_az
             self.antenna_el = antenna_el
             self.antenna_status_changed.emit(antenna_az, antenna_el) # -> ui
+    
+    @Slot()
+    def go_close_connection(self):
+        self.close_connection()
     # ---------------------------------------------------------------------------------------------
 
     def establish_connection(self):
