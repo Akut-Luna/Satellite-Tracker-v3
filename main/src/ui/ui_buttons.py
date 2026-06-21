@@ -1,7 +1,6 @@
 import traceback
 from PySide6.QtWidgets import QFileDialog
 import os
-import spiceypy
 import pandas as pd
 
 def browse_list(self):
@@ -56,19 +55,12 @@ def browse_spice(self):
         self, 'Select SPICE Meta Kernel', f'{default_folder}', 'All Files (*)'
     )
     if file_path:
-        self.spice_input.setText(file_path)
+        self.spice_kernels_changed.emit(file_path) # -> main_loop
         
+        self.spice_input.setText(file_path)
         base_path = os.getcwd()
         try:
             file_path = os.path.relpath(file_path, base_path) # absolut path is a bit long
             self.spice_input.setText(file_path)
         except:
             pass # it will automatically set the absolut path
-
-        # Load all kernels from meta-kernel
-        try:
-            spiceypy.furnsh(file_path) # TODO?
-            self.spice_kernels_loaded = True # TODO
-        except Exception as e:
-            self.log_message(f'Could not load SPICE Kernels: {e}')
-            print(traceback.format_exc())

@@ -66,6 +66,8 @@ class SatelliteTrackerApp(QMainWindow):
     start_tracking_at_AOS_changed = Signal(bool)
     OMM_add_to_list = Signal()
     List_add_to_list = Signal()
+    spice_kernels_changed = Signal(str)
+    spice_target_name_changed = Signal(str)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):

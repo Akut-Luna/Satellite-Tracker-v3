@@ -1,4 +1,5 @@
 import os
+import spiceypy
 import traceback
 import numpy as np
 import astropy.units as u
@@ -374,18 +375,137 @@ def tracking_mode_OMM(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
 
 def tracking_mode_SPICE(self, now_datetime):
-    # find satellite in data
     '''
-    NOTE: while tracking is turned off, we will not inform the user
-    about an error! If the user has not yet finished typing in all 
-    necessary information, the get spamed with error messages. 
-    If tracking is turned on we can assume that the user has finished
-    entering all necessary information and needs to be informed if
-    something is wrong.
+    Parameters:
+        now_datetime (datetime): observation time in UTC
+
+    Returns:
+        az (float): Azimuth in degrees 
+        az_rate (float): Azimuth rate in degrees per second
+        el (float): Elevation in degrees
+        el_rate (float): Elevation rate in degrees per second
+        slant_range (float): Distance from antenna to satellite in km
+        range_rate (float): Range rate in km/s
+        latitude (float): Subpoint latitude in degrees
+        longitude (float): Subpoint longitude in degrees
+        altitude (float): Altitude of satellite above the ground in km
+        f1 (float): Doppler shifted frequency in MHz            
     '''
+    if not self.spice_kernels_loaded:
+        return None, None, None, None, None, None, None, None, None, None
 
+    et = spiceypy.datetime2et(now_datetime)
+    target_name = self.spice_target_name
+    lat = np.radians(self.config.antenna_latitude)
+    lon = np.radians(self.config.antenna_longitude)
+    alt = self.config.antenna_altitude/1000
 
-    return None, None, None, None, None, None, None, None, None, None
+    try:
+        # -------------------------------- convert lat, lon to xyz --------------------------------
+        obspos = spiceypy.georec(lon, lat, alt, 6378.1366, 1.0/298.25642)
+
+        # Get the xyz coordinates of the spacecraft relative to observer in MYTOPO frame (Corrected for one-way light time and stellar aberration)
+        state, _ = spiceypy.spkcpo(target_name, et, 'MYTOPO', 'OBSERVER', 'LT+S', obspos, 'EARTH', 'ITRF93')
+    
+    except Exception as e:
+        '''
+        NOTE: As long as the user has not entered the correct target name, spiceypy.spkcpo will fail. So, we ignore the exception and return.
+        However if we are tracking and it still fails, we need to inform the user. 
+        '''
+        if self.tracking:
+            self.log_message(f'Spiceypy error: {e}')
+            if 'PCK file does not have coverage' in e:
+                self.log_message(f'                                                                   ')
+                self.log_message(f' Check that the Kernels are up to date.                            ')
+                self.log_message(f' Especially pck/earth_latest_high_prec.bpc needs frequent updates. ')
+                self.log_message(f' https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/           ')
+                self.log_message(f'                                                                   ')
+            print(traceback.format_exc())
+        return None, None, None, None, None, None, None, None, None, None
+        
+    try:
+        # --------------------------------------- Range rate --------------------------------------
+        position = np.array(state[:3])  # X, Y, Z
+        velocity = np.array(state[3:])  # Vx, Vy, Vz
+
+        # Compute unit line-of-sight vector
+        los_unit = position / np.linalg.norm(position)
+
+        # Compute range rate (scalar projection of velocity onto line of sight)
+        range_rate = np.dot(velocity, los_unit) # km/s
+
+        # ------------------------------- Range, Azimuth, Elevation -------------------------------
+        slant_range, az, el = spiceypy.recazl(position, azccw=False, elplsz=True)
+        az = np.degrees(az)
+        el = np.degrees(el)
+
+        # ------------------------------ Azimuth and Elevation rates ------------------------------
+        
+        delta_t = 1 # s
+        et_future = spiceypy.datetime2et(now_datetime + timedelta(seconds=delta_t))
+
+        # Get state at future time
+        state_future, _ = spiceypy.spkcpo(target_name, et_future, 'MYTOPO', 'OBSERVER', 'LT+S', obspos, 'EARTH', 'ITRF93')
+        position_future = np.array(state_future[:3])
+
+        # Compute future az, el
+        _, az_future, el_future = spiceypy.recazl(position_future, azccw=False, elplsz=True)
+        az_future = np.degrees(az_future)
+        el_future = np.degrees(el_future)
+
+        # Compute rates
+        az_rate = (az_future - az) / delta_t  # deg/s
+        el_rate = (el_future - el) / delta_t  # deg/s
+
+        # ----------------------------------- Subpoint, Altitude ----------------------------------
+        rot_matrix = spiceypy.pxform('MYTOPO', 'ITRF93', et)
+
+        # Transform the target position from MYTOPO to ITRF93
+        target_pos_itrf = rot_matrix @ position
+
+        # Now we use the target position in ITRF93 to compute the subpoint
+        # Convert rectangular coordinates to geodetic (latitude, longitude, altitude)
+        longitude, latitude, altitude = spiceypy.recgeo(target_pos_itrf, 6378.1366, 1.0/298.25642)
+        latitude = np.degrees(latitude)
+        longitude = np.degrees(longitude)
+
+    except Exception as e:
+        if self.tracking:
+            self.log_message(f'Error calculating position with spiceypy: {e}')
+            print(traceback.format_exc())
+    
+    # --------------------------------------- Doppler Shift ---------------------------------------
+    f0 = self.doppler_emited_freq
+    try:
+        f1 = doppler_shift(f0, range_rate)
+    except Exception as e:
+        self.log_message(f'Error calculating doppler shift: {str(e)}')
+        print(traceback.format_exc())
+
+    # --------------------------------------- ground track ----------------------------------------
+    if self.should_ground_track_get_calculated(now_datetime):
+        try:
+            ground_track = np.zeros((self.config.ground_track_steps,2))
+            for i in range(self.config.ground_track_steps):
+                et = spiceypy.datetime2et(now_datetime + timedelta(minutes=i))
+                state, _ = spiceypy.spkcpo(target_name, et, 'MYTOPO', 'OBSERVER', 'LT+S', obspos, 'EARTH', 'ITRF93')
+                position = np.array(state[:3])  # X, Y, Z
+                rot_matrix = spiceypy.pxform('MYTOPO', 'ITRF93', et)
+                target_pos_itrf = rot_matrix @ position
+                long, lat, altitude = spiceypy.recgeo(target_pos_itrf, 6378.1366, 1.0/298.25642)
+
+                ground_track[i][0] = np.degrees(lat)
+                ground_track[i][1] = np.degrees(long)
+            
+            self.ground_track_changed.emit(ground_track) # -> ui
+            self.last_time_ground_track_got_calculated = now_datetime
+
+        except Exception as e:
+            if self.tracking:
+                self.log_message(f'Error calculating ground track: {str(e)}')
+                print(traceback.format_exc())
+
+    return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
 
 def tracking_mode_AZ_EL(self):
     '''            
@@ -420,7 +540,6 @@ def tracking_mode_Schedule(self, now_datetime):
     return None, None, None, None, None, None, None, None, None, None
 
 # TODO LIST:
-# tracking mode Spice
 # find passes
 # tracking mode schedule
 # keyboard 

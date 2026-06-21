@@ -3,6 +3,7 @@ from utils.time_convertions import utc_now
 import traceback
 import shutil
 import os
+import spiceypy
 from skyfield.api import load
 import numpy as np
 from utils.tracking_modes import (
@@ -72,6 +73,8 @@ class MainLoop(QObject):
         self.azimuth_offset = 0.0
         self.elevation_offset = 0.0
         self.start_tracking_at_AOS = False
+        self.spice_kernels_loaded = False
+        self.spice_target_name = ''
 
         # local
         self.last_time_ground_track_got_calculated = None
@@ -185,6 +188,19 @@ class MainLoop(QObject):
     
     def update_start_tracking_at_AOS(self, status):
         self.start_tracking_at_AOS = status
+    
+    def update_spice_kernels(self, path):
+        # Load all kernels from meta-kernel
+        try:
+            spiceypy.furnsh(path) # TODO?
+            self.spice_kernels_loaded = True
+        except Exception as e:
+            self.log_message(f'Could not load SPICE Kernels: {e}')
+            print(traceback.format_exc())
+
+    def update_spice_target_name(self, name):
+        self.spice_target_name = name
+
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):

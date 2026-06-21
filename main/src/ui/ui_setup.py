@@ -263,10 +263,11 @@ def setup_tracking_modes_widget(self):
     self.spice_file_browse_btn.clicked.connect(self.browse_spice)
     spice_layout.addWidget(self.spice_file_browse_btn, 0, 2)
 
-    # Satellite name
-    spice_layout.addWidget(QLabel('Satellite Name:'), 1, 0)
-    self.spice_name = QLineEdit()
-    spice_layout.addWidget(self.spice_name, 1, 1)
+    # target name
+    spice_layout.addWidget(QLabel('Target Name:'), 1, 0)
+    self.spice_target_name = QLineEdit()
+    self.spice_target_name.textChanged.connect(self.spice_target_name_changed.emit) # -> main_loop
+    spice_layout.addWidget(self.spice_target_name, 1, 1)
 
     self.tracking_mode_stack.addWidget(self.spice_widget)
 

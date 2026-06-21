@@ -14,3 +14,6 @@ class AppConfig:
     auto_uncheck_start_tracking_at_AOS_btn: bool
     time_resolution_horizons_state_vector: int
     time_resolution_horizons_directly: int
+    correction_roll: float
+    correction_pitch: float
+    correction_yaw: float

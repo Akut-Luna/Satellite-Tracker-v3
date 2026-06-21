@@ -109,6 +109,8 @@ class AppCore(QObject):
         self.main_window.elevation_offset_changed.connect(self.main_loop_worker.update_elevation_offset)
         self.main_window.start_tracking_at_AOS_changed.connect(self.main_loop_worker.update_start_tracking_at_AOS)
         self.main_window.OMM_add_to_list.connect(self.main_loop_worker.OMM_add_to_list)
+        self.main_window.spice_kernels_changed.connect(self.main_loop_worker.update_spice_kernels)
+        self.main_window.spice_target_name_changed.connect(self.main_loop_worker.update_spice_target_name)
         
         # ------------- UI -> Core  -------------
         self.main_window.List_add_to_list.connect(self.open_List_add_to_list_window)
