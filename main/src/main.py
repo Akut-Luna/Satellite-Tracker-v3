@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication
 from core.app_core import AppCore
 
 def main():
-    print('Performing setup..')
+    print('Performing setup...')
     app = QApplication(sys.argv)
 
     core = AppCore() # -> core/app_core.py
