@@ -12,10 +12,11 @@ from utils.tracking_modes import (
 
 from utils.helper import (
     ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
-    should_ground_track_get_calculated, OMM_add_to_list
+    should_ground_track_get_calculated, OMM_add_to_list, find_passes, 
 )
 from utils.calculations import correction_matrix
 from utils.get_data import save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
+from utils.time_convertions import local_time_to_UTC
 
 from pprint import pprint
 
@@ -39,6 +40,8 @@ class MainLoop(QObject):
     update_data_if_needed = update_data_if_needed
     should_ground_track_get_calculated = should_ground_track_get_calculated
     OMM_add_to_list = OMM_add_to_list
+    find_passes = find_passes
+    local_time_to_UTC = local_time_to_UTC
 
     # ------------------------------------ Signals (send data) ------------------------------------
     go_update_ui = Signal(dict)     # Send az, el, doppler, etc. to UI
@@ -78,6 +81,10 @@ class MainLoop(QObject):
         self.start_tracking_at_AOS = False
         self.spice_kernels_loaded = False
         self.spice_target_name = ''
+        self.find_passes_start_time = None
+        self.find_passes_end_time = None
+        self.find_passes_min_angle = 0
+        self.local_time_radio_button_checked = False
 
         # local
         self.last_time_ground_track_got_calculated = None
@@ -227,6 +234,17 @@ class MainLoop(QObject):
         else:
             self.el_deg = el
 
+    def update_find_passes_start_time(self, datetime):
+        self.find_passes_start_time = datetime
+
+    def update_find_passes_end_time(self, datetime):
+        self.find_passes_end_time = datetime
+
+    def update_find_passes_min_angle(self, angle):
+        self.find_passes_min_angle = angle
+
+    def update_local_time_radio_button(self, checked):
+        self.local_time_radio_button_checked = checked
     # ---------------------------------------------------------------------------------------------
 
     def start_loop(self, interval_ms):

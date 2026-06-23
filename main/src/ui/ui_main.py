@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal, Slot
 from PySide6.QtGui import QIcon
-import numpy as np
+from datetime import datetime, timezone
 from ui.ui_setup import (
     set_style, setup_ui, 
     setup_find_passes_widget,
@@ -25,6 +25,7 @@ from ui.ui_buttons import (
 from utils.helper import get_target_names_from_file
 from core.config import AppConfig
 import pandas as pd
+import time
 
 class SatelliteTrackerApp(QMainWindow):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -71,6 +72,11 @@ class SatelliteTrackerApp(QMainWindow):
     spice_kernels_changed = Signal(str)
     spice_target_name_changed = Signal(str)
     close_connection = Signal()
+    find_passes_start_time_changed = Signal(object)
+    find_passes_end_time_changed = Signal(object)
+    find_passes_min_angle_changed = Signal(int)
+    go_find_passes = Signal()
+    local_time_radio_button_changed = Signal(bool)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):
@@ -205,3 +211,28 @@ class SatelliteTrackerApp(QMainWindow):
         self.close_connection.emit() # -> motor controller
         event.accept()  # Ensures the window closes properly
 
+    def UTC_local_time_button_func(self):
+        '''
+        Changes if the time in the find passes widget gets displayed in local time or UTC.
+        NOTE: This is only about the displayed time. We always use UTC in the background.
+        '''
+        if self.utc_radio_button.isChecked(): # UTC
+            self.start_time_input.setTimeZone(QTimeZone(b'UTC'))
+            self.end_time_input.setTimeZone(QTimeZone(b'UTC'))
+        else: # Local Time
+            tz = self.config.local_tz.encode() # convert str to bytes
+            self.start_time_input.setTimeZone(QTimeZone(tz))
+            self.end_time_input.setTimeZone(QTimeZone(tz))
+
+        self.start_time_input.setDateTime(QDateTime.currentDateTime())          # Default
+        self.end_time_input.setDateTime(QDateTime.currentDateTime().addDays(1)) # Default
+
+    def start_time_func(self):
+        start_time = self.start_time_input.dateTime().toPython()
+        start_time = start_time.replace(tzinfo=timezone.utc)
+        self.find_passes_start_time_changed.emit(start_time) # -> main_loop
+
+    def end_time_func(self):
+        end_time = self.end_time_input.dateTime().toPython()
+        end_time = end_time.replace(tzinfo=timezone.utc)
+        self.find_passes_end_time_changed.emit(end_time) # -> main_loop

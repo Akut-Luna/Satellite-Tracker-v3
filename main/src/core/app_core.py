@@ -113,7 +113,12 @@ class AppCore(QObject):
         self.main_window.OMM_add_to_list.connect(self.main_loop_worker.OMM_add_to_list)
         self.main_window.spice_kernels_changed.connect(self.main_loop_worker.update_spice_kernels)
         self.main_window.spice_target_name_changed.connect(self.main_loop_worker.update_spice_target_name)
-        
+        self.main_window.find_passes_start_time_changed.connect(self.main_loop_worker.update_find_passes_start_time)
+        self.main_window.find_passes_end_time_changed.connect(self.main_loop_worker.update_find_passes_end_time)
+        self.main_window.find_passes_min_angle_changed.connect(self.main_loop_worker.update_find_passes_min_angle)
+        self.main_window.go_find_passes.connect(self.main_loop_worker.find_passes)
+        self.main_window.local_time_radio_button_changed.connect(self.main_loop_worker.update_local_time_radio_button)
+
         # ------------- UI -> Core  -------------
         self.main_window.List_add_to_list.connect(self.open_List_add_to_list_window)
 
@@ -182,6 +187,8 @@ class AppCore(QObject):
 
         # show window
         self.main_window.show()
+        self.main_window.start_time_func()
+        self.main_window.end_time_func()
 
         # before start up finished we use print() instead of log_message()
         self.main_loop_worker.finished_start_up = True

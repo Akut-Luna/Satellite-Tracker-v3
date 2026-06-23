@@ -83,6 +83,7 @@ def setup_find_passes_widget(self):
     self.utc_radio_button = QRadioButton('UTC')
     self.utc_radio_button.setChecked(True)  # Default to UTC
     self.local_time_radio_button = QRadioButton('Local Time')
+    self.local_time_radio_button.toggled.connect(self.local_time_radio_button_changed.emit) # -> main_loop
     self.time_zone_group.addButton(self.utc_radio_button)
     self.time_zone_group.addButton(self.local_time_radio_button)
 
@@ -90,7 +91,7 @@ def setup_find_passes_widget(self):
     find_passes_layout.addWidget(self.local_time_radio_button, 0, 1)
     
     # Connect the radio button change signal to a function
-    # self.time_zone_group.buttonToggled.connect(self.UTC_local_time_button_func) # TODO
+    self.time_zone_group.buttonToggled.connect(self.UTC_local_time_button_func)
 
     # Start time
     find_passes_layout.addWidget(QLabel('Start time:'), 1, 0)
@@ -98,6 +99,7 @@ def setup_find_passes_widget(self):
     self.start_time_input.setDateTime(QDateTime.currentDateTime())
     self.start_time_input.setTimeZone(QTimeZone(b'UTC'))
     self.start_time_input.setDisplayFormat('hh:mm dd.MM.yyyy')
+    self.start_time_input.dateTimeChanged.connect(self.start_time_func)
     find_passes_layout.addWidget(self.start_time_input, 1, 1)
     
     # End time
@@ -106,6 +108,7 @@ def setup_find_passes_widget(self):
     self.end_time_input.setDateTime(QDateTime.currentDateTime().addDays(1))
     self.end_time_input.setTimeZone(QTimeZone(b'UTC'))
     self.end_time_input.setDisplayFormat('hh:mm dd.MM.yyyy')
+    self.end_time_input.dateTimeChanged.connect(self.end_time_func)
     find_passes_layout.addWidget(self.end_time_input, 2, 1)
     
     # Min elevation
@@ -114,11 +117,12 @@ def setup_find_passes_widget(self):
     self.min_elevation_input.setRange(0, 90)
     self.min_elevation_input.setValue(0)
     self.min_elevation_input.setSuffix('°')
+    self.min_elevation_input.valueChanged.connect(self.find_passes_min_angle_changed.emit) # -> main_loop
     find_passes_layout.addWidget(self.min_elevation_input, 3, 1)
     
     # Find passes button
     self.find_passes_btn = QPushButton('Find Passes')
-    # self.find_passes_btn.clicked.connect(self.find_passes) # TODO
+    self.find_passes_btn.clicked.connect(self.go_find_passes.emit)
     find_passes_layout.addWidget(self.find_passes_btn, 4, 0, 1, 2)
 
     # Next Pass Visualisation Button
