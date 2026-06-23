@@ -232,7 +232,11 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     interpolators, start_time = make_interpolators(df)
                     target['interpolators_directly'] = interpolators
                     target['start_time_directly'] = start_time
-                                    
+                    
+                    # save df for use in find passes
+                    find_passes_df = df[['time_UTC', 'el_deg']]
+                    target['find_passes_df'] = find_passes_df
+
                 # ---------------- then load the data calculated from state vectors ---------------
                 df = None
                 file_name = f'{spacecraft_id}_from_state_vectors.csv'
@@ -256,11 +260,7 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     interpolators, start_time = make_interpolators(df)
                     target['interpolators_from_vector'] = interpolators
                     target['start_time_from_vector'] = start_time
-                    
-                    # save df for use in find passes
-                    find_passes_df = df[['time_UTC', 'el_deg']]
-                    target['find_passes_df'] = find_passes_df
-    
+                        
             elif target['type'] == 'ASTRO': # -----------------------------------------------------
                 pass # for ASTRO there is nothing to do
 
@@ -324,7 +324,7 @@ def find_passes(self, return_data=False):
     min_elevation = self.find_passes_min_angle
 
     if start_time >= end_time:
-        self.log_message('End time must be after start time.')
+        self.log_message("'Start time' must be before 'End time'.")
         return
     
     # convert to UTC if needed
@@ -346,24 +346,103 @@ def find_passes(self, return_data=False):
             passes = find_passes_LEO(current_target, antenna_pos)
 
         elif current_target['type'] == 'DS':
-            # Create a boolean mask
-            above = df['elevation'] > threshold
+            df = current_target['find_passes_df'].copy()
 
-            # AOS: False -> True
-            aos_events = df[~above.shift(1, fill_value=False) & above]
+            # Convert strings to datetime and localize to UTC to match input parameters
+            df['time_UTC'] = pd.to_datetime(df['time_UTC']).dt.tz_localize('UTC')
+            data_start = df['time_UTC'].iloc[0]
+            data_end = df['time_UTC'].iloc[-1]
+            
+            # Ensure start/end times are also pandas-compatible UTC datetimes
+            start_dt = pd.to_datetime(start_time)
+            end_dt = pd.to_datetime(end_time)
 
-            # LOS: True -> False
-            los_events = df[above.shift(1, fill_value=True) & ~above]
+            mask = (df['time_UTC'] >= start_dt) & (df['time_UTC'] <= end_dt)
+            df = df.loc[mask].reset_index(drop=True)
+            
+            passes = []
 
-            # --- fine ---
-            # Function to find roots for: E(t) - threshold = 0
-            func = lambda t: interpolator(t) - threshold
+            # If there's no data in the requested interval, nothing to do
+            if df.empty:
+                self.log_message('No data in the requested time window.')
+            else:
+                el = df['el_deg']
+                times = df['time_UTC']
 
-            # Find root within a specific time interval [t1, t2] where a crossing exists
-            exact_time = brentq(func, t1, t2)
+                if start_dt < data_start:
+                    self.log_message(f'Warning: Local data starts only after {data_start.strftime('%H:%M %d.%m.%Y')} UTC.')
+                if end_dt > data_end:
+                    self.log_message(f'Warning: Local data lasts only until {data_end.strftime('%H:%M %d.%m.%Y')} UTC.')
 
+                # Helper to estimate crossing time between two samples by linear interpolation
+                def interp_crossing(t1, e1, t2, e2, threshold):
+                    try:
+                        if e2 == e1: # flat segment: choose middle
+                            return t1 + (t2 - t1) / 2
+                        frac = (threshold - e1) / (e2 - e1)
+                        frac = max(0.0, min(1.0, frac))
+                        return t1 + (t2 - t1) * frac
+                    except Exception:
+                        return t2
 
+                # -------------- find indices at which we are corssing the threshold --------------
+                above = el > self.find_passes_min_angle   # True = above threshold, False = below threshold
+                int_s = above.astype(int)                 # True and False -> 1 and 0
+                diff = int_s.diff().fillna(0).astype(int) # calculates the difference between consecutive steps
+                aos_crossing_indices = diff[diff ==  1].index  # corssing the threshold (0 -> 1)
+                los_crossing_indices = diff[diff == -1].index  # corssing the threshold (1 -> 0)
 
+                # --------------- find times at which we are corssing the threshold ---------------
+                # ------------- AOS -------------
+                aos_times = []
+                for idx in aos_crossing_indices: # if first sample is an AOS, use the sample time
+                    if idx == 0:                 # else interpolate between this timestep and the previous one
+                        t_cross = times.iloc[0]
+                    else:
+                        t_cross = interp_crossing(times.iloc[idx-1], el.iloc[idx-1], times.iloc[idx], el.iloc[idx], self.find_passes_min_angle)
+                    aos_times.append(t_cross)
+
+                # if already above threshold at the first data point 
+                effective_start = max(data_start, start_dt)
+                if above.iloc[0]: 
+                    if not aos_times or aos_times[0] > times.iloc[0]:
+                        aos_times.insert(0, effective_start)
+
+                # Ensure consistency as python datetime objects without nanosecond warnings
+                aos_times = [t.to_pydatetime() if hasattr(t, 'to_pydatetime') else t for t in pd.to_datetime(aos_times).floor('us')]
+                
+                # ------------- LOS -------------
+                los_times = []
+                for idx in los_crossing_indices: # if first sample is an AOS, use the sample time
+                    if idx == 0:                 # else interpolate between this timestep and the previous one
+                        t_cross = times.iloc[0]
+                    else:
+                        t_cross = interp_crossing(times.iloc[idx-1], el.iloc[idx-1], times.iloc[idx], el.iloc[idx], self.find_passes_min_angle)
+                    los_times.append(t_cross)
+
+                # if still above threshold at the last data point
+                effective_end = min(data_end, end_dt)
+                if above.iloc[-1]: 
+                    if not los_times or los_times[-1] < times.iloc[-1]:
+                        los_times.append(effective_end)
+
+                # Ensure consistency as python datetime objects without nanosecond warnings
+                los_times = [t.to_pydatetime() if hasattr(t, 'to_pydatetime') else t for t in pd.to_datetime(los_times).floor('us')]
+                
+                # -------- ensure each AOS is paired with the next LOS that occurs after it -------
+                i, j = 0, 0
+                while i < len(aos_times) and j < len(los_times):
+                    if aos_times[i] <= los_times[j]:
+                        passes.append([aos_times[i], los_times[j]])
+                        i += 1
+                        j += 1
+                    else: # LOS before next AOS: skip this LOS
+                        j += 1
+
+                # if there are leftover AOS without LOS (pass extends beyond data), close at last data point
+                while i < len(aos_times):
+                    passes.append([aos_times[i], pd.to_datetime(times.iloc[-1]).to_pydatetime()])
+                    i += 1
 
         elif current_target['type'] == 'ASTRO':
             pass # TODO
@@ -403,82 +482,3 @@ def find_passes(self, return_data=False):
     else:
         self.log_message('No passes found for the selected time range')
 
-    #     if 'Horizons' in current_satellite['catalogs']: # Horizons
-    #         current_time = start_time
-    #         time_step = timedelta(minutes=10)  # Start with 10-minute steps
-    #         min_time_step = timedelta(minutes=1)  # Minimum step size for precise detection
-    #         max_time_step = timedelta(minutes=10)  # Maximum step size for precise detection
-    #         passes = []
-    #         new_pass = []
-
-    #         last_el = None
-
-    #         while current_time <= end_time:
-    #             '''
-    #             NOTE: idea for simpler rewrite
-    #             - go in 10 min steps
-    #             - if corssing crossing threshold:
-    #                 - go back by 10 min
-    #                 - go in 1 min steps
-    #                 - if corssing crossing threshold:
-    #                     - if last_el < el:
-    #                         - AOS
-    #                     - else:
-    #                         - LOS
-    #                     - go in 10 min steps                 
-    #             '''
-    #             _, topocentric = self.calculate_satellite_and_topocentric(current_satellite, self.datetime_to_skyfield_time(current_time))
-    #             el, _, _, _, _, _ = topocentric.frame_latlon_and_rates(self.skyfield_antenna_pos)
-    #             el = el.degrees
-
-    #             # If this is the first point
-    #             if last_el is None:
-    #                 if el >= min_elevation:
-    #                     new_pass.append(current_time)
-
-    #                 last_el = el
-    #                 current_time += time_step
-    #                 continue
-                
-    #             # Check if we're crossing the elevation threshold
-    #             crossing_threshold = (last_el < min_elevation and min_elevation <= el) or (last_el > min_elevation and min_elevation >= el)
-                
-    #             if crossing_threshold and time_step > min_time_step: # we went too far
-    #                 # Back up and use a smaller step to find the crossing more precisely
-    #                 current_time -= time_step
-    #                 time_step = min_time_step
-    #             else:
-    #                 # Process the current point
-    #                 if last_el < min_elevation and el >= min_elevation:  # AOS (Acquisition of Signal)
-    #                     new_pass.append(current_time)
-    #                 elif last_el >= min_elevation and el < min_elevation:  # LOS (Loss of Signal)
-    #                     if len(new_pass) == 1:
-    #                         new_pass.append(current_time)
-    #                         passes.append(new_pass)
-    #                         new_pass = []
-                        
-    #                 # Use larger steps when we're far from the threshold
-    #                 delta_to_target = abs(el - min_elevation) # deg
-
-    #                 if delta_to_target > 5:
-    #                     time_step = max_time_step
-    #                 elif delta_to_target > 1:
-    #                     time_step_in_min = time_step.total_seconds()//60
-    #                     rate = abs(el - last_el)/time_step_in_min # deg/min
-
-    #                     time_step_temp = delta_to_target / rate # min
-    #                     time_step_temp = int(time_step_temp) - 1 # min
-    #                     time_step_temp = max(min_time_step.total_seconds()//60, time_step_temp)
-    #                     time_step_temp = min(max_time_step.total_seconds()//60, time_step_temp)
-    #                     time_step = timedelta(minutes=time_step_temp)
-    #                 else:
-    #                     time_step = min_time_step
-                    
-    #                 last_el = el
-    #                 current_time += time_step
-                    
-    #         # Handle the case where we end in the middle of a pass
-    #         if len(new_pass) == 1:
-    #             new_pass.append(current_time)
-    #             passes.append(new_pass)
-        
