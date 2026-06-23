@@ -288,3 +288,4 @@ def update_ui_tracking(self, tracking):
         self.tracking_btn.blockSignals(True)
         self.tracking_btn.setChecked(False)
         self.tracking_btn.blockSignals(False)    
+        
