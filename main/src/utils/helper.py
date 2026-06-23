@@ -232,11 +232,7 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     interpolators, start_time = make_interpolators(df)
                     target['interpolators_directly'] = interpolators
                     target['start_time_directly'] = start_time
-                    
-                    # save subpoint data for use in find passes
-                    subpoint_df = df[['subpoint_lat', 'subpoint_lon']]
-                    target['subpoint_df'] = subpoint_df
-                
+                                    
                 # ---------------- then load the data calculated from state vectors ---------------
                 df = None
                 file_name = f'{spacecraft_id}_from_state_vectors.csv'
@@ -260,6 +256,10 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     interpolators, start_time = make_interpolators(df)
                     target['interpolators_from_vector'] = interpolators
                     target['start_time_from_vector'] = start_time
+                    
+                    # save df for use in find passes
+                    find_passes_df = df[['time_UTC', 'el_deg']]
+                    target['find_passes_df'] = find_passes_df
     
             elif target['type'] == 'ASTRO': # -----------------------------------------------------
                 pass # for ASTRO there is nothing to do
