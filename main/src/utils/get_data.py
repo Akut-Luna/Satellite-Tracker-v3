@@ -136,7 +136,8 @@ def query_celestrak_api(self):
 def query_horizons_api(self, spacecraft_id, spacecraft_name):
     '''
     Parameters:
-        spacecraft_id (int): id of spacecraft of celestial body in Horizons (JPL) catalog
+        spacecraft_id (int): id of spacecraft or celestial body in Horizons (JPL) catalog
+        spacecraft_name (str): name of spacecraft or celestial body
 
     We calculate the needed data two times.
 
@@ -228,36 +229,32 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
         else:
             self.log_message('Error: No Data in the requested time frame available.')
 
-    def process_vectors_data(df, antenna_lat, antenna_lon, antenna_alt_m):   
-        # 1. Use the TDB JD column directly for the interpolation x-axis
-        times_tdb_jd = df['datetime_jd'].values
+    def process_vectors_data(df, antenna_lat, antenna_lon, antenna_alt_m):
+        # we need to stay in JD (TDB) instead of converting to UTC 
+        times_tdb_jd = df['datetime_jd'].values 
         
-        # Use cubic for smooth velocity rates, linear if the dataset is noisy
-        interp_pos = interp1d(times_tdb_jd, df[['x', 'y', 'z']].values, axis=0, kind='linear', fill_value='extrapolate')
-        interp_vel = interp1d(times_tdb_jd, df[['vx', 'vy', 'vz']].values, axis=0, kind='linear', fill_value='extrapolate')
+        # make interpolators
+        interp_pos = interp1d(times_tdb_jd, df[['x', 'y', 'z']].values, axis=0, kind='cubic', fill_value='extrapolate')
+        interp_vel = interp1d(times_tdb_jd, df[['vx', 'vy', 'vz']].values, axis=0, kind='cubic', fill_value='extrapolate')
         
-        # 2. Time setup for Earth states
-        # We must convert JDs (TDB) to an Astropy Time object to get Earth's GCRS state
+        # convert JD (TDB) to an Astropy Time object to get Earth's GCRS state
         times_obs = Time(times_tdb_jd, format='jd', scale='tdb')
         
-        # 3. Vectorized Earth State (at t_observation relative to @0)
-        # This returns the position and velocity of Earth relative to the Solar System Barycenter
+        # position and velocity of Earth relative to the Solar System Barycenter
         earth_pos_bc, earth_vel_bc = get_body_barycentric_posvel('earth', times_obs)
 
         earth_p = earth_pos_bc.xyz.to(u.km).T  # Shape (N, 3)
         earth_v = earth_vel_bc.xyz.to(u.km/u.s).T
 
-        # 4. Light Time Correction
+        # light time Correction (t_emit = t_obs - light_time)
         target_p_geom = df[['x', 'y', 'z']].values * u.km
         dist_approx = np.linalg.norm((target_p_geom - earth_p), axis=1)
         lt_days = (dist_approx / speed_of_light).to(u.day).value  # Shift in days for JD math
-
-        # 5. Emission Times (t_emit = t_obs - light_time)
         t_emit_jd = times_tdb_jd - lt_days
         pos_emit = interp_pos(t_emit_jd) * u.km
         vel_emit = interp_vel(t_emit_jd) * u.km/u.s
 
-        # 6. Relative States & Frame Transformation
+        # Relative States & Frame Transformation
         rel_p = pos_emit - earth_p
         rel_v = vel_emit - earth_v
         
@@ -278,15 +275,11 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
         altaz_frame = AltAz(obstime=times_obs, location=loc)
         aa = target_gcrs.transform_to(altaz_frame)
         
-        # 7. Vectorized Subpoint (Ground Track)
-        # Transform from GCRS (Inertial) to ITRS (Earth-Fixed)
+        # subpoint: GCRS (Inertial) -> ITRS (Earth-Fixed)
         itrs_frame = ITRS(obstime=times_obs)
-        target_itrs = target_gcrs.transform_to(itrs_frame)
-        
-        # earth_location returns an EarthLocation object containing arrays of lat, lon, height
+        target_itrs = target_gcrs.transform_to(itrs_frame)        
         subpoint = target_itrs.earth_location
 
-        # save to file
         return pd.DataFrame({
             'time_UTC': times_obs.utc.iso, # TDB JD -> UTC ISO String
             'az_deg': aa.az.deg,
@@ -428,3 +421,5 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     self.metadata['DS'][f'{spacecraft_id}']['last download'] = utc_now().isoformat()
     self.metadata['DS'][f'{spacecraft_id}']['valid until'] = final_end_time.isoformat()
     self.save_metadata()
+
+    return subpoint_df

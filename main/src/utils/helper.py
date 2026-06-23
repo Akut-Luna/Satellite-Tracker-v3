@@ -160,9 +160,9 @@ def load_target_list_json(self):
 def load_target_list_data(self, OMM_only=False, Horizons_id=None):
     '''
     Then it will load the needed data for each target and add it to the list.
-            Parameters:
-            celestrak_only (bool): Flag if we want to only (re)load the CelesTrak data
-            ID (int): Id of spacecraft. When we want to only (re)load the Horizon data for a specific spacecraft
+    Parameters:
+        celestrak_only (bool): Flag if we want to only (re)load the CelesTrak data
+        ID (int): Id of spacecraft. When we want to only (re)load the Horizon data for a specific spacecraft
 
     '''    
     try: # load OMM data
@@ -209,7 +209,7 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                 have different resolutions. So using two different interpolators is easier. 
                 '''
 
-                # first load the data that comes directly from Horizons
+                # ------------- first load the data that comes directly from Horizons -------------
                 df = None
                 file_name = f'{spacecraft_id}_from_observer_ephemerides.csv'
                 file_path = os.path.join('main', 'data', 'Horizons', file_name)
@@ -232,8 +232,12 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
                     interpolators, start_time = make_interpolators(df)
                     target['interpolators_directly'] = interpolators
                     target['start_time_directly'] = start_time
+                    
+                    # save subpoint data for use in find passes
+                    subpoint_df = df[['subpoint_lat', 'subpoint_lon']]
+                    target['subpoint_df'] = subpoint_df
                 
-                # then load the data calculated from state vectors
+                # ---------------- then load the data calculated from state vectors ---------------
                 df = None
                 file_name = f'{spacecraft_id}_from_state_vectors.csv'
                 file_path = os.path.join('main', 'data', 'Horizons', file_name)
@@ -342,22 +346,21 @@ def find_passes(self, return_data=False):
             passes = find_passes_LEO(current_target, antenna_pos)
 
         elif current_target['type'] == 'DS':
-            pass
-            # # Create a boolean mask
-            # above = df['elevation'] > threshold
+            # Create a boolean mask
+            above = df['elevation'] > threshold
 
-            # # AOS: False -> True
-            # aos_events = df[~above.shift(1, fill_value=False) & above]
+            # AOS: False -> True
+            aos_events = df[~above.shift(1, fill_value=False) & above]
 
-            # # LOS: True -> False
-            # los_events = df[above.shift(1, fill_value=True) & ~above]
+            # LOS: True -> False
+            los_events = df[above.shift(1, fill_value=True) & ~above]
 
-            # # --- fine ---
-            # # Function to find roots for: E(t) - threshold = 0
-            # func = lambda t: interpolator(t) - threshold
+            # --- fine ---
+            # Function to find roots for: E(t) - threshold = 0
+            func = lambda t: interpolator(t) - threshold
 
-            # # Find root within a specific time interval [t1, t2] where a crossing exists
-            # exact_time = brentq(func, t1, t2)
+            # Find root within a specific time interval [t1, t2] where a crossing exists
+            exact_time = brentq(func, t1, t2)
 
 
 
