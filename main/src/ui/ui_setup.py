@@ -141,7 +141,7 @@ def setup_tracking_modes_widget(self):
     
     # tracking option selection
     self.tracking_mode_combo = QComboBox()
-    self.tracking_mode_combo.addItems(['List', 'RA/DEC', 'OMM File', 'SPICE', 'AZ/EL', 'Schedule'])
+    self.tracking_mode_combo.addItems(['List', 'RA/DEC', 'OMM File', 'SPICE', 'AZ/EL'])
     self.tracking_mode_combo.currentIndexChanged.connect(self.on_tracking_mode_changed)
     tracking_modes_layout.addWidget(self.tracking_mode_combo)
     
@@ -289,15 +289,6 @@ def setup_tracking_modes_widget(self):
     self.el_input.textChanged.connect(self.el_deg_changed.emit) # -> main_loop
     az_el_layout.addWidget(self.el_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.az_el_widget)
-
-    # ------------------------------------ 5. Schedule widget -------------------------------------
-    self.schedule_widget = QWidget()
-    az_el_layout = QGridLayout(self.schedule_widget)
-
-    # TODO
-
-    self.tracking_mode_stack.addWidget(self.schedule_widget)
-    # ---------------------------------------------------------------------------------------------
 
     tracking_modes_layout.addWidget(self.tracking_mode_stack)
     self.top_layout.addWidget(self.tracking_modes_group)

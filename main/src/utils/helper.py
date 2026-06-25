@@ -420,7 +420,7 @@ def find_passes(self, return_data=False):
 
         return passes
 
-    def find_passes_ASTRO(self, start_time, end_time): # BUG this breaks ground track
+    def find_passes_ASTRO(self, start_time, end_time):
         start_dt = pd.to_datetime(start_time).to_pydatetime()
         end_dt = pd.to_datetime(end_time).to_pydatetime()
         threshold = self.find_passes_min_angle
@@ -438,7 +438,7 @@ def find_passes(self, return_data=False):
         # Root-finding helper for precise crossing
         def el_root_func(t_ts):
             # Ensure consistency as python datetime objects without nanoseconds warnings
-            t_dt = pd.to_datetime(t_ts, unit='s', utc=True).round('us').to_pydatetime() # BUG UserWarning: Discarding nonzero nanoseconds in conversion. t_dt = pd.to_datetime(t_ts, unit='s', utc=True).to_pydatetime()
+            t_dt = pd.to_datetime(t_ts, unit='s', utc=True).round('us').to_pydatetime()
             return self.tracking_mode_RA_DEC(t_dt, calc_ground_track=False)[1] - threshold
 
         # --- Find AOS Times ---

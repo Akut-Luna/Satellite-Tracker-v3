@@ -31,7 +31,9 @@ def tracking_mode_List(self, now_datetime):
 
 def tracking_mode_List_core(self, now_datetime, current_target):
     '''
-    This function gets used by both tracking mode List and Schedule.
+    This function contain the tracking mode List. The reason why it is 
+    a serparte funcion from tracking_mode_List() is that this function 
+    could be also used by a futur tracking mode Schedule. 
 
     Parameters:
         now_datetime (datetime): time of observation
@@ -539,15 +541,16 @@ def tracking_mode_AZ_EL(self):
 
     return self.az_deg, self.el_deg
 
-def tracking_mode_Schedule(self, now_datetime):
+def tracking_mode_ule(self, now_datetime): # NOT IMPLEMENTED YET
     return None, None, None, None, None, None, None, None, None, None
 
 # TODO LIST:
-# find passes
-# tracking mode schedule
-#  schedule input
-#  add to schedule btn
+# visulaise next pass
 # next to tracking 
-#  Status: Antenna connected (green) / not connected (red)
-#  next scheduled target: NAME from DATE to DATE
-#  if target scheduled and not in schedul mode -> info text  
+#  Antenna Status: 
+#   connected (green)
+#   not connected (red)
+#  Tracker status: 
+#   Waiting for AOS (green)
+#   Tracking (green)
+#   
