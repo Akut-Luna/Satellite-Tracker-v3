@@ -443,6 +443,31 @@ def setup_tracking_widget(self):
 
     self.middle_layout.addWidget(self.tracking_group)
 
+def setup_status_widget(self):
+    '''
+    Sets up the UI element 'Status'
+    '''
+    # --------------------------------------- Antenna Status --------------------------------------
+    self.status_group = QGroupBox('Status')
+    self.status_layout = QGridLayout(self.status_group)
+
+    self.antenna_status_label = QLabel('Antenna Status:')
+    self.status_layout.addWidget(self.antenna_status_label, 0, 0)
+    
+    self.antenna_status_status = QLabel('Not Connected')
+    self.antenna_status_status.setStyleSheet('color: red;')
+    self.status_layout.addWidget(self.antenna_status_status, 0, 1)
+    
+    # --------------------------------------- Tracker Status --------------------------------------
+    self.tracker_status_label = QLabel('Tracker Status:')
+    self.status_layout.addWidget(self.tracker_status_label, 1, 0)
+
+    self.tracker_status_status = QLabel('No Target Selected')
+    self.tracker_status_status.setStyleSheet('color: yellow;')
+    self.status_layout.addWidget(self.tracker_status_status, 1, 1)
+
+    self.middle_layout.addWidget(self.status_group)
+
 def setup_ui(self):
     '''
     Sets up the main UI window
@@ -458,11 +483,12 @@ def setup_ui(self):
     self.setup_tracking_modes_widget()
     main_layout.addLayout(self.top_layout)
 
-    # Middle row: Antenna, Data and Tracking
+    # Middle row: Antenna, Data, Tracking and Status
     self.middle_layout = QHBoxLayout()
     self.setup_antenna_widget()
     self.setup_data_widget()
     self.setup_tracking_widget()
+    self.setup_status_widget()
     main_layout.addLayout(self.middle_layout)
 
     # Bottom row: World map and console

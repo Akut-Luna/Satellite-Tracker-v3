@@ -12,7 +12,7 @@ from utils.tracking_modes import (
 )
 from utils.helper import (
     ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
-    should_ground_track_get_calculated, OMM_add_to_list, find_passes, 
+    should_ground_track_get_calculated, OMM_add_to_list, find_passes
 )
 from utils.get_data import (
     save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed

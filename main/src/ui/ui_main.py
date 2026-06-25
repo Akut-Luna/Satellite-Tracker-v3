@@ -1,22 +1,19 @@
 import os
+import pandas as pd
 import matplotlib.image as mpimg
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-    QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
-    QDateTimeEdit, QRadioButton, QCheckBox, QButtonGroup, QFileDialog,
-    QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,
-    QStackedWidget, QFrame
-)
-from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal, Slot
+from datetime import timezone
 from PySide6.QtGui import QIcon
-from datetime import datetime, timezone
+from PySide6.QtWidgets import QMainWindow
+from PySide6.QtCore import QDateTime, Qt, QTimeZone, Signal, Slot
+
 from ui.ui_setup import (
     set_style, setup_ui, 
     setup_find_passes_widget,
     setup_tracking_modes_widget,
     setup_antenna_widget,
     setup_data_widget,
-    setup_tracking_widget
+    setup_tracking_widget,
+    setup_status_widget
 )
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from ui.ui_buttons import (
@@ -24,8 +21,6 @@ from ui.ui_buttons import (
 )
 from utils.helper import get_target_names_from_file
 from core.config import AppConfig
-import pandas as pd
-import time
 
 class SatelliteTrackerApp(QMainWindow):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -37,6 +32,7 @@ class SatelliteTrackerApp(QMainWindow):
     setup_antenna_widget = setup_antenna_widget
     setup_data_widget = setup_data_widget
     setup_tracking_widget = setup_tracking_widget
+    setup_status_widget = setup_status_widget
 
     # buttons
     browse_list = browse_list
