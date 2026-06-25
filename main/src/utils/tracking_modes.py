@@ -541,16 +541,13 @@ def tracking_mode_AZ_EL(self):
 
     return self.az_deg, self.el_deg
 
-def tracking_mode_ule(self, now_datetime): # NOT IMPLEMENTED YET
-    return None, None, None, None, None, None, None, None, None, None
-
 # TODO LIST:
 # visulaise next pass
 # next to tracking 
 #  Antenna Status: 
 #   connected (green)
 #   not connected (red)
-#  Tracker status: 
+#  Tracker Status: 
 #   Waiting for AOS (green)
 #   Tracking (green)
-#   
+#   No Target Selected (yellow)

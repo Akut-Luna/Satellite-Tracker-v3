@@ -1,24 +1,23 @@
-from PySide6.QtCore import QObject, Signal, QTimer
-from utils.time_convertions import utc_now
-import traceback
-import shutil
 import os
 import spiceypy
+import traceback
+from utils.time_convertions import utc_now
 from skyfield.api import load
-import numpy as np
-from utils.tracking_modes import (
-    tracking_mode_List, tracking_mode_List_core, tracking_mode_RA_DEC, tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
-)
+from PySide6.QtCore import QObject, Signal, QTimer
 
+from utils.calculations import correction_matrix
+from utils.time_convertions import local_time_to_UTC
+from utils.tracking_modes import (
+    tracking_mode_List, tracking_mode_List_core, tracking_mode_RA_DEC, 
+    tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
+)
 from utils.helper import (
     ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
     should_ground_track_get_calculated, OMM_add_to_list, find_passes, 
 )
-from utils.calculations import correction_matrix
-from utils.get_data import save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
-from utils.time_convertions import local_time_to_UTC
-
-from pprint import pprint
+from utils.get_data import (
+    save_metadata, load_metadata, query_celestrak_api, query_horizons_api, update_data_if_needed
+)
 
 class MainLoop(QObject):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -289,7 +288,7 @@ class MainLoop(QObject):
                 elif self.tracking_mode == 4:  # AZ/EL
                     az, el = self.tracking_mode_AZ_EL()
             except Exception as e:
-                self.log_message(f'Error calculating satellite data: {e}')
+                self.log_message(f'Error calculating target data: {e}')
                 print(traceback.format_exc())
 
             if az is not None and el is not None:
@@ -323,7 +322,6 @@ class MainLoop(QObject):
                     self.log_message('Tracking was stopped because the satellite is under the horizon.')
 
                 # ------------------------------------- Motors ------------------------------------
-                
                 data = {
                     'az'      : az,
                     'el'      : el,
