@@ -425,11 +425,11 @@ def find_passes(self, return_data=False):
         end_dt = pd.to_datetime(end_time).to_pydatetime()
         threshold = self.find_passes_min_angle
         
-        # 1. Vectorized Coarse Search (10 minutes)
+        # Vectorized Coarse Search (10 minutes resolution)
         duration_minutes = (end_dt - start_dt).total_seconds() / 60
         periods = max(2, int(duration_minutes // 10))
         time_grid = pd.date_range(start=start_dt, end=end_dt, periods=periods)
-        elevations = np.array([self.tracking_mode_RA_DEC(t)[1] for t in time_grid])
+        elevations = np.array([self.tracking_mode_RA_DEC(t, calc_ground_track=False)[1] for t in time_grid])
         
         above = elevations >= threshold
         int_s = above.astype(int)
@@ -437,8 +437,9 @@ def find_passes(self, return_data=False):
         
         # Root-finding helper for precise crossing
         def el_root_func(t_ts):
-            t_dt = pd.to_datetime(t_ts, unit='s', utc=True).to_pydatetime() # UserWarning: Discarding nonzero nanoseconds in conversion. t_dt = pd.to_datetime(t_ts, unit='s', utc=True).to_pydatetime()
-            return self.tracking_mode_RA_DEC(t_dt)[1] - threshold
+            # Ensure consistency as python datetime objects without nanoseconds warnings
+            t_dt = pd.to_datetime(t_ts, unit='s', utc=True).round('us').to_pydatetime() # BUG UserWarning: Discarding nonzero nanoseconds in conversion. t_dt = pd.to_datetime(t_ts, unit='s', utc=True).to_pydatetime()
+            return self.tracking_mode_RA_DEC(t_dt, calc_ground_track=False)[1] - threshold
 
         # --- Find AOS Times ---
         aos_times = []

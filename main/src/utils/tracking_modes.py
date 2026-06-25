@@ -189,12 +189,13 @@ def tracking_mode_List_core(self, now_datetime, current_target):
     
     return None, None, None, None, None, None, None, None, None, None
 
-def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None):
+def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None, calc_ground_track=True):
     '''
     Parameters:
         now_datetime (datetime): time of observation
         ra_hours (float): RA if called by tracking_mode_list_core()
         dec_degrees (float): DEC if called by tracking_mode_list_core()
+        calc_ground_track (bool): if called by the find passes feature, ground track should not be calculated
 
     Returns:
         az (float): Azimuth in degrees 
@@ -241,6 +242,8 @@ def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None):
     longitude = subpoint.lon.value   # deg
     altitude = subpoint.height.value # km
     
+    if not calc_ground_track:
+        return az, el, latitude, longitude, altitude
     # ---------------------------------------- ground track ----------------------------------------
     '''
     Note: Skyfield is less precise than astropy, but faster by a factor of 10. 

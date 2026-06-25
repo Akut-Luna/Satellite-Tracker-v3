@@ -88,7 +88,6 @@ class MainLoop(QObject):
 
         # local
         self.last_time_ground_track_got_calculated = None
-        self.ground_track = None
         self.finished_start_up = False       # needs to be before load_target_list()
         self.metadata = self.load_metadata() # needs to be before load_target_list()
         self.target_list = self.load_target_list_json() # first load the list from JSON
