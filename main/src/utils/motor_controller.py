@@ -8,6 +8,7 @@ class MotorWorker(QObject):
     # ------------------------------------ Signals (send data) ------------------------------------
     log = Signal(str)
     antenna_status_changed = Signal(float, float)
+    antenna_connection_status_changed = Signal(bool)
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
@@ -109,9 +110,11 @@ class MotorWorker(QObject):
 
             self.socket = s  # Store socket
             self.log_message(f'Successfully connected to {host}:{port}')
+            self.antenna_connection_status_changed.emit(True)
         except:
             self.socket = None
             self.log_message(f'Could not connect to {host}:{port}')
+            self.antenna_connection_status_changed.emit(False)
 
     def close_connection(self):
         '''
@@ -122,6 +125,7 @@ class MotorWorker(QObject):
             self.socket.close()
             self.socket = None
             self.log_message('Connection closed.')
+            self.antenna_connection_status_changed.emit(False)
 
     def talk_to_motor_controller(self, command, az=0, el=0):
         '''

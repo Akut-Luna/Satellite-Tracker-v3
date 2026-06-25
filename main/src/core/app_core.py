@@ -140,6 +140,7 @@ class AppCore(QObject):
 
         # ------- Motor Controller -> UI --------
         self.motor_worker.antenna_status_changed.connect(self.main_window.update_antenna_status)
+        self.motor_worker.antenna_connection_status_changed.connect(self.main_window.update_antenna_connection_status)
 
         # ----------------- logs ----------------
         self.main_loop_worker.log.connect(self.main_window.log_message)

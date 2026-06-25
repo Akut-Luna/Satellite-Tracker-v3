@@ -111,6 +111,7 @@ class SatelliteTrackerApp(QMainWindow):
     def update_tracking(self, tracking):
         self.tracking = tracking
         self.update_ui_tracking(tracking)
+        self.update_tracker_status()
 
     @Slot(bool)
     def toggle_tracking(self, checked):
@@ -124,12 +125,23 @@ class SatelliteTrackerApp(QMainWindow):
     
     @Slot(float, float)
     def update_antenna_status(self, antenna_az, antenna_el):
+        '''
+        position status
+        '''
         if antenna_az == 9999: # no connection
             self.current_azimuth.setText('N/A')
             self.current_elevation.setText('N/A')
         else:
             self.current_azimuth.setText(f'{antenna_az:.1f}°')
             self.current_elevation.setText(f'{antenna_el:.1f}°')
+
+    def update_antenna_connection_status(self, connected):
+        if connected:
+            self.antenna_connection_status.setText('Connected')
+            self.antenna_connection_status.setStyleSheet('color: green;')
+        else:
+            self.antenna_connection_status.setText('Not Connected')
+            self.antenna_connection_status.setStyleSheet('color: red;')
     
     def update_ui_f0(self, f0):
         self.doppler_initial_freq.setText(str(f0))
@@ -141,6 +153,17 @@ class SatelliteTrackerApp(QMainWindow):
         all_items = [self.tracking_mode_list_dropdown.itemText(i) for i in range(self.tracking_mode_list_dropdown.count())]
         if target_name not in all_items:
             self.tracking_mode_list_dropdown.addItems([target_name])
+    
+    def update_tracker_status(self):
+        if self.tracking:
+            self.tracker_status_status.setText('Tracking')
+            self.tracker_status_status.setStyleSheet('color: green;')
+        elif self.start_tracking_at_AOS_btn.isChecked():
+            self.tracker_status_status.setText('Waiting for AOS')
+            self.tracker_status_status.setStyleSheet('color: green;')
+        else:
+            self.tracker_status_status.setText('No Target Selected')
+            self.tracker_status_status.setStyleSheet('color: yellow;')
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):
@@ -150,7 +173,7 @@ class SatelliteTrackerApp(QMainWindow):
         '''
         if self.tracking:
             self.toggle_tracking(False)
-            self.log_message('Tracking stopped because tracking methode was changed')
+            self.log_message('Tracking stopped because tracking mode was changed')
         self.tracking_mode_stack.setCurrentIndex(index)
         self.doppler_initial_freq.setText('0.0')
         self.tracking_mode_changed.emit(index) # -> main_loop

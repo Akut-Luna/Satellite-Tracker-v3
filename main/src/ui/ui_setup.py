@@ -63,9 +63,11 @@ def set_style(self):
 
     # ========================================= Tracking ==========================================
     self.tracking_group.setMaximumHeight(194)
-
     self.tracking_btn.setMaximumWidth(170)
     self.tracking_layout.setAlignment(Qt.AlignCenter)
+
+    # ========================================== Status ===========================================
+    self.status_group.setMaximumHeight(194)
 
     # ============================================ Map ============================================
 
@@ -439,6 +441,7 @@ def setup_tracking_widget(self):
     # ----------------------------------- Start Tracking at AOS -----------------------------------
     self.start_tracking_at_AOS_btn = QCheckBox('Start Tracking at AOS')
     self.start_tracking_at_AOS_btn.toggled.connect(self.start_tracking_at_AOS_changed)
+    self.start_tracking_at_AOS_btn.toggled.connect(self.update_tracker_status)
     self.tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
 
     self.middle_layout.addWidget(self.tracking_group)
@@ -446,27 +449,35 @@ def setup_tracking_widget(self):
 def setup_status_widget(self):
     '''
     Sets up the UI element 'Status'
+    # ---------------------------------------------------------------------------------------------
     '''
-    # --------------------------------------- Antenna Status --------------------------------------
     self.status_group = QGroupBox('Status')
-    self.status_layout = QGridLayout(self.status_group)
+    self.status_layout = QVBoxLayout(self.status_group)
 
+    # --------------------------------------- Antenna Status --------------------------------------
+    antenna_layout = QHBoxLayout()
     self.antenna_status_label = QLabel('Antenna Status:')
-    self.status_layout.addWidget(self.antenna_status_label, 0, 0)
-    
-    self.antenna_status_status = QLabel('Not Connected')
-    self.antenna_status_status.setStyleSheet('color: red;')
-    self.status_layout.addWidget(self.antenna_status_status, 0, 1)
-    
+    antenna_layout.addWidget(self.antenna_status_label)
+
+    self.antenna_connection_status = QLabel('Not Connected')
+    self.antenna_connection_status.setStyleSheet('color: red;')
+    antenna_layout.addWidget(self.antenna_connection_status)
+    antenna_layout.addStretch() # Push everything to the left
+    self.status_layout.addLayout(antenna_layout)
+
     # --------------------------------------- Tracker Status --------------------------------------
+    tracker_layout = QHBoxLayout()
     self.tracker_status_label = QLabel('Tracker Status:')
-    self.status_layout.addWidget(self.tracker_status_label, 1, 0)
+    tracker_layout.addWidget(self.tracker_status_label)
 
     self.tracker_status_status = QLabel('No Target Selected')
     self.tracker_status_status.setStyleSheet('color: yellow;')
-    self.status_layout.addWidget(self.tracker_status_status, 1, 1)
+    tracker_layout.addWidget(self.tracker_status_status)
+    tracker_layout.addStretch() # Push everything to the left
+    self.status_layout.addLayout(tracker_layout)
 
     self.middle_layout.addWidget(self.status_group)
+
 
 def setup_ui(self):
     '''

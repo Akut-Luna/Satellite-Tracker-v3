@@ -540,14 +540,3 @@ def tracking_mode_AZ_EL(self):
     self.ground_track_changed.emit(np.zeros((0, 2))) # -> ui
 
     return self.az_deg, self.el_deg
-
-# TODO LIST:
-# visulaise next pass
-# next to tracking 
-#  Antenna Status: 
-#   connected (green)
-#   not connected (red)
-#  Tracker Status: 
-#   Waiting for AOS (green)
-#   Tracking (green)
-#   No Target Selected (yellow)
