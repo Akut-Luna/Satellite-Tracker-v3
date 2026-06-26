@@ -68,7 +68,7 @@ or on macOS/Linux:
 .venv/bin/python
 ```
 
-### 6. Run the project.
+### 7. Run the project.
 
 ```bash
 python main/src/main.py
