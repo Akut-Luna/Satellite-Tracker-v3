@@ -1,12 +1,9 @@
 import traceback
+import numpy as np
 import cartopy.crs as ccrs
 import cartopy.geodesic as geodesic
-import numpy as np
-from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
-from PySide6.QtGui import QIcon
-from matplotlib.figure import Figure
+from PySide6.QtCore import QDateTime
 from matplotlib.patches import Polygon
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
 def update_map(self, latitude, longitude, altitude):
     '''

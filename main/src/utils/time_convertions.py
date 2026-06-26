@@ -1,8 +1,8 @@
 import os
-from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
-from datetime import datetime, timezone
 from astropy.time import Time
+from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 load_dotenv(os.path.join('main', 'config', 'config_antenna.env'))
 LOCAL_TZ = os.getenv('LOCAL_TZ') # local time zone

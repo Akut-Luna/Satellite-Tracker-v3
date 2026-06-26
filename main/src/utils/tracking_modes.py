@@ -6,8 +6,8 @@ from datetime import timedelta
 from skyfield.api import wgs84, Star, EarthSatellite
 from astropy.coordinates import AltAz, SkyCoord, ITRS, EarthLocation
 
-from utils.time_convertions import datetime_to_astropy_time, datetime_to_skyfield_time
 from utils.calculations import doppler_shift
+from utils.time_convertions import datetime_to_astropy_time, datetime_to_skyfield_time
 
 def tracking_mode_List(self, now_datetime, calc_ground_track=True):
     '''

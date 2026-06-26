@@ -1,13 +1,12 @@
-import cartopy.crs as ccrs
 import os
+import cartopy.crs as ccrs
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+    QWidget, QVBoxLayout, QHBoxLayout, QFrame, QStackedWidget,
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, 
-    QDateTimeEdit, QRadioButton, QCheckBox, QButtonGroup, QFileDialog,
-    QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,
-    QStackedWidget, QFrame
+    QDateTimeEdit, QRadioButton, QCheckBox, QButtonGroup,
+    QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,  
 )
-from PySide6.QtCore import QDateTime, Qt, QTimer, QTimeZone, Signal
+from PySide6.QtCore import QDateTime, Qt, QTimeZone
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 

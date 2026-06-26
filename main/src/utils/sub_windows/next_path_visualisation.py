@@ -1,15 +1,8 @@
 import os
-import json
-import traceback
 import numpy as np
 import matplotlib.pyplot as plt
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, 
-    QLabel, QLineEdit, QPushButton, QComboBox, 
-    QGridLayout, QStackedWidget
-)
-from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
 class NexPassVisualisationWindow(QWidget):

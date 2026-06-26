@@ -1,13 +1,13 @@
 import os
 import json
 import traceback
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QLineEdit, QPushButton, QComboBox, 
     QGridLayout, QStackedWidget
 )
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QIcon
 
 from utils.helper import ra_dec_parser
 
