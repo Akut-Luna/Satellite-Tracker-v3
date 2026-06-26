@@ -9,10 +9,11 @@ from astropy.coordinates import AltAz, SkyCoord, ITRS, EarthLocation
 from utils.time_convertions import datetime_to_astropy_time, datetime_to_skyfield_time
 from utils.calculations import doppler_shift
 
-def tracking_mode_List(self, now_datetime):
+def tracking_mode_List(self, now_datetime, calc_ground_track=True):
     '''
     Parameters:
         now_datetime (datetime): time of observation
+        calc_ground_track (bool): flag if gound track should be calculated
     
     Returns:
         az (float): Azimuth in degrees 
@@ -27,19 +28,18 @@ def tracking_mode_List(self, now_datetime):
         f1 (float): Doppler shifted frequency in MHz  
     '''
     current_target = self.target_list[self.target_list_idx]
-    return self.tracking_mode_List_core(now_datetime, current_target)
+    return self.tracking_mode_List_core(now_datetime, current_target, calc_ground_track)
 
-def tracking_mode_List_core(self, now_datetime, current_target):
+def tracking_mode_List_core(self, now_datetime, current_target, calc_ground_track=True):
     '''
     This function contain the tracking mode List. The reason why it is 
-    a serparte funcion from tracking_mode_List() is that this function
-    is also used by the visualise next pass feature.
-    
-    In the future it could also be used by a new tracking mode Schedule. 
+    a serparte funcion from tracking_mode_List() is that in the future 
+    it could also be used by a new tracking mode Schedule. 
 
     Parameters:
         now_datetime (datetime): time of observation
         current_target (dict): current target dict
+        calc_ground_track (bool): flag if gound track should be calculated
     
     Returns:
         az (float): Azimuth in degrees 
@@ -103,7 +103,7 @@ def tracking_mode_List_core(self, now_datetime, current_target):
             print(traceback.format_exc())
 
         # -------------------------------------- ground track --------------------------------------
-        if self.should_ground_track_get_calculated(now_datetime):
+        if self.should_ground_track_get_calculated(now_datetime) and calc_ground_track:
             try:
                 if self.config.ground_track_steps > 0:
                     future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.ground_track_steps)]
@@ -160,7 +160,7 @@ def tracking_mode_List_core(self, now_datetime, current_target):
             print(traceback.format_exc())
 
         # -------------------------------------- ground track --------------------------------------
-        if self.should_ground_track_get_calculated(now_datetime):
+        if self.should_ground_track_get_calculated(now_datetime) and calc_ground_track:
             try:
                 if self.config.ground_track_steps > 0:
                     base_offset = (now_datetime - start_time).total_seconds()
@@ -185,7 +185,7 @@ def tracking_mode_List_core(self, now_datetime, current_target):
     elif current_target['type'] == 'ASTRO': # -----------------------------------------------------
         ra = current_target['RA']
         dec = current_target['DEC']
-        az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(now_datetime, ra, dec)
+        az, el, latitude, longitude, altitude = self.tracking_mode_RA_DEC(now_datetime, ra, dec, calc_ground_track)
         return az, None, el, None, None, None, latitude, longitude, altitude, None
 
     else: # ---------------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None, ca
         now_datetime (datetime): time of observation
         ra_hours (float): RA if called by tracking_mode_list_core()
         dec_degrees (float): DEC if called by tracking_mode_list_core()
-        calc_ground_track (bool): if called by the find passes feature, ground track should not be calculated
+        calc_ground_track (bool): flag if gound track should be calculated
 
     Returns:
         az (float): Azimuth in degrees 
@@ -280,10 +280,11 @@ def tracking_mode_RA_DEC(self, now_datetime, ra_hours=None, dec_degrees=None, ca
             print(traceback.format_exc())
     return az, el, latitude, longitude, altitude
 
-def tracking_mode_OMM(self, now_datetime):
+def tracking_mode_OMM(self, now_datetime, calc_ground_track=True):
     '''
     Parameters:
         now_datetime (datetime): time of observation
+        calc_ground_track (bool): flag if gound track should be calculated
 
     Returns:
         az (float): Azimuth in degrees 
@@ -376,7 +377,7 @@ def tracking_mode_OMM(self, now_datetime):
                 print(traceback.format_exc())
 
             # ------------------------------------ ground track ------------------------------------
-            if self.should_ground_track_get_calculated(now_datetime):
+            if self.should_ground_track_get_calculated(now_datetime) and calc_ground_track:
                 try:
                     if self.config.ground_track_steps > 0:
                         future_times = [now_datetime + timedelta(minutes=i) for i in range(self.config.ground_track_steps)]
@@ -399,10 +400,11 @@ def tracking_mode_OMM(self, now_datetime):
             return az, az_rate, el, el_rate, slant_range, range_rate, latitude, longitude, altitude, f1
     return None, None, None, None, None, None, None, None, None, None
 
-def tracking_mode_SPICE(self, now_datetime):
+def tracking_mode_SPICE(self, now_datetime, calc_ground_track=True):
     '''
     Parameters:
         now_datetime (datetime): observation time in UTC
+        calc_ground_track (bool): flag if gound track should be calculated
 
     Returns:
         az (float): Azimuth in degrees 
@@ -508,7 +510,7 @@ def tracking_mode_SPICE(self, now_datetime):
         print(traceback.format_exc())
 
     # --------------------------------------- ground track ----------------------------------------
-    if self.should_ground_track_get_calculated(now_datetime):
+    if self.should_ground_track_get_calculated(now_datetime) and calc_ground_track:
         try:
             ground_track = np.zeros((self.config.ground_track_steps,2))
             for i in range(self.config.ground_track_steps):

@@ -276,6 +276,9 @@ def load_target_list_data(self, OMM_only=False, Horizons_id=None):
 def should_ground_track_get_calculated(self, now_datetime):
     if self.last_time_ground_track_got_calculated is not None:
         delta_t_min = (now_datetime - self.last_time_ground_track_got_calculated).total_seconds() // 60
+        if delta_t_min < 0: # if delta t is negative soemthing went wrong
+            print('hi')
+            return True     # and we should definitly update
     else:
         delta_t_min = self.config.min_before_recalculate_ground_track
         self.last_time_ground_track_got_calculated = now_datetime
@@ -567,8 +570,6 @@ def visualise_next_pass(self, data):
     start_time = data[0][0]
     end_time = data[0][1]
     delta_t = int((end_time - start_time).total_seconds())
-
-    current_target = self.target_list[self.target_list_idx]
     
     step_size = 1 # seconds per step
     while delta_t > 500:            # There is absolutly not need to plot more then 500 points.
@@ -580,7 +581,7 @@ def visualise_next_pass(self, data):
         for i in range(delta_t):
             current_time = start_time + timedelta(seconds=i*step_size)
 
-            az, _, el, _, _, _, _, _, _, _ = self.tracking_mode_List_core(current_time, current_target)
+            az, _, el, _, _, _, _, _, _, _ = self.tracking_mode_List(current_time, calc_ground_track=False)
             
             data[i,0] = az
             data[i,1] = el
