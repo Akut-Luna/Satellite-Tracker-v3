@@ -24,7 +24,7 @@ python3 -m venv .venv
 ```
 
 ### 3. Activate the virtual environment
-**You will have to do this for every new terminal.** For some IDEs like VS Code opening a new integrated terminal in VS Code will usually activate the virtual environment automatically, assuming the interpreter is selected correctly (see step 6).
+**You will have to do this for every new terminal** but for some IDEs like VS Code opening a new integrated terminal in VS Code will usually activate the virtual environment automatically, assuming the interpreter is selected correctly (see step 6).
 
 Windows
 
