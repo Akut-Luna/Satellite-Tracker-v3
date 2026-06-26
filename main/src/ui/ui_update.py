@@ -242,6 +242,9 @@ def update_ui(self, data):
         self.log_message(f'Error updating Map: {str(e)}')
         print(traceback.format_exc())
 
+    # Clock
+    self.UTC_text.setDateTime(QDateTime.currentDateTimeUtc())
+
     # Altitude
     if altitude is not None:
         self.altitude_text.setText(f'{altitude:.0f} km')
