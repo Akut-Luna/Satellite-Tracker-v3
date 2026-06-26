@@ -277,7 +277,6 @@ def should_ground_track_get_calculated(self, now_datetime):
     if self.last_time_ground_track_got_calculated is not None:
         delta_t_min = (now_datetime - self.last_time_ground_track_got_calculated).total_seconds() // 60
         if delta_t_min < 0: # if delta t is negative soemthing went wrong
-            print('hi')
             return True     # and we should definitly update
     else:
         delta_t_min = self.config.min_before_recalculate_ground_track
