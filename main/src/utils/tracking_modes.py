@@ -32,8 +32,10 @@ def tracking_mode_List(self, now_datetime):
 def tracking_mode_List_core(self, now_datetime, current_target):
     '''
     This function contain the tracking mode List. The reason why it is 
-    a serparte funcion from tracking_mode_List() is that this function 
-    could be also used by a futur tracking mode Schedule. 
+    a serparte funcion from tracking_mode_List() is that this function
+    is also used by the visualise next pass feature.
+    
+    In the future it could also be used by a new tracking mode Schedule. 
 
     Parameters:
         now_datetime (datetime): time of observation

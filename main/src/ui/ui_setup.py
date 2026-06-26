@@ -124,12 +124,12 @@ def setup_find_passes_widget(self):
     
     # Find passes button
     self.find_passes_btn = QPushButton('Find Passes')
-    self.find_passes_btn.clicked.connect(self.go_find_passes.emit)
+    self.find_passes_btn.clicked.connect(self.go_find_passes.emit) # -> main_loop
     find_passes_layout.addWidget(self.find_passes_btn, 4, 0, 1, 2)
 
     # Next Pass Visualisation Button
     self.next_pass_visualisation_btn = QPushButton('Visualise Next Pass')
-    # self.next_pass_visualisation_btn.clicked.connect(self.visualise_next_pass) # TODO
+    self.next_pass_visualisation_btn.clicked.connect(self.go_visualise_next_pass.emit) # -> core
     find_passes_layout.addWidget(self.next_pass_visualisation_btn, 5, 0, 1, 2)
 
     self.top_layout.addWidget(self.find_passes_group)

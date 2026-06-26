@@ -1,10 +1,22 @@
+import os
+import json
+import traceback
+import numpy as np
+import matplotlib.pyplot as plt
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, 
+    QLabel, QLineEdit, QPushButton, QComboBox, 
+    QGridLayout, QStackedWidget
+)
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QIcon
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
-# TODO
 class NexPassVisualisationWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Next Pass Visualisation')
-        self.setWindowIcon(QIcon(os.path.join('Main', 'Images', 'satellite_icon_white.svg')))
+        self.setWindowIcon(QIcon(os.path.join('main', 'images', 'satellite_icon_white.svg')))
         layout = QVBoxLayout(self)
         
         self.fig, self.ax = plt.subplots()

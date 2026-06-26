@@ -6,21 +6,14 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtCore import QDateTime, Qt, QTimeZone, Signal, Slot
 
-from ui.ui_setup import (
-    set_style, setup_ui, 
-    setup_find_passes_widget,
-    setup_tracking_modes_widget,
-    setup_antenna_widget,
-    setup_data_widget,
-    setup_tracking_widget,
-    setup_status_widget
-)
-from ui.ui_update import update_ui, update_map, update_ui_tracking
-from ui.ui_buttons import (
-    browse_list, browse_OMM, browse_spice
-)
-from utils.helper import get_target_names_from_file
 from core.config import AppConfig
+from utils.helper import get_target_names_from_file
+from ui.ui_update import update_ui, update_map, update_ui_tracking
+from ui.ui_setup import (
+    set_style, setup_ui, setup_find_passes_widget, setup_tracking_modes_widget,
+    setup_antenna_widget, setup_data_widget, setup_tracking_widget, setup_status_widget
+)
+from ui.ui_buttons import browse_list, browse_OMM, browse_spice
 
 class SatelliteTrackerApp(QMainWindow):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
@@ -73,6 +66,7 @@ class SatelliteTrackerApp(QMainWindow):
     find_passes_min_angle_changed = Signal(int)
     go_find_passes = Signal()
     local_time_radio_button_changed = Signal(bool)
+    go_visualise_next_pass = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config: AppConfig):

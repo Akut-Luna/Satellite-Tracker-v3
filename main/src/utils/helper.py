@@ -5,11 +5,12 @@ import shutil
 import traceback
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from scipy.optimize import bisect
 from scipy.interpolate import interp1d
 from skyfield.api import load, Loader, EarthSatellite, wgs84
 
+from utils.sub_windows.next_path_visualisation import NexPassVisualisationWindow
 from utils.time_convertions import datetime_to_skyfield_time, skyfield_time_to_datetime, local_time_to_UTC, UTC_to_local_time
 
 def load_planet_ephemeris(self):
@@ -286,7 +287,7 @@ def find_passes(self, return_data=False):
     Finds the times when the satellite is rising over / setting under the horizon.
 
     Parameters:
-        return_data (bool): if True it will not print to console and return the data. 
+        return_data (bool): if True we will not print to console and return the data. 
 
     Returns:
         passes (list): (N,2) dim list with AOS datetime and LOS datetime
@@ -540,7 +541,7 @@ def find_passes(self, return_data=False):
             passes[i][0] = UTC_to_local_time(passes[i][0])
             passes[i][1] = UTC_to_local_time(passes[i][1])
 
-    # ---------------------------------- Print results in console ---------------------------------
+    # ---------------------------------- Print results to console ---------------------------------
     if passes:
         if return_data:            
             return passes
@@ -562,3 +563,30 @@ def find_passes(self, return_data=False):
     else:
         self.log_message('No passes found for the selected time range')
 
+def visualise_next_pass(self, data):
+    start_time = data[0][0]
+    end_time = data[0][1]
+    delta_t = int((end_time - start_time).total_seconds())
+
+    current_target = self.target_list[self.target_list_idx]
+    
+    step_size = 1 # seconds per step
+    while delta_t > 500:            # There is absolutly not need to plot more then 500 points.
+        delta_t = delta_t // 10     # Therefore we can optimise the calculation by reducing the 
+        step_size *= 10             # amount of calculated points
+    
+    data = np.zeros((delta_t,2))
+    if self.tracking_mode == 0: # List
+        for i in range(delta_t):
+            current_time = start_time + timedelta(seconds=i*step_size)
+
+            az, _, el, _, _, _, _, _, _, _ = self.tracking_mode_List_core(current_time, current_target)
+            
+            data[i,0] = az
+            data[i,1] = el
+
+    UTC = not self.local_time_radio_button_checked # flag that shows if time is in UTC or Local Time
+
+    self.plot_window = NexPassVisualisationWindow()
+    self.plot_window.plot(data, start_time, end_time, UTC)
+    self.plot_window.show()

@@ -8,7 +8,6 @@ from ui.ui_main import SatelliteTrackerApp
 from utils.motor_controller import MotorWorker
 from utils.sub_windows.List_add_to_list import ListAddToListWindow
 
-
 class AppCore(QObject):
     tracking_changed = Signal(bool)
     '''
@@ -121,6 +120,7 @@ class AppCore(QObject):
 
         # ------------- UI -> Core  -------------
         self.main_window.List_add_to_list.connect(self.open_List_add_to_list_window)
+        self.main_window.go_visualise_next_pass.connect(self.open_visualise_next_pass_window)
 
         # ------- UI -> Motor Controller  -------
         self.main_window.close_connection.connect(self.motor_worker.close_connection)
@@ -179,6 +179,13 @@ class AppCore(QObject):
         # add to list window -> main_loop
         self.List_add_to_list_window.new_target_added.connect(self.main_loop_worker.update_target_list)
 
+    @Slot(bool)
+    def open_visualise_next_pass_window(self):
+        data = self.main_loop_worker.find_passes(return_data=True)
+        if data is None:
+            return
+        else:
+            self.main_loop_worker.visualise_next_pass(data)
     # ---------------------------------------------------------------------------------------------
 
     def start(self):

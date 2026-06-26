@@ -1,7 +1,7 @@
-import traceback
-from PySide6.QtWidgets import QFileDialog
 import os
+import traceback
 import pandas as pd
+from PySide6.QtWidgets import QFileDialog
 
 def browse_list(self):
     base_path = os.getcwd()
