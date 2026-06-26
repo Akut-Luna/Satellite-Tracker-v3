@@ -139,21 +139,14 @@ def plot_geodesic_circle(ax, lon, lat, radius_km, **kwargs):
     # Extract coordinates
     circle_lons = circle_points[:, 0]
     circle_lats = circle_points[:, 1]
-    
+
     # Plot the circle
     ax.plot(circle_lons, circle_lats, transform=ccrs.Geodetic(), **kwargs)
     
     # close the circle
     start_point = circle_points[0]
     end_point = circle_points[-1]
-
-    # Debugging -----------------------------
-    # ax.scatter(start_point[0], start_point[1], color='gray')
-    # ax.scatter(end_point[0], end_point[1], color='black')
-    # ---------------------------------------
-
-    # if it goes over the 180° meridian plot in 2 parts
-    if abs(start_point[0] - end_point[0]) > 180:
+    if abs(start_point[0] - end_point[0]) > 180: # if it goes over the 180° meridian plot in 2 parts
         lons = [start_point[0], 180]
         lats = [start_point[1], start_point[1]]
         ax.plot(lons, lats, transform=ccrs.Geodetic(), **kwargs)
@@ -167,7 +160,7 @@ def plot_geodesic_circle(ax, lon, lat, radius_km, **kwargs):
         ax.plot(lons, lats, transform=ccrs.Geodetic(), **kwargs)
 
     # Create a polygon for filling
-    fill_color = 'red'
+    fill_color = kwargs.get('color', 'red')
     fill_alpha = 0.1
 
     # Handle the case where the circle crosses the dateline
