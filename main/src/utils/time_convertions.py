@@ -49,28 +49,6 @@ def datetime_to_skyfield_time(skyfield_ts, datetime):
     '''
     return skyfield_ts.from_datetime(datetime)
 
-def convert_tdb_to_utc(jd_tdb, delta_t):
-    '''
-    Converts TBD Julian Date to UTC
-
-    Parameters:
-        jd_tdb (float): Julian Date in Barycentric Dynamical Time (the JPL's T_eph)
-        delta_t (float): difference between TBD and UT
-    
-    Returns:
-        jd_utc (float): Julian Date in UTC
-    
-    NOTE: getting correct DUT1 is not implemented yet, but since DUT1 < 0.9s per definition it can be neglected.
-    '''
-    jd_ut = jd_tdb - (delta_t / 86400)  # Convert delta-T from seconds to Julian days
-    # getting correct DUT1 not implemented yet ------------------------------------------------
-    # mjd_ut = int(jd_ut - 2400000.5)     # Convert to Modified Julian Date (MJD)
-    # dut1 = self.get_dut1(mjd_ut)        # Get DUT1 from EOP data
-    dut1 = 0
-    # -----------------------------------------------------------------------------------------
-    jd_utc = jd_ut - (dut1 / 86400)     # Apply DUT1 correction
-    return jd_utc
-
 def utc_now():
     '''
     Returns:

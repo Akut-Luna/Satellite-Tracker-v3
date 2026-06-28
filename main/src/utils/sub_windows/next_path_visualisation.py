@@ -75,4 +75,3 @@ class NexPassVisualisationWindow(QWidget):
             
         self.label_plot(f'AOS ({tz})\n{start_time_str}', x[0], y[0])
         self.label_plot(f'LOS ({tz})\n{end_time_str}', x[-1], y[-1])
-

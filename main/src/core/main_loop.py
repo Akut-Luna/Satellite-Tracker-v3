@@ -55,6 +55,10 @@ class MainLoop(QObject):
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):
+        '''
+        Parameters:
+            config (AppConfig): static settings
+        '''
         super().__init__()
         self.config = config
         self.load_planet_ephemeris()
@@ -100,7 +104,7 @@ class MainLoop(QObject):
             print(message)
 
     # ------------------------------------ Slots (receive data) -----------------------------------
-    def update_ra_hours(self, ra_value:str):
+    def update_ra_hours(self, ra_value):
         '''
         Parameters:
             ra_value (str): RA value in h
@@ -113,8 +117,8 @@ class MainLoop(QObject):
         except Exception as e:
             self.log_message(f'Error: {e}')
             print(traceback.format_exc())
-
-    def update_dec_degrees(self, dec_value:str):
+    
+    def update_dec_degrees(self, dec_value):
         '''
         Parameters:
             dec_value (str): DEC value in deg
@@ -127,7 +131,7 @@ class MainLoop(QObject):
         except Exception as e:
             self.log_message(f'Error: {e}')
             print(traceback.format_exc())
-
+    
     def update_tracking_mode(self, index):
         self.last_time_ground_track_got_calculated = None
         self.tracking_mode = index
@@ -135,10 +139,14 @@ class MainLoop(QObject):
             current_target = self.target_list[self.target_list_idx]
             f0 = current_target['frequency']
             self.go_update_f0.emit(f0) # -> ui
-
+    
     def update_tracking(self, tracking):
+        '''
+        Parameters:
+            tracking (bool): flag if we are tracking
+        '''
         self.tracking = tracking
-
+    
     def toggle_tracking(self, checked):
         '''
         This function tells AppCore to tell everyone to update self.tracking
@@ -156,10 +164,10 @@ class MainLoop(QObject):
     
     def update_OMM_df(self, df):
         self.OMM_df = df
-
+    
     def update_OMM_satellite_name(self, name):
         self.OMM_satellite_name = name.upper()
-
+    
     def update_OMM_satellite_id(self, sat_id):
         if sat_id != '':
             try:
@@ -168,7 +176,7 @@ class MainLoop(QObject):
                 self.log_message(f'Invalid ID: {sat_id}')
         else:
             self.OMM_satellite_id = -1
-
+    
     def update_doppler_emited_freq(self, freq):
         if freq != '':
             try:
@@ -177,23 +185,27 @@ class MainLoop(QObject):
                 self.log_message(f'Invalid frequency: {freq}')
         else:
             self.doppler_emited_freq = 0.0
-
+    
     def update_target_list_path(self, path):
         self.target_list_path = path
         self.target_list = self.load_target_list_json() # update list in memory
         self.load_target_list_data()                    # update list in memory
-
+    
     def update_target_list(self):
         self.target_list = self.load_target_list_json() # first load the list from JSON
         self.load_target_list_data()                    # then fill it with data
-
+    
     def update_azimuth_offset(self, offset):
         self.azimuth_offset = offset
-
+    
     def update_elevation_offset(self, offset):
         self.elevation_offset = offset
     
     def update_start_tracking_at_AOS(self, status):
+        '''
+        Parameters:
+            status (bool): True -> checked, False -> unchecked
+        '''
         self.start_tracking_at_AOS = status
     
     def update_spice_kernels(self, path):
@@ -204,11 +216,15 @@ class MainLoop(QObject):
         except Exception as e:
             self.log_message(f'Could not load SPICE Kernels: {e}')
             print(traceback.format_exc())
-
+    
     def update_spice_target_name(self, name):
         self.spice_target_name = name
     
     def update_az_deg(self, az):
+        '''
+        Parameters:
+            az (str): azimuth
+        '''
         if az == '':
             az = 0
         else:
@@ -221,6 +237,10 @@ class MainLoop(QObject):
             self.az_deg = az
     
     def update_el_deg(self, el):
+        '''
+        Parameters:
+            el (str): elevation
+        '''
         if el == '':
             el = 0
         else:
@@ -231,16 +251,16 @@ class MainLoop(QObject):
             self.el_deg = None
         else:
             self.el_deg = el
-
+    
     def update_find_passes_start_time(self, datetime):
         self.find_passes_start_time = datetime
-
+    
     def update_find_passes_end_time(self, datetime):
         self.find_passes_end_time = datetime
-
+    
     def update_find_passes_min_angle(self, angle):
         self.find_passes_min_angle = angle
-
+    
     def update_local_time_radio_button(self, checked):
         self.local_time_radio_button_checked = checked
     # ---------------------------------------------------------------------------------------------

@@ -1,18 +1,21 @@
 import os
 from dotenv import load_dotenv 
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QObject, QThread, Signal
 
-from core.main_loop import MainLoop
 from core.config import AppConfig
+from core.main_loop import MainLoop
 from ui.ui_main import SatelliteTrackerApp
 from utils.motor_controller import MotorWorker
 from utils.sub_windows.List_add_to_list import ListAddToListWindow
 
 class AppCore(QObject):
+    '''
+    This class is the 'core' of the Tracker App. It will hold the different threads.
+    '''
+    
+    # ------------------------------------ Signals (send data) ------------------------------------
     tracking_changed = Signal(bool)
-    '''
-    This class is the "core" of the Tracker App. It will hold the different threads.
-    '''
+    # ---------------------------------------------------------------------------------------------
 
     def __init__(self):
         super().__init__()
@@ -154,15 +157,17 @@ class AppCore(QObject):
         self.tracking_changed.connect(self.motor_worker.update_tracking)     # App Core -> Motor Controller
 
     # ------------------------------------ Slots (receive data) -----------------------------------
-    @Slot(bool)
-    def set_tracking(self, tracking: bool):
+    def set_tracking(self, tracking):
+        '''
+        Parameters:
+            tracking (bool): flag if we are tracking
+        '''
         if self.tracking == tracking:
             return
 
         self.tracking = tracking
         self.tracking_changed.emit(tracking) # -> ui, main_loop, motor_controller
 
-    @Slot(bool)
     def open_List_add_to_list_window(self):
         '''
         This is for the 'add to list' button in List mode, not for the 'add to list' in OMM file mode.
@@ -179,7 +184,6 @@ class AppCore(QObject):
         # add to list window -> main_loop
         self.List_add_to_list_window.new_target_added.connect(self.main_loop_worker.update_target_list)
 
-    @Slot(bool)
     def open_visualise_next_pass_window(self):
         data = self.main_loop_worker.find_passes(return_data=True)
         if data is None:

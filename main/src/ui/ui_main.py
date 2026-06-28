@@ -1,12 +1,12 @@
 import os
+import numpy as np
 import pandas as pd
 import matplotlib.image as mpimg
-from datetime import timezone
-from PySide6.QtGui import QIcon
+from datetime import timezone, datetime
+from PySide6.QtGui import QIcon, QKeyEvent
 from PySide6.QtWidgets import QMainWindow
-from PySide6.QtCore import QDateTime, Qt, QTimeZone, Signal, Slot
+from PySide6.QtCore import QDateTime, Qt, QTimeZone, Signal
 
-from core.config import AppConfig
 from utils.helper import get_target_names_from_file
 from ui.ui_update import update_ui, update_map, update_ui_tracking
 from ui.ui_setup import (
@@ -61,17 +61,19 @@ class SatelliteTrackerApp(QMainWindow):
     spice_kernels_changed = Signal(str)
     spice_target_name_changed = Signal(str)
     close_connection = Signal()
-    find_passes_start_time_changed = Signal(object)
-    find_passes_end_time_changed = Signal(object)
+    find_passes_start_time_changed = Signal(datetime)
+    find_passes_end_time_changed = Signal(datetime)
     find_passes_min_angle_changed = Signal(int)
     go_find_passes = Signal()
     local_time_radio_button_changed = Signal(bool)
     go_visualise_next_pass = Signal()
     # ---------------------------------------------------------------------------------------------
 
-    def __init__(self, config: AppConfig):
+    def __init__(self, config):
         '''
         This function initializes the UI.
+        Parameters:
+            config (AppConfig): static settings
         '''
         super().__init__()
         self.config = config
@@ -99,15 +101,21 @@ class SatelliteTrackerApp(QMainWindow):
 
     # ------------------------------------ Slots (receive data) -----------------------------------
     def update_ground_track(self, ground_track):
+        '''
+        Parameters:
+            ground_track (array): ground track data
+        '''
         self.ground_track = ground_track
 
-    @Slot(bool)
     def update_tracking(self, tracking):
+        '''
+        Parameters:
+            tracking (bool): flag if we are tracking
+        '''
         self.tracking = tracking
         self.update_ui_tracking(tracking)
         self.update_tracker_status()
 
-    @Slot(bool)
     def toggle_tracking(self, checked):
         '''
         This function tells AppCore to tell everyone to update self.tracking
@@ -117,7 +125,6 @@ class SatelliteTrackerApp(QMainWindow):
         '''
         self.tracking_changed.emit(checked) # -> app_core
     
-    @Slot(float, float)
     def update_antenna_status(self, antenna_az, antenna_el):
         '''
         position status

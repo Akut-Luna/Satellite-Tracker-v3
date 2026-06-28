@@ -207,6 +207,8 @@ def plot_geodesic_circle(ax, lon, lat, radius_km, **kwargs):
 def update_ui(self, data):
     '''
     This function gets called via Signal and Slot by core/main_loop.py
+    Parameters:
+        data (dict)
     '''
 
     az          = data['az']
@@ -263,6 +265,8 @@ def update_ui(self, data):
 def update_ui_tracking(self, tracking):
     '''
     This function updates the UI when the tracking state changes
+    Parameters:
+        tracking (bool): flag if we are tracking
     '''
     if tracking:
         self.tracking_btn.setText('Stop Tracking')
@@ -274,7 +278,7 @@ def update_ui_tracking(self, tracking):
     else:
         self.tracking_btn.setText('Start Tracking')
 
-        # uncheck "Start Tracking at AOS" to prevent immediate restart of tracking
+        # uncheck 'Start Tracking at AOS' to prevent immediate restart of tracking
         self.start_tracking_at_AOS_btn.setChecked(False)
 
         # ensures that the button is not checked if the function was not called by the button

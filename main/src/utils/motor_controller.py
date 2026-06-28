@@ -26,15 +26,17 @@ class MotorWorker(QObject):
         self.log.emit(message) # -> ui
 
     # ------------------------------------ Slots (receive data) -----------------------------------
-    @Slot(bool)
     def update_tracking(self, tracking):
         self.tracking = tracking
         if not tracking:
             if self.socket is not None: # send stop command to motors
                 self.talk_to_motor_controller('stop')
 
-    @Slot(dict)
     def move_motors(self, data):
+        '''
+        Parameters:
+            data (dict): data from main_loop
+        '''
         if not self.tracking:
             return
 
@@ -67,7 +69,6 @@ class MotorWorker(QObject):
                 target_el = np.clip(target_el, 0, 90)
                 self.talk_to_motor_controller('set', target_az, target_el)
 
-    @Slot()
     def update_antenna_status(self):
         res = self.talk_to_motor_controller('status')
 
@@ -89,7 +90,6 @@ class MotorWorker(QObject):
             self.antenna_el = antenna_el
             self.antenna_status_changed.emit(antenna_az, antenna_el) # -> ui
     
-    @Slot()
     def go_close_connection(self):
         self.close_connection()
     # ---------------------------------------------------------------------------------------------

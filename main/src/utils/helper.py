@@ -30,7 +30,7 @@ def load_planet_ephemeris(self):
 
     self.planet_ephemeris = load(ephemeris_file)  
 
-def get_target_names_from_file(self, list_path:str):
+def get_target_names_from_file(self, list_path):
     try:
         with open(list_path, 'r') as file:
             target_data = json.load(file)
