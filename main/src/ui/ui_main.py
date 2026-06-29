@@ -1,9 +1,8 @@
 import os
-import numpy as np
 import pandas as pd
 import matplotlib.image as mpimg
 from datetime import timezone, datetime
-from PySide6.QtGui import QIcon, QKeyEvent
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtCore import QDateTime, Qt, QTimeZone, Signal
 

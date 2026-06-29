@@ -7,8 +7,8 @@ from PySide6.QtCore import QObject, Signal, QTimer
 from utils.calculations import correction_matrix
 from utils.time_convertions import local_time_to_UTC, utc_now
 from utils.tracking_modes import (
-    tracking_mode_List, tracking_mode_List_core, tracking_mode_RA_DEC, 
-    tracking_mode_OMM, tracking_mode_SPICE, tracking_mode_AZ_EL
+    tracking_mode_List, tracking_mode_RA_DEC, tracking_mode_OMM,
+    tracking_mode_SPICE, tracking_mode_AZ_EL
 )
 from utils.helper import (
     ra_dec_parser, load_planet_ephemeris, load_target_list_json, load_target_list_data,
@@ -20,12 +20,11 @@ from utils.get_data import (
 
 class MainLoop(QObject):
     # ------------ bind imported functions (makes it act like normal member functions) ------------
-    tracking_mode_List      = tracking_mode_List
-    tracking_mode_List_core = tracking_mode_List_core
-    tracking_mode_RA_DEC    = tracking_mode_RA_DEC
-    tracking_mode_OMM       = tracking_mode_OMM
-    tracking_mode_SPICE     = tracking_mode_SPICE
-    tracking_mode_AZ_EL     = tracking_mode_AZ_EL
+    tracking_mode_List   = tracking_mode_List
+    tracking_mode_RA_DEC = tracking_mode_RA_DEC
+    tracking_mode_OMM    = tracking_mode_OMM
+    tracking_mode_SPICE  = tracking_mode_SPICE
+    tracking_mode_AZ_EL  = tracking_mode_AZ_EL
 
     # helper
     load_planet_ephemeris = load_planet_ephemeris

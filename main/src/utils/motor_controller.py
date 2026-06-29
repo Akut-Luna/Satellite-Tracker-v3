@@ -2,7 +2,7 @@ import socket
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import angular_separation
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QObject, Signal
 
 class MotorWorker(QObject):
     # ------------------------------------ Signals (send data) ------------------------------------
