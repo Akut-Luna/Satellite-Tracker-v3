@@ -113,7 +113,7 @@ class SatelliteTrackerApp(QMainWindow):
         '''
         self.tracking = tracking
         self.update_ui_tracking(tracking)
-        self.update_tracker_status()
+        self.update_tracker_status(error=False)
 
     def toggle_tracking(self, checked):
         '''
@@ -154,8 +154,11 @@ class SatelliteTrackerApp(QMainWindow):
         if target_name not in all_items:
             self.tracking_mode_list_dropdown.addItems([target_name])
     
-    def update_tracker_status(self):
-        if self.tracking:
+    def update_tracker_status(self, error):
+        if error:
+            self.tracker_status_status.setText('ERROR')
+            self.tracker_status_status.setStyleSheet('color: red;')
+        elif self.tracking:
             self.tracker_status_status.setText('Tracking')
             self.tracker_status_status.setStyleSheet('color: green;')
         elif self.start_tracking_at_AOS_btn.isChecked():

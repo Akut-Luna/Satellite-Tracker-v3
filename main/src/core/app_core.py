@@ -134,6 +134,7 @@ class AppCore(QObject):
         self.main_loop_worker.go_update_f0.connect(self.main_window.update_ui_f0)
         self.main_loop_worker.uncheck_start_tracking_at_AOS_btn.connect(self.main_window.uncheck_start_tracking_at_AOS_btn)
         self.main_loop_worker.add_to_list_dropdown.connect(self.main_window.add_to_list_dropdown)
+        self.main_loop_worker.tracker_status_error.connect(lambda: self.main_window.update_tracker_status(error=True))
 
         # ---- Main Loop -> Motor Controller ----
         self.main_loop_worker.go_update_motors.connect(self.motor_worker.move_motors)
