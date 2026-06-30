@@ -440,7 +440,7 @@ def setup_tracking_widget(self):
     # ----------------------------------- Start Tracking at AOS -----------------------------------
     self.start_tracking_at_AOS_btn = QCheckBox('Start Tracking at AOS')
     self.start_tracking_at_AOS_btn.toggled.connect(self.start_tracking_at_AOS_changed)
-    self.start_tracking_at_AOS_btn.toggled.connect(lambda checked: self.update_tracker_status(error=False))
+    self.start_tracking_at_AOS_btn.toggled.connect(lambda _: self.update_tracker_status(error=False))
     self.tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
 
     self.middle_layout.addWidget(self.tracking_group)
@@ -476,7 +476,6 @@ def setup_status_widget(self):
     self.status_layout.addLayout(tracker_layout)
 
     self.middle_layout.addWidget(self.status_group)
-
 
 def setup_ui(self):
     '''
