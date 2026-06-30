@@ -8,5 +8,5 @@ if __name__ == '__main__':
 
 # TODO: documentaion in PDF -> 
 #   Part 1 patchnotes, 
-#   Part 2 Signals and Slots  
 # TODO: note in v1
+# TODO: clean up signals
