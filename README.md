@@ -1,6 +1,6 @@
 # Satellite Tracker v3
 Version 3 is a complete rewrite of the [first version of this project.](https://github.com/Akut-Luna/Satellite-Tracker-v1) (Don't ask what happened to version 2.)
-I wrote the first version as part of my Bachelor Thesis at the University of Zurich. If you want the full understanding of what this project is about, please read the [full thesis (PDF)](./doc/Bachelor_Thesis.pdf). If you just need to know what has changed between version 1 and version 3, please read the [advanced patch notes (PDF)](./doc/advanced_patch_notes.pdf).
+I wrote the first version as part of my Bachelor Thesis at the University of Zurich. If you want the full understanding of what this project is about, please read the [full thesis (PDF)](./doc/Bachelor_Thesis.pdf). If you just need to know what has changed between version 1 and version 3, please read the [advanced patch notes (PDF)](./doc/Satellite_Tracker_v3.pdf).
 
 ## Installation
 
