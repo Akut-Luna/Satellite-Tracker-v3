@@ -4,6 +4,20 @@ I wrote the first version as part of my Bachelor Thesis at the University of Zur
 
 ## Installation
 
+### 0. Check Python version
+You need to have Python 3.12.6 or higher installed. Check you version with:
+
+```bash
+python --version
+```
+
+If needed you can upgrade with:
+```bash
+winget install Python.Python.3.12
+```
+
+After the installation finishes, you must restart your terminal for the changes to take effect.
+
 ### 1. Clone the repository
 
 ```bash
