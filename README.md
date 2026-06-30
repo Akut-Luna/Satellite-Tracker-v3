@@ -22,6 +22,10 @@ After the installation finishes, you must restart your terminal for the changes 
 
 ```bash
 git clone https://github.com/Akut-Luna/Satellite-Tracker-v3.git
+```
+Change in to directory
+
+```bash
 cd Satellite-Tracker-v3
 ```
 
