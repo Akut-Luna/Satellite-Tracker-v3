@@ -328,7 +328,7 @@ def tracking_mode_OMM(self, now_datetime, calc_ground_track=True):
             fields = row.to_dict(orient='records')[0]
             satellite = EarthSatellite.from_omm(self.skyfield_ts, fields)
         except Exception as e:
-            if self.tracking:
+            if self.tracking or self.start_tracking_at_AOS:
                 raise ValueError(f'Could not create EarthSatellite: {str(e)}')
 
         if satellite is not None:
@@ -439,7 +439,7 @@ def tracking_mode_SPICE(self, now_datetime, calc_ground_track=True):
         NOTE: As long as the user has not entered the correct target name, spiceypy.spkcpo will fail. So, we ignore the exception and return.
         However if we are tracking and it still fails, we need to inform the user. 
         '''
-        if self.tracking:
+        if self.tracking or self.start_tracking_at_AOS:
             self.log_message(f'Spiceypy error: {e}')
             if 'PCK file does not have coverage' in e:
                 self.log_message(f'                                                                   ')
@@ -497,7 +497,7 @@ def tracking_mode_SPICE(self, now_datetime, calc_ground_track=True):
         longitude = np.degrees(longitude)
 
     except Exception as e:
-        if self.tracking:
+        if self.tracking or self.start_tracking_at_AOS:
             self.log_message(f'Error calculating position with spiceypy: {e}')
             print(traceback.format_exc())
     
@@ -528,7 +528,7 @@ def tracking_mode_SPICE(self, now_datetime, calc_ground_track=True):
             self.last_time_ground_track_got_calculated = now_datetime
 
         except Exception as e:
-            if self.tracking:
+            if self.tracking or self.start_tracking_at_AOS:
                 self.log_message(f'Error calculating ground track: {str(e)}')
                 print(traceback.format_exc())
 
