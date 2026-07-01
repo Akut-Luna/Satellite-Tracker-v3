@@ -1,6 +1,7 @@
 import sys
 if sys.version_info < (3, 12, 6):
     sys.exit('Python 3.12.6+ is required.')
+
 from PySide6.QtWidgets import QApplication
 
 from core.app_core import AppCore

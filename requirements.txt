@@ -1,7 +1,7 @@
 astropy==7.2.0
 astroquery==0.4.11
 Cartopy==0.24.1
-matplotlib==3.11.0
+matplotlib==3.10.1
 numpy==2.4.6
 pandas==3.0.3
 PySide6==6.11.1
@@ -10,3 +10,5 @@ Requests==2.34.2
 scipy==1.17.1
 skyfield==1.50
 spiceypy==6.0.0
+shapely==2.0.7
+qt-material==2.17

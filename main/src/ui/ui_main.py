@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import matplotlib.image as mpimg
 from datetime import timezone, datetime
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtCore import QDateTime, Qt, QTimeZone, Signal
 
@@ -166,7 +166,10 @@ class SatelliteTrackerApp(QMainWindow):
             self.tracker_status_status.setStyleSheet('color: green;')
         else:
             self.tracker_status_status.setText('No Target Selected')
-            self.tracker_status_status.setStyleSheet('color: yellow;')
+            if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+                self.tracker_status_status.setStyleSheet('color: yellow;')
+            else:
+                self.tracker_status_status.setStyleSheet('color: orange;')
     # ---------------------------------------------------------------------------------------------
 
     def on_tracking_mode_changed(self, index):

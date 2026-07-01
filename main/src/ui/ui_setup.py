@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QGroupBox, QGridLayout, QSpinBox, QDoubleSpinBox,  
 )
 from PySide6.QtCore import QDateTime, Qt, QTimeZone
+from PySide6.QtGui import QGuiApplication
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas # must be imported after PySide
 
@@ -470,7 +471,10 @@ def setup_status_widget(self):
     tracker_layout.addWidget(self.tracker_status_label)
 
     self.tracker_status_status = QLabel('No Target Selected')
-    self.tracker_status_status.setStyleSheet('color: yellow;')
+    if QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+        self.tracker_status_status.setStyleSheet('color: yellow;')
+    else:
+        self.tracker_status_status.setStyleSheet('color: orange;')
     tracker_layout.addWidget(self.tracker_status_status)
     tracker_layout.addStretch() # Push everything to the left
     self.status_layout.addLayout(tracker_layout)
