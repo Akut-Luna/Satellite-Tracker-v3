@@ -72,21 +72,22 @@ python ./install/setup.py
 When using a virtual environment you may need to select the Python interpreter. Here is how to do it when you use VS Code as your IDE. 
 
 1. Press Ctrl+Shift+P → Python: Select Interpreter.
-2. Choose:
-
-Windows:
+2. Choose (Windows):
 
 ```
 .venv/Scripts/python.exe
 ```
 
-or on macOS/Linux:
+2. Choose (macOS/Linux):
 
 ```
 .venv/bin/python
 ```
 
-### 7. Run the project.
+### 7. Set config
+Open ```main/config/config_antenna.env``` and set the configuration for your antenna.
+
+### 8. Run the project
 
 ```bash
 python main/src/main.py
