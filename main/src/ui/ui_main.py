@@ -186,6 +186,7 @@ class SatelliteTrackerApp(QMainWindow):
 
     def keyPressEvent(self, event):
         '''
+        This function overwrites the default (empty) keyPressEvent from QMainWindow
         Parameters:
             event (PySide6.QtGui.QKeyEvent): event
         '''
