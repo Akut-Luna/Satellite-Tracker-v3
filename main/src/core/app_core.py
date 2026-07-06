@@ -4,7 +4,7 @@ from PySide6.QtCore import QObject, QThread, Signal
 
 from core.config import AppConfig
 from core.main_loop import MainLoop
-from ui.ui_main import SatelliteTrackerApp
+from main.src.ui.ui_main import SatelliteTrackerApp
 from utils.motor_controller import MotorWorker
 from utils.sub_windows.List_add_to_list import ListAddToListWindow
 
