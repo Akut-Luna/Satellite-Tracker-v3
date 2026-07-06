@@ -4,7 +4,7 @@ from PySide6.QtCore import QObject, QThread, Signal
 
 from core.config import AppConfig
 from core.main_loop import MainLoop
-from main.src.ui.ui_main import SatelliteTrackerApp
+from ui.ui_main import SatelliteTrackerApp
 from utils.motor_controller import MotorWorker
 from utils.sub_windows.List_add_to_list import ListAddToListWindow
 
@@ -98,32 +98,33 @@ class AppCore(QObject):
         self.main_loop_thread.started.connect(self.main_loop_worker.load_init_f0)
 
         # ----------- UI -> Main Loop -----------
-        self.main_window.RA_changed.connect(self.main_loop_worker.update_ra_hours)
-        self.main_window.DEC_changed.connect(self.main_loop_worker.update_dec_degrees)
-        self.main_window.az_deg_changed.connect(self.main_loop_worker.update_az_deg)
-        self.main_window.el_deg_changed.connect(self.main_loop_worker.update_el_deg)
-        self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
-        self.main_window.target_list_idx_changed.connect(self.main_loop_worker.update_target_list_idx)
+        self.main_window.az_input.textChanged.connect(self.main_loop_worker.update_az_deg)
+        self.main_window.el_input.textChanged.connect(self.main_loop_worker.update_el_deg)
+        self.main_window.ra_input.textChanged.connect(self.main_loop_worker.update_ra_hours)
+        self.main_window.dec_input.textChanged.connect(self.main_loop_worker.update_dec_degrees)
+        self.main_window.tracking_mode_list_dropdown.currentIndexChanged.connect(self.main_loop_worker.update_target_list_idx)
+        self.main_window.tracking_mode_list_dropdown.currentIndexChanged.connect(self.main_loop_worker.update_target_list_path)
+        self.main_window.OMM_satellite_name_input.textChanged.connect(self.main_loop_worker.update_OMM_satellite_name)
+        self.main_window.OMM_satellite_id_input.textChanged.connect(self.main_loop_worker.update_OMM_satellite_id)
+        self.main_window.OMM_add_to_list_btn.clicked.connect(self.main_loop_worker.OMM_add_to_list)
+        self.main_window.doppler_initial_freq.textChanged.connect(self.main_loop_worker.update_doppler_emited_freq)
+        self.main_window.start_tracking_at_AOS_btn.toggled.connect(self.main_loop_worker.update_start_tracking_at_AOS)
+        self.main_window.spice_target_name.textChanged.connect(self.main_loop_worker.update_spice_target_name)
+        self.main_window.find_passes_end_time_changed.connect(self.main_loop_worker.update_find_passes_end_time)
+        self.main_window.find_passes_btn.clicked.connect(self.main_loop_worker.find_passes)
+        self.main_window.min_elevation_input.valueChanged.connect(self.main_loop_worker.update_find_passes_min_angle)
+        self.main_window.local_time_radio_button.toggled.connect(self.main_loop_worker.update_local_time_radio_button)
+        
         self.main_window.OMM_df_changed.connect(self.main_loop_worker.update_OMM_df)
-        self.main_window.OMM_satellite_name_changed.connect(self.main_loop_worker.update_OMM_satellite_name)
-        self.main_window.OMM_satellite_id_changed.connect(self.main_loop_worker.update_OMM_satellite_id)
-        self.main_window.doppler_emited_freq_changed.connect(self.main_loop_worker.update_doppler_emited_freq)
-        self.main_window.target_list_path_changed.connect(self.main_loop_worker.update_target_list_path)
+        self.main_window.find_passes_start_time_changed.connect(self.main_loop_worker.update_find_passes_start_time)
+        self.main_window.spice_kernels_changed.connect(self.main_loop_worker.update_spice_kernels)
         self.main_window.azimuth_offset_changed.connect(self.main_loop_worker.update_azimuth_offset)
         self.main_window.elevation_offset_changed.connect(self.main_loop_worker.update_elevation_offset)
-        self.main_window.start_tracking_at_AOS_changed.connect(self.main_loop_worker.update_start_tracking_at_AOS)
-        self.main_window.OMM_add_to_list.connect(self.main_loop_worker.OMM_add_to_list)
-        self.main_window.spice_kernels_changed.connect(self.main_loop_worker.update_spice_kernels)
-        self.main_window.spice_target_name_changed.connect(self.main_loop_worker.update_spice_target_name)
-        self.main_window.find_passes_start_time_changed.connect(self.main_loop_worker.update_find_passes_start_time)
-        self.main_window.find_passes_end_time_changed.connect(self.main_loop_worker.update_find_passes_end_time)
-        self.main_window.find_passes_min_angle_changed.connect(self.main_loop_worker.update_find_passes_min_angle)
-        self.main_window.go_find_passes.connect(self.main_loop_worker.find_passes)
-        self.main_window.local_time_radio_button_changed.connect(self.main_loop_worker.update_local_time_radio_button)
+        self.main_window.tracking_mode_changed.connect(self.main_loop_worker.update_tracking_mode)
 
         # ------------- UI -> Core  -------------
-        self.main_window.List_add_to_list.connect(self.open_List_add_to_list_window)
-        self.main_window.go_visualise_next_pass.connect(self.open_visualise_next_pass_window)
+        self.main_window.List_add_to_list_btn.clicked.connect(self.open_List_add_to_list_window)
+        self.main_window.next_pass_visualisation_btn.clicked.connect(self.open_visualise_next_pass_window)
 
         # ------- UI -> Motor Controller  -------
         self.main_window.close_connection.connect(self.motor_worker.close_connection)

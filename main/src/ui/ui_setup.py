@@ -85,7 +85,7 @@ def setup_find_passes_widget(self):
     self.utc_radio_button = QRadioButton('UTC')
     self.utc_radio_button.setChecked(True)  # Default to UTC
     self.local_time_radio_button = QRadioButton('Local Time')
-    self.local_time_radio_button.toggled.connect(self.local_time_radio_button_changed.emit) # -> main_loop
+    # self.local_time_radio_button.toggled.connect(self.local_time_radio_button_changed.emit) # -> main_loop
     self.time_zone_group.addButton(self.utc_radio_button)
     self.time_zone_group.addButton(self.local_time_radio_button)
 
@@ -119,17 +119,17 @@ def setup_find_passes_widget(self):
     self.min_elevation_input.setRange(0, 90)
     self.min_elevation_input.setValue(0)
     self.min_elevation_input.setSuffix('°')
-    self.min_elevation_input.valueChanged.connect(self.find_passes_min_angle_changed.emit) # -> main_loop
+    # self.min_elevation_input.valueChanged.connect(self.find_passes_min_angle_changed.emit) # -> main_loop
     find_passes_layout.addWidget(self.min_elevation_input, 3, 1)
     
     # Find passes button
     self.find_passes_btn = QPushButton('Find Passes')
-    self.find_passes_btn.clicked.connect(self.go_find_passes.emit) # -> main_loop
+    # self.find_passes_btn.clicked.connect(self.go_find_passes.emit) # -> main_loop
     find_passes_layout.addWidget(self.find_passes_btn, 4, 0, 1, 2)
 
     # Next Pass Visualisation Button
     self.next_pass_visualisation_btn = QPushButton('Visualise Next Pass')
-    self.next_pass_visualisation_btn.clicked.connect(self.go_visualise_next_pass.emit) # -> core
+    # self.next_pass_visualisation_btn.clicked.connect(self.go_visualise_next_pass.emit) # -> core
     find_passes_layout.addWidget(self.next_pass_visualisation_btn, 5, 0, 1, 2)
 
     self.top_layout.addWidget(self.find_passes_group)
@@ -175,13 +175,13 @@ def setup_tracking_modes_widget(self):
     # ----------------- middle ------------------
     self.tracking_mode_list_dropdown = QComboBox()
     self.tracking_mode_list_dropdown.addItems(self.get_target_names_from_file(default_list))
-    self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.target_list_idx_changed.emit) # -> main_loop
+    # self.tracking_mode_list_dropdown.currentIndexChanged.connect(self.target_list_idx_changed.emit) # -> main_loop
     
     list_layout.addWidget(self.tracking_mode_list_dropdown)
     
     # ----------------- bottom ------------------
     self.List_add_to_list_btn = QPushButton('Add new target to list')
-    self.List_add_to_list_btn.clicked.connect(self.List_add_to_list.emit) # -> core
+    # self.List_add_to_list_btn.clicked.connect(self.List_add_to_list.emit) # -> core
     list_layout.addWidget(self.List_add_to_list_btn)
 
     self.tracking_mode_stack.addWidget(self.list_widget)
@@ -192,13 +192,13 @@ def setup_tracking_modes_widget(self):
     
     ra_dec_layout.addWidget(QLabel('RA [h]:'), 0, 0)
     self.ra_input = QLineEdit()
-    self.ra_input.textChanged.connect(self.RA_changed.emit) # -> main_loop
+    # self.ra_input.textChanged.connect(self.RA_changed.emit) # -> main_loop
     ra_dec_layout.addWidget(self.ra_input, 0, 1)
     ra_dec_layout.addWidget(QLabel('Accepted format: xx.xxxx or xxh xxm xxs'), 0, 2)
 
     ra_dec_layout.addWidget(QLabel('DEC [°]:'), 1, 0)
     self.dec_input = QLineEdit()
-    self.dec_input.textChanged.connect(self.DEC_changed.emit) # -> main_loop
+    # self.dec_input.textChanged.connect(self.DEC_changed.emit) # -> main_loop
     ra_dec_layout.addWidget(self.dec_input, 1, 1)
     ra_dec_layout.addWidget(QLabel('Accepted format: xx.xxxx or +xx°' + " xx'" +' xx"'), 1, 2)
     self.tracking_mode_stack.addWidget(self.ra_dec_widget)
@@ -228,13 +228,13 @@ def setup_tracking_modes_widget(self):
     # satellite name
     OMM_middle_layout.addWidget(QLabel('Satellite Name:'))
     self.OMM_satellite_name_input = QLineEdit()
-    self.OMM_satellite_name_input.textChanged.connect(self.OMM_satellite_name_changed)
+    # self.OMM_satellite_name_input.textChanged.connect(self.OMM_satellite_name_changed)
     OMM_middle_layout.addWidget(self.OMM_satellite_name_input)
 
     # NORAD id
     OMM_middle_layout.addWidget(QLabel('NORAD id:'))
     self.OMM_satellite_id_input = QLineEdit()
-    self.OMM_satellite_id_input.textChanged.connect(self.OMM_satellite_id_changed)
+    # self.OMM_satellite_id_input.textChanged.connect(self.OMM_satellite_id_changed)
     OMM_middle_layout.addWidget(self.OMM_satellite_id_input)
 
     OMM_layout.addLayout(OMM_middle_layout)
@@ -248,7 +248,7 @@ def setup_tracking_modes_widget(self):
 
     # add to list button
     self.OMM_add_to_list_btn = QPushButton('Add to List')
-    self.OMM_add_to_list_btn.clicked.connect(self.OMM_add_to_list.emit) # -> main_loop
+    # self.OMM_add_to_list_btn.clicked.connect(self.OMM_add_to_list.emit) # -> main_loop
     OMM_bottom_layout.addWidget(self.OMM_add_to_list_btn)
     
     OMM_layout.addLayout(OMM_bottom_layout)
@@ -272,7 +272,7 @@ def setup_tracking_modes_widget(self):
     # target name
     spice_layout.addWidget(QLabel('Target Name:'), 1, 0)
     self.spice_target_name = QLineEdit()
-    self.spice_target_name.textChanged.connect(self.spice_target_name_changed.emit) # -> main_loop
+    # self.spice_target_name.textChanged.connect(self.spice_target_name_changed.emit) # -> main_loop
     spice_layout.addWidget(self.spice_target_name, 1, 1)
 
     self.tracking_mode_stack.addWidget(self.spice_widget)
@@ -283,12 +283,12 @@ def setup_tracking_modes_widget(self):
 
     az_el_layout.addWidget(QLabel('Azimuth [°]:'), 0, 0)
     self.az_input = QLineEdit()
-    self.az_input.textChanged.connect(self.az_deg_changed.emit) # -> main_loop
+    # self.az_input.textChanged.connect(self.az_deg_changed.emit) # -> main_loop
     az_el_layout.addWidget(self.az_input, 0, 1)
 
     az_el_layout.addWidget(QLabel('Elevation [°]:'), 1, 0)
     self.el_input = QLineEdit()
-    self.el_input.textChanged.connect(self.el_deg_changed.emit) # -> main_loop
+    # self.el_input.textChanged.connect(self.el_deg_changed.emit) # -> main_loop
     az_el_layout.addWidget(self.el_input, 1, 1)
     self.tracking_mode_stack.addWidget(self.az_el_widget)
 
@@ -372,7 +372,7 @@ def setup_antenna_widget(self):
     doppler_shift_layout.addWidget(QLabel('Emitted freq. [MHz]'), 1, 1)
     self.doppler_initial_freq = QLineEdit()
     self.doppler_initial_freq.setText('0.0')
-    self.doppler_initial_freq.textChanged.connect(self.doppler_emited_freq_changed)
+    # self.doppler_initial_freq.textChanged.connect(self.doppler_emited_freq_changed)
     doppler_shift_layout.addWidget(self.doppler_initial_freq, 2, 1)
 
     doppler_shift_layout.addWidget(QLabel('Observed freq. [MHz]'), 1, 2)
@@ -440,7 +440,7 @@ def setup_tracking_widget(self):
 
     # ----------------------------------- Start Tracking at AOS -----------------------------------
     self.start_tracking_at_AOS_btn = QCheckBox('Start Tracking at AOS')
-    self.start_tracking_at_AOS_btn.toggled.connect(self.start_tracking_at_AOS_changed)
+    # self.start_tracking_at_AOS_btn.toggled.connect(self.start_tracking_at_AOS_changed)
     self.start_tracking_at_AOS_btn.toggled.connect(lambda _: self.update_tracker_status(error=False))
     self.tracking_layout.addWidget(self.start_tracking_at_AOS_btn)
 

@@ -40,32 +40,32 @@ class SatelliteTrackerApp(QMainWindow):
     update_ui_tracking = update_ui_tracking
 
     # ------------------------------------ Signals (send data) ------------------------------------
-    RA_changed  = Signal(str) # for tracking mode OMM file only
-    DEC_changed = Signal(str) # for tracking mode OMM file only
-    az_deg_changed = Signal(str) # for tracking mode AZ/EL only
-    el_deg_changed = Signal(str) # for tracking mode AZ/EL only
+    # RA_changed  = Signal(str) # for tracking mode OMM file only
+    # DEC_changed = Signal(str) # for tracking mode OMM file only
+    # az_deg_changed = Signal(str) # for tracking mode AZ/EL only
+    # el_deg_changed = Signal(str) # for tracking mode AZ/EL only
     tracking_mode_changed = Signal(int)
     tracking_changed = Signal(bool)
-    target_list_idx_changed = Signal(int)
+    # target_list_idx_changed = Signal(int)
     OMM_df_changed = Signal(pd.DataFrame)
-    OMM_satellite_name_changed = Signal(str)
-    OMM_satellite_id_changed = Signal(str)
-    doppler_emited_freq_changed = Signal(str)
+    # OMM_satellite_name_changed = Signal(str)
+    # OMM_satellite_id_changed = Signal(str)
+    # doppler_emited_freq_changed = Signal(str)
     target_list_path_changed = Signal(str)
     azimuth_offset_changed = Signal(float)
     elevation_offset_changed = Signal(float)
-    start_tracking_at_AOS_changed = Signal(bool)
-    OMM_add_to_list = Signal()
-    List_add_to_list = Signal()
+    # start_tracking_at_AOS_changed = Signal(bool)
+    # OMM_add_to_list = Signal()
+    # List_add_to_list = Signal()
     spice_kernels_changed = Signal(str)
-    spice_target_name_changed = Signal(str)
+    # spice_target_name_changed = Signal(str)
     close_connection = Signal()
     find_passes_start_time_changed = Signal(datetime)
     find_passes_end_time_changed = Signal(datetime)
-    find_passes_min_angle_changed = Signal(int)
-    go_find_passes = Signal()
-    local_time_radio_button_changed = Signal(bool)
-    go_visualise_next_pass = Signal()
+    # find_passes_min_angle_changed = Signal(int)
+    # go_find_passes = Signal()
+    # local_time_radio_button_changed = Signal(bool)
+    # go_visualise_next_pass = Signal()
     # ---------------------------------------------------------------------------------------------
 
     def __init__(self, config):

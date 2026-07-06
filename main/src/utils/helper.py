@@ -84,6 +84,7 @@ def ra_dec_parser(value: str) -> float:
     return sign * (units['°'] + units["'"] / 60 + units['"'] / 3600)     # DEC
 
 def OMM_add_to_list(self):
+    print('hi')
     if self.OMM_satellite is not None:
         sat_name = self.OMM_satellite.name
         sat_id = self.OMM_satellite.model.satnum
