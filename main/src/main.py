@@ -1,3 +1,10 @@
+'''
+Satellite Tracker Version 3.0
+Author: Felix Meyer
+Mail (UZH): felix.meyer@uzh.ch
+Mail (privat): felixpaulmeyer@gmail.com
+'''
+
 import sys
 if sys.version_info < (3, 12, 6):
     sys.exit('Python 3.12.6+ is required.')
