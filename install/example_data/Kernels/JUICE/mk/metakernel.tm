@@ -1,6 +1,6 @@
 \begindata
 
-PATH_VALUES  = ( 'Main/data/Kernels' )
+PATH_VALUES  = ( 'main/data/Kernels' )
 
 PATH_SYMBOLS = ( 'KERNELS' )
 
