@@ -19,10 +19,17 @@ winget install Python.Python.3.12
 After the installation finishes, you must restart your terminal for the changes to take effect.
 
 ### 1. Clone the repository
+NOTE: [Depending on how your github is setup, large files may not get downloaded correctly](https://stackoverflow.com/questions/65363299/git-clone-lfs-files-not-fully-downloading). Therefore first run:
+
+```bash
+git lfs install
+```
+then run:
 
 ```bash
 git clone https://github.com/Akut-Luna/Satellite-Tracker-v3.git
 ```
+
 Change directory
 
 ```bash
