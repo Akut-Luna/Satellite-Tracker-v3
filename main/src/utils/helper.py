@@ -14,7 +14,7 @@ from utils.sub_windows.next_path_visualisation import NexPassVisualisationWindow
 from utils.time_convertions import datetime_to_skyfield_time, skyfield_time_to_datetime, local_time_to_UTC, UTC_to_local_time
 
 def load_planet_ephemeris(self):
-    filename = 'de421.bsp'
+    filename = 'de440s.bsp'
     ephemeris_folder = os.path.join('main', 'data', 'Ephemeris')
     ephemeris_file = os.path.join(ephemeris_folder, filename)
 
