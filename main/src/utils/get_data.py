@@ -154,8 +154,8 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     The average difference is around 0.5 deg, and the average max difference is around 0.8 deg. There is however
     one outlier where the difference goes up to 5 deg.
 
-    Overall we can consider the values from the second method to be more accurate. They agree perfectly with
-    the values in the Horizons Web interface, which makes sense since both come straight from Horizons.
+    Overall we can consider the values from the second method to be more accurate. They are in good (but not perfect) 
+    with argeement the values in the Horizons Web interface, which makes sense since both come straight from Horizons.
 
     There are two reasons why we don't use the second method exclusively:
 
@@ -167,8 +167,10 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     Therefore we use both methods and will use the AZ, EL, etc. data from the second method and
     the subpoint data from the first.
     '''
-    start_time = (utc_now()).strftime('%Y-%m-%dT%H:%M:%S')
-    end_time = (utc_now() + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')
+    # We are rounding down to the last full minute
+    now = utc_now()
+    start_time = now.replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S')
+    end_time = (now + timedelta(days=1)).replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S')
 
     # -------------- vectors table --------------
     def fetch_data_vectors(spacecraft_id, start, stop):
