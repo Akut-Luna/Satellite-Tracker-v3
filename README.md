@@ -5,7 +5,15 @@ I wrote the first version as part of my Bachelor Thesis at the University of Zur
 ## Installation
 
 ### 0. Check Python version
-You need to have Python 3.12.6 or higher installed. Check you version with:
+You need to have Python 3.12.6 or higher installed. 
+NOTE: The code uses the ability to reuse the same quotation marks inside an f-string expression introduced in Python 3.12. So, it should work with Python 3.12.0 or higher, but it was developed and tested on version 3.12.6. If you want to use a different version you need to update this two lines in ```main/src/main.py```:
+
+```Python
+if sys.version_info < (3, 12, 6):
+    sys.exit('Python 3.12.6+ is required.')
+```
+
+Check you version with:
 
 ```bash
 python --version
