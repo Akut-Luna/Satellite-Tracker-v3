@@ -146,16 +146,33 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
 
     The second time we query the Horizons API directly for the AZ, EL, etc. values.
 
-    By comparing both methods for several days of the Artemis II mission, I found that the AZ and EL values
-    differ in a strange periodic pattern, with a period of one day. I assume either some mistake in the many
-    conversions between the different time formats, or in the calculations from state vector to AZ/EL there is
-    some mistake that depends on the time of day, aka the angle of antenna on its circle around the Earth's axis.
+    NOTE on number formats and time scales:
+    - JD (Julian Day, number format): 
+        A continuous count of days since January 1, 4713 BCE. It is a number format, not a time scale.
+        The same way 2026-09-25T07:12:00.000 and 25.09.26 12:00 are two different number formats. 
+        So the representation of a moment in time has a time scale and a number fromat. For example:
+        
+        Calendar String UTC: 2026-09-25 07:12:00.000
+        Julian Day      UTC: 2461308.8000000
+        Calendar String TDB: 2026-09-25 07:13:09.182
+        Julian Day      TDB: 2461308.8008007
 
-    The average difference is around 0.5 deg, and the average max difference is around 0.8 deg. There is however
-    one outlier where the difference goes up to 5 deg.
+        all represent the same moment in time.
 
-    Overall we can consider the values from the second method to be more accurate. They are in good (but not perfect) 
-    with argeement the values in the Horizons Web interface, which makes sense since both come straight from Horizons.
+    - UT (Universal Time, time scale): 
+        Time based on Earth's rotation (specifically UT1). It is irregular due to changes in rotation speed.
+
+    - UTC (Coordinated Universal Time, time scale): 
+        The civilian time standard. It follows TAI (atomic time) but stays within 0.9 seconds of UT1 via leap seconds.
+
+    - TT (Terrestrial Time, time scale): 
+        A theoretical, uniform time scale used for geocentric ephemerides. TT ~ TAI + 32.184s.
+
+    - TDB (Barycentric Dynamical Time, time scale): 
+        A relativistic time scale for the Solar System barycenter. It differs from TT only by periodic variations (max ~0.002s).
+
+    Overall we can consider the values from the second method to be more accurate. They are in very good
+    argeement the values in the Horizons Web interface, which makes sense since both come straight from Horizons.
 
     There are two reasons why we don't use the second method exclusively:
 
@@ -170,9 +187,15 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     # We are rounding down to the last full minute
     now = utc_now()
     start_time = now.replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S')
+    start_time_utc = Time(start_time, scale='utc')
+    start_time_tdb = start_time_utc.tdb.strftime('%Y-%m-%dT%H:%M:%S')
+
     end_time = (now + timedelta(days=1)).replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S')
+    end_time_utc = Time(end_time, scale='utc')
+    end_time_tdb = end_time_utc.tdb.strftime('%Y-%m-%dT%H:%M:%S')
 
     # -------------- vectors table --------------
+    # NOTE: Vector data expects time in TDB and retruns time in TDB!
     def fetch_data_vectors(spacecraft_id, start, stop):
         time_res = f'{self.config.time_resolution_horizons_state_vector}m'
         obj = Horizons(
@@ -298,7 +321,11 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     self.log_message(f'├Downloading vector table for {spacecraft_name}...')
 
     # get data
-    df, st, et = query_vectors_data(spacecraft_id, start_time, end_time)
+    df, st, et = query_vectors_data(
+        spacecraft_id, 
+        start_time_tdb, 
+        end_time_tdb
+    )
     if df is None:
         return # did not manage to get data
 
@@ -308,6 +335,7 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
         self.config.antenna_longitude, 
         self.config.antenna_altitude, 
     )
+
     last_time_vec = datetime.fromisoformat(df['time_UTC'].iloc[-1])
 
     # save data
@@ -319,10 +347,16 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     self.log_message(f'├─Data saved to {file_path}')
 
     # -------------- observer table -------------
+    # NOTE: Observer data expects time in UT and retruns time in UT!
+    # We don't care about the difference between UT and UTC 
+    # as it is <0.9s at all times by definition, and our 
+    # temporal resolution is 1 min at best.
     def fetch_data_observer(spacecraft_id, start, stop):
         # NOTE: lighttime correction is enabled by default for observer tables.
         time_res = f'{self.config.time_resolution_horizons_directly}m'
-        
+        start = str(start)
+        stop = str(stop)
+
         # 4 = Apparent AZ & EL
         # 5 = Rates; AZ & EL 
         # 20 = Observer range & range-rate
@@ -348,9 +382,9 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
         
         if table and len(table) > 0:
             # NOTE: we don't get subpoint from observer table
-            times_obs = Time(table['datetime_jd'], format='jd', scale='tdb')
+            times_obs = Time(table['datetime_jd'], format='jd', scale='utc')
             return pd.DataFrame({
-                'time_UTC': times_obs.utc.iso,                      # TDB JD -> UTC 
+                'time_UTC': times_obs.utc.iso,                      # JD UTC -> ISO String UTC
                 'az_deg': table['AZ'],                              # already in deg
                 'el_deg': table['EL'],                              # already in deg
                 'az_rate_deg_s': table['AZ_rate'].to(u.deg / u.s),  # arcsec/s -> deg/s
@@ -364,41 +398,31 @@ def query_horizons_api(self, spacecraft_id, spacecraft_name):
     self.log_message(f'├Downloading observer table for {spacecraft_name}...') 
 
     '''
-    For the vector table Horizons gives errors in TD time.
-    For the observer table Horizons gives errors in U time.
-    Because of the small differences between TD and U
-    the time that worked for the vector table, might not work
-    for the observer table. So, we will increase/decrease the 
-    time by 1 min unit it works.
-    If we have to change the time by 10 min, we assume something 
-    went wrong and abort.
+    For the vector table Horizons gives errors in TD time (probably meaning TDB).
+    For the observer table Horizons gives errors in U time (probably meaning UT).
     '''
-    for attempt in range(10):
-        if st != start_time: # start_time got adjusted
-            # %b handles the abbreviated month name (e.g., APR)
-            st = datetime.strptime(st, '%Y-%b-%d %H:%M:%S.%f')
-            st += timedelta(minutes=1)
-            st = st.strftime('%Y-%b-%d %H:%M:%S.%f')[:-2].upper()
-        
-        if et != end_time: # end_time got adjusted
-            # %b handles the abbreviated month name (e.g., APR)
-            et = datetime.strptime(et, '%Y-%b-%d %H:%M:%S.%f')
-            et -= timedelta(minutes=1)
-            et = et.strftime('%Y-%b-%d %H:%M:%S.%f')[:-2].upper()
+    if st != start_time_tdb: # start time changed
+        st_iso = datetime.strptime(st, '%Y-%b-%d %H:%M:%S.%f').isoformat()
+        st_tdb = Time(st_iso, scale='tdb')
+        st_utc_dt = st_tdb.utc.to_datetime() # TDB -> UTC
+        if st_utc_dt.second or st_utc_dt.microsecond:
+            st_utc_dt += timedelta(minutes=1)
+        start_time_utc = st_utc_dt.replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S') # rounded up
 
-        # get data
-        try:
-            df = query_observer_data(spacecraft_id, st, et)
-            if df is not None:
-                break # Success!
-        except:
-            pass
+    if et != end_time_tdb: # end time changed
+        et_iso = datetime.strptime(et, '%Y-%b-%d %H:%M:%S.%f').isoformat()
+        et_tdb = Time(et_iso, scale='tdb')
+        et_utc_dt = et_tdb.utc.to_datetime() # TDB -> UTC
+        if et_utc_dt.second or et_utc_dt.microsecond:
+            et_utc_dt -= timedelta(minutes=1)
+        end_time_utc = et_utc_dt.replace(second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S') # rounded down
 
-    if df is None:
-        if attempt == 9:
-            self.log_message(f'While looking for observer data for {spacecraft_name}, we could not find valid start and end times.')
-            self.log_message(f'last attempt: st = {st} and et = {et}')
-        return # did not manage to get data
+    df = query_observer_data(
+        spacecraft_id, 
+        start_time_utc, 
+        end_time_utc
+    )
+
     last_time_obs = datetime.fromisoformat(df['time_UTC'].iloc[-1])
 
     # save data
